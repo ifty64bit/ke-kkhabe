@@ -132,14 +132,14 @@
 
 <nav aria-label="অন্যান্য পাতা" class="mx-auto w-full max-w-xl px-6 pb-10">
 	<ul
-		class="grid border-t border-border"
+		class="grid gap-2 border-t border-border pt-3"
 		style:grid-template-columns="repeat({links.length}, minmax(0, 1fr))"
 	>
 		{#each links as link (link.route)}
 			<li>
 				<a
 					href={resolve(link.route)}
-					class="flex flex-col items-center gap-0.5 rounded-control px-2 pt-5 pb-2 text-center transition-colors hover:bg-surface-2"
+					class="flex flex-col items-center gap-0.5 rounded-control px-2 py-3 text-center transition-colors hover:bg-surface-2"
 				>
 					<span class="font-semibold">{link.label}</span>
 					<span class="text-xs text-muted">{link.hint}</span>
