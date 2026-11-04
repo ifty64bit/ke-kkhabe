@@ -46,3 +46,24 @@
 - Why: the designer preferred it to the wordmark-only header
 - Rejected: wordmark only
 - Rests on: designer feedback, 2026-11-04
+
+## 2026-11-04 · A day's price is the item's total cost, split evenly per piece
+
+- Decided by: the designer
+- Why: prices change daily, and when a shop runs out an item can come from a second shop at a different price on the same day; the total captures both
+- Rejected: one per-piece price chosen by the manager (total may not match what was spent); charging by which shop's piece (manager must assign pieces to people)
+- Rests on: designer answer, 2026-11-04
+
+## 2026-11-04 · Days do not record shop names
+
+- Decided by: the designer
+- Why: not needed
+- Rejected: optional note per day; per-item shop list
+- Rests on: designer answer, 2026-11-04
+
+## 2026-11-04 · Items have a single name
+
+- Decided by: the designer
+- Why: separate Bangla and English names were unnecessary
+- Rejected: required Bangla name with optional English name
+- Rests on: designer feedback, 2026-11-04

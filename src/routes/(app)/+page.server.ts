@@ -2,7 +2,7 @@ import { fail } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import { dhakaToday } from '#lib/date.ts';
 import type { MessageKey } from '#lib/i18n/index.ts';
-import { lineTotal, sum } from '#lib/money.ts';
+import { chargesForDay } from '#lib/server/charges.ts';
 import { day, dayItem, item, orderLine, response } from '#lib/server/db/schema.ts';
 import type { Db } from '#lib/server/db/index.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -22,7 +22,6 @@ async function loadToday(db: Db, userId: string) {
 				name: item.name,
 				unitBn: item.unitBn,
 				unitEn: item.unitEn,
-				unitPrice: dayItem.unitPrice,
 				available: dayItem.available
 			})
 			.from(dayItem)
@@ -62,7 +61,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const t = await loadToday(locals.db, locals.user!.id);
 	const charge =
 		t.day?.status === 'finalized'
-			? sum(t.items.map((i) => lineTotal(t.lines[i.id] ?? 0, i.unitPrice ?? 0)))
+			? ((await chargesForDay(locals.db, t.day.id)).get(locals.user!.id) ?? 0)
 			: null;
 	return { ...t, charge };
 };

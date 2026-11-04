@@ -55,7 +55,7 @@ export const day = sqliteTable(
 	(t) => [uniqueIndex('day_date_uq').on(t.date)]
 );
 
-/** Items offered on a day, with the actual unit price entered after buying. */
+/** Items offered on a day, with what each cost in total (entered after buying; prices vary by day and shop). */
 export const dayItem = sqliteTable(
 	'day_item',
 	{
@@ -65,12 +65,13 @@ export const dayItem = sqliteTable(
 		itemId: text('item_id')
 			.notNull()
 			.references(() => item.id),
-		unitPrice: integer('unit_price'), // poisha; null until finalized
+		/** What this item cost in total today (poisha), split across ordered units at finalize. */
+		totalCost: integer('total_cost'),
 		available: integer('available', { mode: 'boolean' }).notNull().default(true)
 	},
 	(t) => [
 		primaryKey({ columns: [t.dayId, t.itemId] }),
-		check('day_item_price_nonneg', sql`${t.unitPrice} IS NULL OR ${t.unitPrice} >= 0`)
+		check('day_item_cost_nonneg', sql`${t.totalCost} IS NULL OR ${t.totalCost} >= 0`)
 	]
 );
 

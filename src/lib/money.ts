@@ -40,3 +40,32 @@ export function formatTaka(poisha: Poisha, locale: Locale = 'bn', opts: { sign?:
 	const sign = poisha < 0 ? '−' : opts.sign && poisha > 0 ? '+' : '';
 	return `${sign}৳${formatted}`;
 }
+
+/**
+ * Split `total` poisha across `weights` (e.g. each member's quantity) in proportion,
+ * returning integer shares that sum to exactly `total`.
+ * Largest-remainder method: everyone gets the floor of their exact share, then leftover
+ * poisha go one each to the largest fractional parts; ties go to the earlier index.
+ * Callers should pass weights in a stable order (e.g. sorted by user id) so results are reproducible.
+ */
+export function allocate(total: Poisha, weights: number[]): Poisha[] {
+	if (!isSafeInt(total) || total < 0) throw new Error('Total must be a non-negative integer');
+	if (weights.some((w) => !isSafeInt(w) || w < 0))
+		throw new Error('Weights must be non-negative integers');
+	const units = weights.reduce((a, b) => a + b, 0);
+	if (units === 0) {
+		if (total !== 0) throw new Error('Cannot allocate a cost across zero units');
+		return weights.map(() => 0);
+	}
+	// Integer math only: exact share = total * w / units.
+	const shares = weights.map((w) => Math.floor((total * w) / units));
+	const remainders = weights.map((w, i) => ({ i, r: (total * w) % units }));
+	let left = total - shares.reduce((a, b) => a + b, 0);
+	remainders.sort((a, b) => b.r - a.r || a.i - b.i);
+	for (const { i } of remainders) {
+		if (left === 0) break;
+		shares[i] += 1;
+		left -= 1;
+	}
+	return shares;
+}

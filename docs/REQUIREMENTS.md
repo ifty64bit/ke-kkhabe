@@ -21,6 +21,8 @@ Office breakfast ordering with a shared expense ledger. Each working day, member
 
 - Managers maintain a master list of items: name (Bangla + English), unit (e.g. piece, cup), active flag.
 - Items are never hard-deleted once used. They are archived instead.
+- An item has one name (no separate Bangla/English names). Units come from bilingual presets.
+- Prices are not part of the catalog; they are entered per day.
 
 ## Daily flow
 
@@ -30,7 +32,7 @@ A day moves through these states:
 2. **Open**: members see "Aj khaben?" and choose items and quantities, or "Na, aj khabo na". They can edit or cancel any number of times.
 3. **Closed**: a manager closes ordering by hand. Members can no longer edit. The manager sees the **purchase summary** (total quantity per item, e.g. 23 paratha, 12 egg) and the per-person list.
 4. **Finalized**: after buying, a manager enters:
-   - the **actual unit price** for each item,
+   - what each item **cost in total** that day. Prices change day to day, and on some days one item comes from more than one shop at different prices; the total covers both. The form starts from the previous day's cost so a normal day is quick to confirm,
    - **adjusted quantities** per member where needed (an item ran out, fewer were bought, a late add),
    - **who paid** the shop: one or more members with amounts. The amounts must add up to the day's total.
 
@@ -44,7 +46,7 @@ A day moves through these states:
 
 - Currency is BDT, stored as integer poisha (no floats). The timezone is Asia/Dhaka, and the "day" and "month" boundaries use it.
 - Ledger entries:
-  - **Charge**: member × day = Σ(final quantity × unit price). This reduces the member's balance.
+  - **Charge**: for each item, its total cost is split across the units actually eaten (final quantities), so everyone pays the same per-piece price for that item that day. Shares are whole poisha that add up exactly to the total; leftover poisha go to the largest fractional shares in a fixed order. A member's charge for the day is the sum over items. This reduces the member's balance.
   - **Bill payment**: a member paid the shop X on a day. This increases their balance.
   - **Settlement**: A paid B X (cash or bKash, outside the app). A's balance goes up and B's goes down. **Anyone** (A, B, or a manager) can log it. It records who logged it, and it can be voided (soft-delete, audited) by the logger or a manager.
 - **Net balance** per member = bill payments + settlements sent − charges − settlements received. Positive means others owe you, negative means you owe.
