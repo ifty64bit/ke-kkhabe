@@ -1,2 +1,166 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
+
+/*
+ * Ke Khabe theme: "turmeric & tea".
+ * Semantic tokens live on :root and switch by [data-theme] (light | dark | system).
+ * Components use only semantic utilities (bg-surface, text-fg, bg-primary...),
+ * so they adapt to every theme without `dark:` variants.
+ */
+
+:root {
+	color-scheme: light;
+
+	--ke-bg: oklch(0.982 0.01 85);
+	--ke-surface: oklch(0.997 0.004 85);
+	--ke-surface-2: oklch(0.955 0.016 80);
+	--ke-fg: oklch(0.25 0.025 50);
+	--ke-muted: oklch(0.5 0.025 60);
+	--ke-border: oklch(0.89 0.018 75);
+	--ke-ring: oklch(0.7 0.16 62);
+
+	--ke-primary: oklch(0.76 0.155 68); /* turmeric */
+	--ke-primary-hover: oklch(0.71 0.16 62);
+	--ke-primary-fg: oklch(0.24 0.04 50);
+
+	--ke-accent: oklch(0.52 0.09 45); /* cha (tea) */
+	--ke-accent-fg: oklch(0.98 0.01 85);
+
+	--ke-success: oklch(0.55 0.13 150);
+	--ke-success-soft: oklch(0.95 0.04 150);
+	--ke-danger: oklch(0.55 0.2 27);
+	--ke-danger-soft: oklch(0.95 0.035 27);
+	--ke-warning: oklch(0.62 0.14 75);
+	--ke-warning-soft: oklch(0.96 0.05 85);
+
+	--ke-shadow: 0 1px 2px oklch(0.4 0.05 60 / 0.08), 0 8px 24px -12px oklch(0.4 0.05 60 / 0.18);
+}
+
+/* Keep the two dark blocks below identical. */
+:root[data-theme='dark'] {
+	color-scheme: dark;
+
+	--ke-bg: oklch(0.17 0.012 55);
+	--ke-surface: oklch(0.21 0.014 55);
+	--ke-surface-2: oklch(0.255 0.016 55);
+	--ke-fg: oklch(0.94 0.012 80);
+	--ke-muted: oklch(0.7 0.02 70);
+	--ke-border: oklch(0.31 0.016 55);
+	--ke-ring: oklch(0.8 0.14 70);
+
+	--ke-primary: oklch(0.8 0.145 72);
+	--ke-primary-hover: oklch(0.85 0.13 76);
+	--ke-primary-fg: oklch(0.2 0.03 50);
+
+	--ke-accent: oklch(0.72 0.08 50);
+	--ke-accent-fg: oklch(0.18 0.02 50);
+
+	--ke-success: oklch(0.74 0.13 150);
+	--ke-success-soft: oklch(0.3 0.05 150);
+	--ke-danger: oklch(0.7 0.17 27);
+	--ke-danger-soft: oklch(0.3 0.06 27);
+	--ke-warning: oklch(0.8 0.13 80);
+	--ke-warning-soft: oklch(0.32 0.05 80);
+
+	--ke-shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 24px -12px oklch(0 0 0 / 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root[data-theme='system'] {
+		color-scheme: dark;
+
+		--ke-bg: oklch(0.17 0.012 55);
+		--ke-surface: oklch(0.21 0.014 55);
+		--ke-surface-2: oklch(0.255 0.016 55);
+		--ke-fg: oklch(0.94 0.012 80);
+		--ke-muted: oklch(0.7 0.02 70);
+		--ke-border: oklch(0.31 0.016 55);
+		--ke-ring: oklch(0.8 0.14 70);
+
+		--ke-primary: oklch(0.8 0.145 72);
+		--ke-primary-hover: oklch(0.85 0.13 76);
+		--ke-primary-fg: oklch(0.2 0.03 50);
+
+		--ke-accent: oklch(0.72 0.08 50);
+		--ke-accent-fg: oklch(0.18 0.02 50);
+
+		--ke-success: oklch(0.74 0.13 150);
+		--ke-success-soft: oklch(0.3 0.05 150);
+		--ke-danger: oklch(0.7 0.17 27);
+		--ke-danger-soft: oklch(0.3 0.06 27);
+		--ke-warning: oklch(0.8 0.13 80);
+		--ke-warning-soft: oklch(0.32 0.05 80);
+
+		--ke-shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 24px -12px oklch(0 0 0 / 0.5);
+	}
+}
+
+/* `dark:` variant for the rare one-off case; follows the same rules as the tokens. */
+@custom-variant dark {
+	&:where([data-theme='dark'], [data-theme='dark'] *) {
+		@slot;
+	}
+	@media (prefers-color-scheme: dark) {
+		&:where([data-theme='system'], [data-theme='system'] *) {
+			@slot;
+		}
+	}
+}
+
+@theme inline {
+	--color-bg: var(--ke-bg);
+	--color-surface: var(--ke-surface);
+	--color-surface-2: var(--ke-surface-2);
+	--color-fg: var(--ke-fg);
+	--color-muted: var(--ke-muted);
+	--color-border: var(--ke-border);
+	--color-ring: var(--ke-ring);
+	--color-primary: var(--ke-primary);
+	--color-primary-hover: var(--ke-primary-hover);
+	--color-primary-fg: var(--ke-primary-fg);
+	--color-accent: var(--ke-accent);
+	--color-accent-fg: var(--ke-accent-fg);
+	--color-success: var(--ke-success);
+	--color-success-soft: var(--ke-success-soft);
+	--color-danger: var(--ke-danger);
+	--color-danger-soft: var(--ke-danger-soft);
+	--color-warning: var(--ke-warning);
+	--color-warning-soft: var(--ke-warning-soft);
+	--shadow-card: var(--ke-shadow);
+}
+
+@theme {
+	--font-sans: 'Hind Siliguri', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Anek Bangla', 'Hind Siliguri', ui-sans-serif, system-ui, sans-serif;
+	--font-google: 'Roboto', arial, sans-serif;
+
+	--radius-card: 1.25rem;
+	--radius-control: 0.75rem;
+}
+
+@layer base {
+	html {
+		background-color: var(--color-bg);
+		color: var(--color-fg);
+		font-family: var(--font-sans);
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	body {
+		min-height: 100dvh;
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--color-ring);
+		outline-offset: 2px;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			transition-duration: 0.01ms !important;
+			animation-duration: 0.01ms !important;
+		}
+	}
+}

@@ -3,6 +3,7 @@ import type { LayoutServerLoad } from './$types';
 export const load: LayoutServerLoad = ({ locals }) => {
 	const u = locals.user;
 	return {
+		theme: locals.theme,
 		user: u
 			? {
 					id: u.id,

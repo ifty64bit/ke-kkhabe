@@ -7,6 +7,7 @@ import { isAdminEmail } from '#lib/server/admins.ts';
 import { getDb } from '#lib/server/db/index.ts';
 import { user as userTable } from '#lib/server/db/schema.ts';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
+import { parseTheme, THEME_COOKIE } from '#lib/theme/index.ts';
 import { env } from 'cloudflare:workers';
 
 const PUBLIC_PATHS = ['/login', '/api/auth'];
@@ -16,6 +17,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const d1 = env.DB;
 	if (!d1) throw new Error('D1 binding "DB" not found - check wrangler.jsonc');
 
+	event.locals.theme = parseTheme(event.cookies.get(THEME_COOKIE));
 	event.locals.db = getDb(d1);
 	event.locals.auth = createAuth(d1);
 
@@ -52,5 +54,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	return svelteKitHandler({ event, resolve, auth, building });
+	const { theme } = event.locals;
+	return svelteKitHandler({
+		event,
+		resolve: (e) =>
+			resolve(e, { transformPageChunk: ({ html }) => html.replace('%ke.theme%', theme) }),
+		auth,
+		building
+	});
 };
