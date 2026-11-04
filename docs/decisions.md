@@ -74,3 +74,31 @@
 - Why: delivery serves each person once regardless of what they ordered
 - Rejected: split by food cost; split by pieces; separate fee per shop or rider
 - Rests on: designer answer, 2026-11-04
+
+## 2026-11-04 · The finalize preview and the ledger share one pure charge function
+
+- Decided by: Claude, default
+- Why: the client preview must equal `chargesForDay` by construction, not by copying the split math twice
+- Rejected: reimplementing the per-item and fee split in the browser
+- Rests on: daily-controls prompt §3.6 and §4 (preview is indicative, server result authoritative)
+
+## 2026-11-04 · Form errors travel as message keys plus a param map
+
+- Decided by: Claude, default
+- Why: actions must never return locale text, and the payments-mismatch message needs a formatted amount
+- Rejected: preformatting amounts inside the pure validator (it stays locale-free and unit-testable)
+- Rests on: daily-controls prompt §1 (`fail(status, { messageKey })`), i18n rules
+
+## 2026-11-04 · An eating order with no quantities is rejected in the member-order dialog
+
+- Decided by: Claude, default
+- Why: a yes with no items is ambiguous; the dialog already offers "খাবেন না" for skipping
+- Rejected: silently saving it as not eating
+- Rests on: the Today page's order action, which also requires at least one item
+
+## 2026-11-04 · Unit tests run through a standalone Vitest config
+
+- Decided by: Claude, default
+- Why: the tests cover pure modules only, so the app's Vite/SvelteKit pipeline stays untouched
+- Rejected: adding a `test` block to vite.config.ts (couples the dev pipeline to tests)
+- Rests on: daily-controls prompt §6 (Vitest for `allocate`, `validateFinalize`, the charge preview)

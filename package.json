@@ -12,6 +12,7 @@
 		"check:watch": "bun run clean && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
+		"test": "vitest run",
 		"gen": "bun run clean && wrangler types --env-file .env.example",
 		"db:push": "drizzle-kit push",
 		"db:generate": "drizzle-kit generate",
@@ -49,6 +50,7 @@
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.60.1",
 		"vite": "^8.3.0",
+		"vitest": "^5.1.0",
 		"wrangler": "^4.97.0"
 	},
 	"imports": {
