@@ -29,10 +29,10 @@ Office breakfast ordering with a shared expense ledger. Each working day, member
 A day moves through these states:
 
 1. **Draft**: a manager creates today's menu by ticking items from the catalog.
-2. **Open**: members see "Aj khaben?" and choose items and quantities, or "Na, aj khabo na". They can edit or cancel any number of times.
-3. **Closed**: a manager closes ordering by hand. Members can no longer edit. The manager sees the **purchase summary** (total quantity per item, e.g. 23 paratha, 12 egg) and the per-person list.
+2. **Open**: members see "Aj khaben?" and choose items and quantities, or "Na, aj khabo na". They can edit or cancel any number of times. Any item can be ordered in part, so people can share one: ¼, ⅓, ½, ⅔ or ¾, alone or on top of whole pieces (e.g. 1½). Each person orders their own part; nobody links up with a partner.
+3. **Closed**: a manager closes ordering by hand. Members can no longer edit. The manager sees the **purchase summary** (whole pieces to buy per item, e.g. 23 paratha, 12 egg; partial orders add up and round up, with the ordered amount and the unclaimed part shown, e.g. "1⅓ ordered · ⅔ left over") and the per-person list.
 4. **Finalized**: after buying, a manager enters:
-   - each item's **price per piece**; the app multiplies it by the final quantities. Items nobody ate need no price. The form starts from the last price used,
+   - each item's **price per piece**; the app multiplies it by the whole pieces bought (the final quantities added up and rounded up). Items nobody ate need no price. The form starts from the last price used,
    - the day's **delivery fee**, if any: one total for the day (add fees together if more than one rider came),
    - the day's **discount**, if any: one amount for the day,
    - **adjusted quantities** per member where needed (an item ran out, fewer were bought, a late add),
@@ -48,7 +48,7 @@ A day moves through these states:
 
 - Currency is BDT, stored as integer poisha (no floats). The timezone is Asia/Dhaka, and the "day" and "month" boundaries use it.
 - Ledger entries:
-  - **Charge**: for each item, its total cost is split across the units actually eaten (final quantities), so everyone pays the same per-piece price for that item that day. Shares are whole poisha that add up exactly to the total; leftover poisha go to the largest fractional shares in a fixed order. The day's delivery fee is split equally among everyone who ate that day (members who skipped pay none of it), again in whole poisha that add up exactly. The day's discount is taken off in equal shares among everyone who ate, the same way. A member's charge for the day is the sum over items, plus their share of the delivery fee, minus their share of the discount. Finalizing is blocked if a discount would push anyone's charge below zero. Finalizing is blocked if there is a delivery fee but nobody ate. This reduces the member's balance.
+  - **Charge**: for each item, its total cost (price per piece × whole pieces bought) is split across what each person actually ate (final quantities, fractions included), so everyone pays the same price per amount eaten for that item that day; an unclaimed part of the last piece is shared by that item's eaters in proportion. Shares are whole poisha that add up exactly to the total; leftover poisha go to the largest fractional shares in a fixed order. The day's delivery fee is split equally among everyone who ate that day (members who skipped pay none of it), again in whole poisha that add up exactly. The day's discount is taken off in equal shares among everyone who ate, the same way. A member's charge for the day is the sum over items, plus their share of the delivery fee, minus their share of the discount. Finalizing is blocked if a discount would push anyone's charge below zero. Finalizing is blocked if there is a delivery fee but nobody ate. This reduces the member's balance.
   - **Bill payment**: a member paid the shop X on a day. This increases their balance.
   - **Settlement**: A paid B X (cash or bKash, outside the app). A's balance goes up and B's goes down. **Anyone** (A, B, or a manager) can log it. It records who logged it, and it can be voided (soft-delete, audited) by the logger or a manager.
 - **Net balance** per member = bill payments + settlements sent − charges − settlements received. Positive means others owe you, negative means you owe.

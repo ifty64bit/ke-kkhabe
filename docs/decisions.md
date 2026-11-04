@@ -158,3 +158,10 @@
 - Why: breakfast always comes from a single shop
 - Rejected: a per-item total mode for an item bought from two shops at different prices
 - Rests on: designer feedback, 2026-11-04 (supersedes the earlier mixed-shop split answer)
+
+## 2026-11-04 · Quantities are twelfths; an item's cost is whole items bought, split by what each person ate
+
+- Decided by: the designer
+- Why: people share one item (e.g. a bowl of dal), and the shop charges per whole item. Twelfths make ¼, ⅓, ½, ⅔ and ¾ exact integers, like poisha for money
+- Rejected: half-steps only; explicit "share with…" links between members; any decimal (cannot express ⅓); per-item opt-in for fractions
+- Rests on: per-piece price decision above; designer answers, 2026-11-04
