@@ -136,7 +136,7 @@
 		method="POST"
 		action="?/record"
 		use:enhance={submit}
-		class="flex flex-col gap-4"
+		class="flex flex-col gap-4 p-2"
 	>
 		{#if !isManager}
 			<input type="hidden" name="from" value={from} />
