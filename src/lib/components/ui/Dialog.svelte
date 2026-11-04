@@ -109,7 +109,7 @@
 					</button>
 				{/if}
 			</header>
-			<div class="overflow-y-auto px-5 py-4">
+			<div class="overflow-y-auto px-5 pt-4">
 				{@render children?.({ close })}
 			</div>
 			{#if footer}
