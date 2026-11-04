@@ -5,6 +5,7 @@ import { allocate, type Poisha } from '#lib/money.ts';
  * client-side finalize preview so both always agree. No database or server imports.
  */
 export type ChargeItem = { itemId: string; totalCost: Poisha | null };
+/** `finalQuantity` is in twelfths of an item (see `#lib/quantity.ts`). */
 export type ChargeLine = { userId: string; itemId: string; finalQuantity: number | null };
 
 /**
@@ -27,8 +28,9 @@ export type ChargeBreakdown = {
 
 /**
  * Each member's charge for a day, line by line: per-item shares, delivery share and
- * discount share. Every item's total cost is split across the units actually eaten
- * (final quantities). The delivery fee is added, and the discount taken off, in equal
+ * discount share. Every item's total cost (whole items bought) is split across the
+ * twelfths actually eaten (final quantities), so any unclaimed part of the last item is
+ * shared by that item's eaters in proportion. The delivery fee is added, and the discount taken off, in equal
  * shares among everyone who ate anything. Members are processed in user-id order so
  * leftover poisha land the same way every time.
  * A large discount can push a member below zero; `validateFinalize` rejects that case.

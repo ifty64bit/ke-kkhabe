@@ -11,7 +11,7 @@ const line = (userId: string, itemId: string, finalQuantity: number | null) => (
 
 describe('computeCharges', () => {
 	it('splits an item cost across final quantities', () => {
-		const charges = computeCharges([item('a', 1000)], [line('u1', 'a', 3), line('u2', 'a', 1)], 0);
+		const charges = computeCharges([item('a', 1000)], [line('u1', 'a', 36), line('u2', 'a', 12)], 0);
 		expect(charges.get('u1')).toBe(750);
 		expect(charges.get('u2')).toBe(250);
 	});
@@ -19,7 +19,7 @@ describe('computeCharges', () => {
 	it('splits the delivery fee equally among eaters, whole poisha adding up', () => {
 		const charges = computeCharges(
 			[item('a', 1000)],
-			[line('u1', 'a', 1), line('u2', 'a', 1), line('u3', 'a', 1)],
+			[line('u1', 'a', 12), line('u2', 'a', 12), line('u3', 'a', 12)],
 			100
 		);
 		// Item: 1000/3 → 334, 333, 333. Fee: 100/3 → 34, 33, 33. All in user-id order.
@@ -32,7 +32,7 @@ describe('computeCharges', () => {
 	it('leaves out members who ate nothing', () => {
 		const charges = computeCharges(
 			[item('a', 1000)],
-			[line('u1', 'a', 2), line('u2', 'a', 0), line('u3', 'a', null)],
+			[line('u1', 'a', 24), line('u2', 'a', 0), line('u3', 'a', null)],
 			0
 		);
 		expect([...charges.keys()]).toEqual(['u1']);
@@ -41,7 +41,7 @@ describe('computeCharges', () => {
 	it('registers eaters of a free item so they still share the fee', () => {
 		const charges = computeCharges(
 			[item('paid', 500), item('free', 0)],
-			[line('u1', 'paid', 1), line('u2', 'free', 2)],
+			[line('u1', 'paid', 12), line('u2', 'free', 24)],
 			90
 		);
 		expect(charges.get('u1')).toBe(500 + 45);
@@ -54,7 +54,7 @@ describe('computeCharges', () => {
 	});
 
 	it('is reproducible: leftover poisha land the same way for sorted users', () => {
-		const lines = [line('u2', 'a', 1), line('u1', 'a', 1), line('u3', 'a', 1)];
+		const lines = [line('u2', 'a', 12), line('u1', 'a', 12), line('u3', 'a', 12)];
 		const first = computeCharges([item('a', 101)], lines, 0);
 		const second = computeCharges([item('a', 101)], [...lines].reverse(), 0);
 		expect([...first.entries()]).toEqual([...second.entries()]);
@@ -65,9 +65,9 @@ describe('computeCharges: discount', () => {
 	// Paratha ৳120 over 12 (A 6, B 4, C 2); delivery ৳30; discount ৳20.
 	const items = [{ itemId: 'p', totalCost: 12000 }];
 	const lines = [
-		{ userId: 'a', itemId: 'p', finalQuantity: 6 },
-		{ userId: 'b', itemId: 'p', finalQuantity: 4 },
-		{ userId: 'c', itemId: 'p', finalQuantity: 2 },
+		{ userId: 'a', itemId: 'p', finalQuantity: 72 },
+		{ userId: 'b', itemId: 'p', finalQuantity: 48 },
+		{ userId: 'c', itemId: 'p', finalQuantity: 24 },
 		{ userId: 'd', itemId: 'p', finalQuantity: 0 }
 	];
 
@@ -96,9 +96,9 @@ describe('computeBreakdown', () => {
 		{ itemId: 't', totalCost: 1000 }
 	];
 	const lines = [
-		{ userId: 'a', itemId: 'p', finalQuantity: 6 },
-		{ userId: 'b', itemId: 'p', finalQuantity: 6 },
-		{ userId: 'b', itemId: 't', finalQuantity: 1 }
+		{ userId: 'a', itemId: 'p', finalQuantity: 72 },
+		{ userId: 'b', itemId: 'p', finalQuantity: 72 },
+		{ userId: 'b', itemId: 't', finalQuantity: 12 }
 	];
 
 	it("each member's lines add up exactly to their total", () => {

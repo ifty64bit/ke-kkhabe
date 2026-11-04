@@ -6,6 +6,7 @@ import {
 	type FinalizeContext,
 	type FinalizeForm
 } from '#lib/server/finalize.ts';
+import { computeCharges } from '#lib/charges.ts';
 
 // Paratha: u1 ×2, u2 ×3 (5 pcs). Egg: u1 ×1. Chicken is unavailable, so u3's line defaults to 0.
 const ctx: FinalizeContext = {
@@ -15,10 +16,10 @@ const ctx: FinalizeContext = {
 		{ id: 'murgi', available: false }
 	],
 	lines: [
-		{ userId: 'u1', itemId: 'parata', quantity: 2 },
-		{ userId: 'u2', itemId: 'parata', quantity: 3 },
-		{ userId: 'u1', itemId: 'dim', quantity: 1 },
-		{ userId: 'u3', itemId: 'murgi', quantity: 1 }
+		{ userId: 'u1', itemId: 'parata', quantity: 24 },
+		{ userId: 'u2', itemId: 'parata', quantity: 36 },
+		{ userId: 'u1', itemId: 'dim', quantity: 12 },
+		{ userId: 'u3', itemId: 'murgi', quantity: 12 }
 	],
 	payerIds: new Set(['u1', 'u2', 'manager'])
 };
@@ -27,9 +28,9 @@ const ctx: FinalizeContext = {
 const form: FinalizeForm = {
 	prices: { parata: '10', dim: '20' },
 	final: {
-		[finalKey('u1', 'parata')]: 2,
-		[finalKey('u2', 'parata')]: 3,
-		[finalKey('u1', 'dim')]: 1,
+		[finalKey('u1', 'parata')]: 24,
+		[finalKey('u2', 'parata')]: 36,
+		[finalKey('u1', 'dim')]: 12,
 		[finalKey('u3', 'murgi')]: 0
 	},
 	deliveryFee: '30',
@@ -63,7 +64,7 @@ describe('validateFinalize: prices', () => {
 	it('uses final quantities, not ordered ones, when the shop ran out', () => {
 		// u2 got 2 paratha instead of 3: 4 × ৳10.
 		const v = valid({
-			final: { ...form.final, [finalKey('u2', 'parata')]: 2 },
+			final: { ...form.final, [finalKey('u2', 'parata')]: 24 },
 			payments: [{ userId: 'manager', amount: '90' }]
 		});
 		expect(costOf(v, 'parata')).toBe(4000);
@@ -107,12 +108,12 @@ describe('validateFinalize: prices', () => {
 describe('validateFinalize: quantities', () => {
 	it('defaults missing final quantities to quantity, or 0 when the item is unavailable', () => {
 		const units = finalUnitsByItem({ ...form, final: {} }, ctx);
-		expect(units.get('parata')).toBe(5);
+		expect(units.get('parata')).toBe(60);
 		expect(units.get('murgi')).toBe(0);
 	});
 
-	it('rejects final quantities outside 0–20', () => {
-		const r = errorsOf({ final: { ...form.final, [finalKey('u1', 'parata')]: 21 } });
+	it('rejects final quantities above 20 items', () => {
+		const r = errorsOf({ final: { ...form.final, [finalKey('u1', 'parata')]: 252 } });
 		expect(r.errors[`final:${finalKey('u1', 'parata')}`]).toBe('manage.finalize.error.qtyInvalid');
 	});
 });
@@ -221,5 +222,81 @@ describe('validateFinalize: payments', () => {
 			]
 		});
 		expect(v.payments).toHaveLength(1);
+	});
+});
+
+describe('validateFinalize: shared items (fractions)', () => {
+	it('charges whole items bought and shares the leftover', () => {
+		// Two people order ½ dal and one orders ⅓: 1⅓ ordered, 2 bought at ৳30.
+		const dalCtx: FinalizeContext = {
+			items: [{ id: 'dal', available: true }],
+			lines: [
+				{ userId: 'u1', itemId: 'dal', quantity: 6 },
+				{ userId: 'u2', itemId: 'dal', quantity: 6 },
+				{ userId: 'u3', itemId: 'dal', quantity: 4 }
+			],
+			payerIds: new Set(['manager'])
+		};
+		const result = validateFinalize(
+			{
+				prices: { dal: '30' },
+				final: {},
+				deliveryFee: '',
+				discount: '',
+				payments: [{ userId: 'manager', amount: '60' }]
+			},
+			dalCtx
+		);
+		if (!result.ok) throw new Error(JSON.stringify(result.errors));
+		expect(costOf(result.value, 'dal')).toBe(6000);
+		const charges = computeCharges(
+			result.value.costs,
+			result.value.final.map((f) => ({ ...f, finalQuantity: f.quantity })),
+			0
+		);
+		// ৳60 over 16 twelfths: ½ → ৳22.50, ⅓ → ৳15.
+		expect(charges.get('u1')).toBe(2250);
+		expect(charges.get('u2')).toBe(2250);
+		expect(charges.get('u3')).toBe(1500);
+	});
+
+	it('a fraction-only eater shares the delivery fee', () => {
+		const mixed: FinalizeContext = {
+			items: [
+				{ id: 'parata', available: true },
+				{ id: 'dal', available: true }
+			],
+			lines: [
+				{ userId: 'u1', itemId: 'parata', quantity: 24 },
+				{ userId: 'u2', itemId: 'dal', quantity: 6 }
+			],
+			payerIds: new Set(['manager'])
+		};
+		const result = validateFinalize(
+			{
+				prices: { parata: '10', dal: '30' },
+				final: {},
+				deliveryFee: '20',
+				discount: '',
+				payments: [{ userId: 'manager', amount: '70' }]
+			},
+			mixed
+		);
+		if (!result.ok) throw new Error(JSON.stringify(result.errors));
+		const charges = computeCharges(
+			result.value.costs,
+			result.value.final.map((f) => ({ ...f, finalQuantity: f.quantity })),
+			result.value.deliveryFee
+		);
+		expect(charges.get('u1')).toBe(2000 + 1000);
+		expect(charges.get('u2')).toBe(3000 + 1000);
+	});
+
+	it('rejects quantities that are not an allowed fraction', () => {
+		const key = finalKey('u1', 'parata');
+		for (const bad of [5, 241]) {
+			const r = errorsOf({ final: { ...form.final, [key]: bad } });
+			expect(r.errors[`final:${key}`]).toBe('manage.finalize.error.qtyInvalid');
+		}
 	});
 });

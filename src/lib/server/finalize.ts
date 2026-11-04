@@ -1,6 +1,7 @@
 import type { MessageKey } from '#lib/i18n/index.ts';
 import { computeCharges } from '#lib/charges.ts';
 import { lineTotal, parseTaka, sum, type Poisha } from '#lib/money.ts';
+import { isValidQty, toBuy } from '#lib/quantity.ts';
 
 /**
  * Pure validation for the finalize form, unit-testable without a database.
@@ -8,10 +9,9 @@ import { lineTotal, parseTaka, sum, type Poisha } from '#lib/money.ts';
  * writes anything when the result is `ok`.
  */
 
-export const MAX_QTY = 20;
-
 export type FinalizeItem = { id: string; available: boolean };
 
+/** `quantity` is in twelfths of an item (see `#lib/quantity.ts`). */
 export type FinalizeLine = { userId: string; itemId: string; quantity: number };
 
 /**
@@ -20,7 +20,7 @@ export type FinalizeLine = { userId: string; itemId: string; quantity: number };
  */
 export type FinalizeForm = {
 	prices: Record<string, string>;
-	/** Keyed by `userId:itemId`, for every existing order line. */
+	/** Final quantities in twelfths, keyed by `userId:itemId`, for every existing order line. */
 	final: Record<string, number>;
 	deliveryFee: string;
 	discount: string;
@@ -81,19 +81,20 @@ export function validateFinalize(form: FinalizeForm, ctx: FinalizeContext): Fina
 		if (!errors[field]) errors[field] = key;
 	};
 
-	// Final quantities: 0–20 for every existing line; missing means the default.
+	// Final quantities: whole items plus an allowed fraction, up to 20; missing means the default.
 	const availableOf = new Map(ctx.items.map((i) => [i.id, i.available]));
 	const final = new Map<string, number>();
 	for (const line of ctx.lines) {
 		const key = finalKey(line.userId, line.itemId);
 		const qty = form.final[key] ?? (availableOf.get(line.itemId) === false ? 0 : line.quantity);
-		if (!Number.isInteger(qty) || qty < 0 || qty > MAX_QTY)
+		if (!isValidQty(qty))
 			set(`final:${key}`, 'manage.finalize.error.qtyInvalid');
 		else final.set(key, qty);
 	}
 	const units = finalUnitsByItem(form, ctx);
 
-	// Costs: per-piece price × units. An item nobody got costs 0 and ignores its price.
+	// Costs: per-piece price × whole items bought (ordered twelfths rounded up).
+	// An item nobody got costs 0 and ignores its price.
 	const costs = new Map<string, Poisha>();
 	for (const item of ctx.items) {
 		const n = units.get(item.id) ?? 0;
@@ -109,7 +110,7 @@ export function validateFinalize(form: FinalizeForm, ctx: FinalizeContext): Fina
 		}
 		const value = parseTaka(raw);
 		if (value === null) set(field, 'manage.finalize.error.costInvalid');
-		else costs.set(item.id, lineTotal(n, value));
+		else costs.set(item.id, lineTotal(toBuy(n), value));
 	}
 
 	const totalUnits = [...units.values()].reduce((a, b) => a + b, 0);

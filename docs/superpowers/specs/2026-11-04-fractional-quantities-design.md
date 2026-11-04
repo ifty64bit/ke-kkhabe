@@ -59,8 +59,8 @@ are replaced by `isValidQty` / `MAX_UNITS`.
   remainder, user-id order). Shares are whole poisha that sum exactly to the item cost.
 - Any leftover fraction is therefore paid by that item's eaters in proportion to what they ate.
   Everyone pays the same price per unit eaten.
-- Example: three people order ⅓ dal and one orders 1. Ordered = 2⅓, bought = 3, at ৳30 each
-  = ৳90. The ⅓ people pay ৳15 each and the person with 1 pays ৳45.
+- Example: two people order ½ dal and one orders ⅓. Ordered = 1⅓, bought = 2, at ৳30 each
+  = ৳60. The ½ people pay ৳22.50 each and the ⅓ person pays ৳15.
 - Delivery fee and discount are unchanged: equal shares among everyone with any positive final quantity.
 - `computeBreakdown` in `src/lib/charges.ts` needs no change. It already weights by final quantity
   and now receives twelfths. `validateFinalize` changes: `lineTotal(toBuy(units), price)`
@@ -92,7 +92,7 @@ All text goes through `useI18n` in both bn and en, built from `src/lib/component
 
 - `quantity.test.ts`: `isValidQty` accepts or rejects each case (e.g. 5 and 241 are rejected),
   `split`/`join` round-trip, `toBuy`, `leftover`, `formatQty` in bn and en.
-- `finalize.test.ts`: the leftover example above (৳15/৳15/৳15/৳45); a fraction-only item; an
+- `finalize.test.ts`: the leftover example above (৳22.50/৳22.50/৳15); a fraction-only item; an
   all-whole day gives the same totals as before (quantities × 12); a fractional final quantity
   that isn't on the allowed list is rejected.
 - `charges.test.ts`: existing tests re-expressed in twelfths still pass.

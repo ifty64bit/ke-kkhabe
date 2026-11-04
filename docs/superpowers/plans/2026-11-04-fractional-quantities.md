@@ -83,7 +83,7 @@
 - Produces: `validateFinalize` with unchanged types. `FinalizeLine.quantity` and `FinalizeForm.final[...]` are now twelfths (document this in the comments). `MAX_QTY` is removed; its callers use `isValidQty`.
 
 - [ ] **Step 1: Update the existing tests to twelfths.** In `finalize.test.ts`, multiply every quantity in `ctx.lines` and `form.final` by 12 (2→24, 3→36, 1→12). Expected money values don't change. Do the same in `charges.test.ts`. Then add these new tests:
-  - `'charges whole items bought and shares the leftover'`: its own ctx with item `dal` and lines `u1,u2,u3` dal 4 each, `u4` dal 12; price `'30'`; no fee; payment `manager` `'90'`. Expect `costOf(v,'dal') === 9000`, and via `computeCharges` on `v.costs`/`v.final`: u1=u2=u3=1500, u4=4500.
+  - `'charges whole items bought and shares the leftover'`: its own ctx with item `dal` and lines `u1,u2` dal 6 each, `u3` dal 4; price `'30'`; no fee; payment `manager` `'60'`. Expect `costOf(v,'dal') === 6000`, and via `computeCharges` on `v.costs`/`v.final`: u1=u2=2250, u3=1500.
   - `'a fraction-only eater shares the delivery fee'`: its own ctx with u1 paratha 24 and u2 dal 6; prices paratha `'10'`, dal `'30'`; fee `'20'`; payment `'70'`. u1 = 2000 + 1000; u2 = 3000 + 1000.
   - `'rejects quantities that are not an allowed fraction'`: `final[key] = 5` gives error `final:<key>` = `'manage.finalize.error.qtyInvalid'`; same for 241.
 - [ ] **Step 2: Run** `bunx vitest run src/lib/server/finalize.test.ts src/lib/charges.test.ts`. Expected: the existing tests now fail on costs (price × 24 instead of × 2), and the new tests fail.
@@ -147,7 +147,7 @@
 - [ ] **Step 2: Order text.** `orderText` and the receipt count use `formatQty`.
 - [ ] **Step 3: Finalize dialog.** The client cost must match the server: `lineTotal(toBuy(n), price)`. `initialPrices` uses `pricePerPiece(m.totalCost, n)`. The stepper needs no change beyond Task 4.
 - [ ] **Step 4: Run** `bun run check && bun run lint && bun run test`. Expected: clean, all PASS.
-- [ ] **Step 5: Manual check.** Use the `run` skill. Three members order ⅓ dal and one orders 1. Close orders: the shopping card shows "3" and "2⅓ ordered · ⅔ left over". Finalize at ৳30 with a single payer: the charges are ৳15/৳15/৳15/৳45, and the receipt for a ⅓ eater shows "⅓".
+- [ ] **Step 5: Manual check.** Use the `run` skill. Two members order ½ dal and one orders ⅓. Close orders: the shopping card shows "2" and "1⅓ ordered · ⅔ left over". Finalize at ৳30 with a single payer: the charges are ৳22.50/৳22.50/৳15, and the receipt for the ⅓ eater shows "⅓".
 - [ ] **Step 6: Commit** with the message "Show buy counts, leftovers and fractional quantities".
 
 ### Task 6: Decision record and requirements
