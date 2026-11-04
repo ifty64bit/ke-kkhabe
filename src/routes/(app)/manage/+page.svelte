@@ -321,6 +321,7 @@
 		people={data.people.filter((p) => p.lines.length > 0)}
 		existingPayments={data.payments}
 		deliveryFee={data.day?.deliveryFee ?? 0}
+		discount={data.day?.discount ?? 0}
 		meId={data.meId}
 		{payerOptions}
 		errors={finalizeOpen ? (form?.errors ?? {}) : {}}

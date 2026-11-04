@@ -8,11 +8,15 @@ import type { Db } from '#lib/server/db/index.ts';
  * Each member's charge for a finalized day.
  * Every item's total cost is split across the units actually eaten (final quantities),
  * so members pay the same per-piece price for an item even when it came from several shops.
- * The day's delivery fee is split equally among everyone who ate anything.
+ * The day's delivery fee and discount are split equally among everyone who ate anything.
  */
 export async function chargesForDay(db: Db, dayId: string): Promise<Map<string, Poisha>> {
 	const [[theDay], costs, lines] = await Promise.all([
-		db.select({ deliveryFee: day.deliveryFee }).from(day).where(eq(day.id, dayId)).limit(1),
+		db
+			.select({ deliveryFee: day.deliveryFee, discount: day.discount })
+			.from(day)
+			.where(eq(day.id, dayId))
+			.limit(1),
 		db
 			.select({ itemId: dayItem.itemId, totalCost: dayItem.totalCost })
 			.from(dayItem)
@@ -26,5 +30,5 @@ export async function chargesForDay(db: Db, dayId: string): Promise<Map<string, 
 			.from(orderLine)
 			.where(eq(orderLine.dayId, dayId))
 	]);
-	return computeCharges(costs, lines, theDay?.deliveryFee ?? 0);
+	return computeCharges(costs, lines, theDay?.deliveryFee ?? 0, theDay?.discount ?? 0);
 }

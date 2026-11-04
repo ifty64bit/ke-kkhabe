@@ -172,8 +172,9 @@ export const bn = {
 	'manage.shopping.hint': 'দোকানে এই পরিমাণ কিনুন।',
 
 	'manage.finalize.title': 'হিসাব চূড়ান্ত করুন',
-	'manage.finalize.description': 'প্রতিটা আইটেমের মোট খরচ, ডেলিভারি ফি আর কে টাকা দিয়েছেন দিন।',
-	'manage.finalize.itemsTitle': 'আইটেমের খরচ',
+	'manage.finalize.description':
+		'প্রতি পিসের দাম দিন, বাকিটা হিসাব হয়ে যাবে। ছাড় বা ডেলিভারি ফি থাকলে সেটাও দিন।',
+	'manage.finalize.itemsTitle': 'দাম',
 	'manage.finalize.costLabel': '{name} — মোট খরচ (৳)',
 	'manage.finalize.unitsTotal': 'মোট {count} {unit}',
 	'manage.finalize.perUnitHint': 'গতবার প্রতি {unit} {price}',
@@ -206,6 +207,19 @@ export const bn = {
 	'manage.finalize.error.paymentsShort': 'আরও {amount} বাকি।',
 	'manage.finalize.error.paymentsOver': '{amount} বেশি দেওয়া হয়েছে।',
 
+	'manage.finalize.priceLabel': '{name}, প্রতি {unit} (৳)',
+	'manage.finalize.totalLabel': '{name}, মোট (৳)',
+	'manage.finalize.lineTotal': '{count} {unit} × {price} = {total}',
+	'manage.finalize.useTotal': 'দুই দোকানের দাম? মোট দিন',
+	'manage.finalize.usePrice': 'প্রতি পিসের দাম দিন',
+	'manage.finalize.mixedHint': 'মোট খরচ {count} {unit}-এ সমান ভাগ হবে।',
+	'manage.finalize.discountLabel': 'ছাড় (৳)',
+	'manage.finalize.discountHint': 'যারা খেয়েছেন তাদের মধ্যে সমান ভাগ হবে।',
+	'manage.finalize.discount': 'ছাড়',
+	'manage.finalize.error.priceRequired': 'দাম দিন (বিনা পয়সায় হলে ০)।',
+	'manage.finalize.error.discountTooHigh':
+		'ছাড় এত বেশি যে কারও খরচ ০-এর নিচে নেমে যাচ্ছে। ছাড় কমান।',
+	'manage.summary.discount': 'ছাড়',
 	'manage.summary.title': 'আজকের হিসাব',
 	'manage.summary.grandTotal': 'মোট খরচ',
 	'manage.summary.paidBy': 'টাকা দিয়েছেন',

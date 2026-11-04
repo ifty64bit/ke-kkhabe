@@ -176,8 +176,9 @@ export const en: Record<MessageKey, string> = {
 	'manage.shopping.hint': 'Buy these amounts at the shop.',
 
 	'manage.finalize.title': 'Finalize the bill',
-	'manage.finalize.description': "Enter each item's total cost, the delivery fee, and who paid.",
-	'manage.finalize.itemsTitle': 'Item costs',
+	'manage.finalize.description':
+		"Enter each item's price per piece and the rest is worked out. Add a discount or delivery fee if there was one.",
+	'manage.finalize.itemsTitle': 'Prices',
 	'manage.finalize.costLabel': '{name} — total cost (৳)',
 	'manage.finalize.unitsTotal': '{count} {unit} in total',
 	'manage.finalize.perUnitHint': 'Last time {price} per {unit}',
@@ -210,6 +211,19 @@ export const en: Record<MessageKey, string> = {
 	'manage.finalize.error.paymentsShort': '{amount} still missing.',
 	'manage.finalize.error.paymentsOver': '{amount} too much.',
 
+	'manage.finalize.priceLabel': '{name}, per {unit} (৳)',
+	'manage.finalize.totalLabel': '{name}, total (৳)',
+	'manage.finalize.lineTotal': '{count} {unit} × {price} = {total}',
+	'manage.finalize.useTotal': 'Two shops, two prices? Enter the total',
+	'manage.finalize.usePrice': 'Enter the price per piece',
+	'manage.finalize.mixedHint': 'The total is split evenly over {count} {unit}.',
+	'manage.finalize.discountLabel': 'Discount (৳)',
+	'manage.finalize.discountHint': 'Split equally among everyone who ate.',
+	'manage.finalize.discount': 'Discount',
+	'manage.finalize.error.priceRequired': 'Enter a price (0 if it was free).',
+	'manage.finalize.error.discountTooHigh':
+		"The discount is so large that someone's share drops below zero. Lower the discount.",
+	'manage.summary.discount': 'Discount',
 	'manage.summary.title': "Today's bill",
 	'manage.summary.grandTotal': 'Total',
 	'manage.summary.paidBy': 'Paid the shop',

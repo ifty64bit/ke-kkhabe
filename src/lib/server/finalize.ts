@@ -1,5 +1,6 @@
 import type { MessageKey } from '#lib/i18n/index.ts';
-import { parseTaka, sum, type Poisha } from '#lib/money.ts';
+import { computeCharges } from '#lib/charges.ts';
+import { lineTotal, parseTaka, sum, type Poisha } from '#lib/money.ts';
 
 /**
  * Pure validation for the finalize form, unit-testable without a database.
@@ -13,12 +14,19 @@ export type FinalizeItem = { id: string; available: boolean };
 
 export type FinalizeLine = { userId: string; itemId: string; quantity: number };
 
-/** Raw form input; every taka field is an unparsed string where '' means 0. */
+/**
+ * Raw form input. For each item someone ate, the manager enters a per-piece price
+ * (`prices`), or, when it came from more than one shop at different prices, the item's
+ * total (`totals`; presence of the key selects total mode). Items nobody ate need neither.
+ * Fee and discount are taka strings where '' means 0.
+ */
 export type FinalizeForm = {
-	costs: Record<string, string>;
+	prices: Record<string, string>;
+	totals: Record<string, string>;
 	/** Keyed by `userId:itemId`, for every existing order line. */
 	final: Record<string, number>;
 	deliveryFee: string;
+	discount: string;
 	payments: { userId: string; amount: string }[];
 };
 
@@ -37,6 +45,7 @@ export type FinalizeValue = {
 	costs: { itemId: string; totalCost: Poisha }[];
 	final: { userId: string; itemId: string; quantity: number }[];
 	deliveryFee: Poisha;
+	discount: Poisha;
 	payments: { userId: string; amount: Poisha }[];
 	itemsTotal: Poisha;
 	deliveryFeeTotal: Poisha;
@@ -75,14 +84,6 @@ export function validateFinalize(form: FinalizeForm, ctx: FinalizeContext): Fina
 		if (!errors[field]) errors[field] = key;
 	};
 
-	// Costs: every menu item, empty means 0.
-	const costs = new Map<string, Poisha>();
-	for (const item of ctx.items) {
-		const value = takaOf(form.costs[item.id]);
-		if (value === null) set(`cost:${item.id}`, 'manage.finalize.error.costInvalid');
-		else costs.set(item.id, value);
-	}
-
 	// Final quantities: 0–20 for every existing line; missing means the default.
 	const availableOf = new Map(ctx.items.map((i) => [i.id, i.available]));
 	const final = new Map<string, number>();
@@ -93,19 +94,55 @@ export function validateFinalize(form: FinalizeForm, ctx: FinalizeContext): Fina
 			set(`final:${key}`, 'manage.finalize.error.qtyInvalid');
 		else final.set(key, qty);
 	}
-
-	// An item nobody got can't have a cost: there would be nobody to split it over.
 	const units = finalUnitsByItem(form, ctx);
+
+	// Costs: per-piece price × units, or the entered total for mixed-shop items.
+	// An item nobody got costs 0 and ignores its inputs.
+	const costs = new Map<string, Poisha>();
 	for (const item of ctx.items) {
-		if ((units.get(item.id) ?? 0) === 0 && (costs.get(item.id) ?? 0) > 0)
-			set(`cost:${item.id}`, 'manage.finalize.error.zeroUnitsCost');
+		const n = units.get(item.id) ?? 0;
+		if (n === 0 || !Number.isInteger(n)) {
+			costs.set(item.id, 0);
+			continue;
+		}
+		const totalMode = item.id in form.totals;
+		const raw = (totalMode ? form.totals[item.id] : form.prices[item.id]) ?? '';
+		const field = totalMode ? `total:${item.id}` : `price:${item.id}`;
+		if (raw.trim() === '') {
+			set(field, 'manage.finalize.error.priceRequired');
+			continue;
+		}
+		const value = parseTaka(raw);
+		if (value === null) set(field, 'manage.finalize.error.costInvalid');
+		else costs.set(item.id, totalMode ? value : lineTotal(n, value));
 	}
+
+	const totalUnits = [...units.values()].reduce((a, b) => a + b, 0);
 
 	// A delivery fee needs at least one eater (someone with a positive final quantity).
 	const deliveryFee = takaOf(form.deliveryFee);
 	if (deliveryFee === null) set('deliveryFee', 'manage.finalize.error.costInvalid');
-	else if (deliveryFee > 0 && [...units.values()].reduce((a, b) => a + b, 0) === 0)
+	else if (deliveryFee > 0 && totalUnits === 0)
 		set('deliveryFee', 'manage.finalize.error.feeNoEaters');
+
+	// A discount needs eaters too, and must not push anyone's share below zero.
+	const discount = takaOf(form.discount);
+	if (discount === null) set('discount', 'manage.finalize.error.costInvalid');
+	else if (discount > 0 && totalUnits === 0) set('discount', 'manage.finalize.error.feeNoEaters');
+	else if (discount > 0 && Object.keys(errors).length === 0) {
+		const charges = computeCharges(
+			ctx.items.map((i) => ({ itemId: i.id, totalCost: costs.get(i.id) ?? 0 })),
+			ctx.lines.map((l) => ({
+				userId: l.userId,
+				itemId: l.itemId,
+				finalQuantity: final.get(finalKey(l.userId, l.itemId)) ?? 0
+			})),
+			deliveryFee ?? 0,
+			discount
+		);
+		if ([...charges.values()].some((c) => c < 0))
+			set('discount', 'manage.finalize.error.discountTooHigh');
+	}
 
 	// Payments: skip fully empty rows, validate the rest.
 	const payments: { userId: string; amount: Poisha }[] = [];
@@ -134,7 +171,7 @@ export function validateFinalize(form: FinalizeForm, ctx: FinalizeContext): Fina
 	});
 
 	const itemsTotal = sum([...costs.values()]);
-	const grandTotal = itemsTotal + (deliveryFee ?? 0);
+	const grandTotal = itemsTotal + (deliveryFee ?? 0) - (discount ?? 0);
 	const paidTotal = sum(payments.map((p) => p.amount));
 
 	// Money in must equal money spent, to the poisha.
@@ -163,6 +200,7 @@ export function validateFinalize(form: FinalizeForm, ctx: FinalizeContext): Fina
 				quantity: final.get(finalKey(line.userId, line.itemId))!
 			})),
 			deliveryFee: fee,
+			discount: discount ?? 0,
 			payments,
 			itemsTotal,
 			deliveryFeeTotal: fee,

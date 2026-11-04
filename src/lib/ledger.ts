@@ -7,7 +7,7 @@ import { parseTaka, type Poisha } from '#lib/money.ts';
  * (settle-up hints). No database or server imports.
  */
 
-export type LedgerDay = { id: string; date: string; deliveryFee: Poisha };
+export type LedgerDay = { id: string; date: string; deliveryFee: Poisha; discount?: Poisha };
 export type LedgerDayItem = { dayId: string; itemId: string; totalCost: Poisha | null };
 export type LedgerLine = {
 	dayId: string;
@@ -63,7 +63,8 @@ export function balancesFrom({ days, items, lines, payments, settlements }: Ledg
 		for (const [userId, charge] of computeCharges(
 			itemsByDay.get(d.id) ?? [],
 			linesByDay.get(d.id) ?? [],
-			d.deliveryFee
+			d.deliveryFee,
+			d.discount ?? 0
 		))
 			bump(userId, -charge);
 	}

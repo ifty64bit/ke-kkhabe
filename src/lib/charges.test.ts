@@ -60,3 +60,32 @@ describe('computeCharges', () => {
 		expect([...first.entries()]).toEqual([...second.entries()]);
 	});
 });
+
+describe('computeCharges: discount', () => {
+	// Paratha ৳120 over 12 (A 6, B 4, C 2); delivery ৳30; discount ৳20.
+	const items = [{ itemId: 'p', totalCost: 12000 }];
+	const lines = [
+		{ userId: 'a', itemId: 'p', finalQuantity: 6 },
+		{ userId: 'b', itemId: 'p', finalQuantity: 4 },
+		{ userId: 'c', itemId: 'p', finalQuantity: 2 },
+		{ userId: 'd', itemId: 'p', finalQuantity: 0 }
+	];
+
+	it('takes the discount off in equal shares among people who ate', () => {
+		const charges = computeCharges(items, lines, 3000, 2000);
+		// Food 6000/4000/2000, +1000 delivery each, −666.67 discount each (leftover poisha first by id).
+		expect(charges.get('a')).toBe(6000 + 1000 - 667);
+		expect(charges.get('b')).toBe(4000 + 1000 - 667);
+		expect(charges.get('c')).toBe(2000 + 1000 - 666);
+		expect(charges.has('d')).toBe(false);
+	});
+
+	it('charges add up to food + delivery − discount exactly', () => {
+		const charges = computeCharges(items, lines, 3000, 2000);
+		expect(sum([...charges.values()])).toBe(12000 + 3000 - 2000);
+	});
+
+	it('defaults to no discount', () => {
+		expect(computeCharges(items, lines, 0)).toEqual(computeCharges(items, lines, 0, 0));
+	});
+});

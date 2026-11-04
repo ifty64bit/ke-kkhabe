@@ -130,3 +130,24 @@
 - Why: a reopened day must vanish from balances; doing it in the pure fold as well as the SQL join makes it unit-testable and keeps `computeLedger` honest
 - Rejected: trusting the SQL join alone
 - Rests on: ledger prompt §2 (only finalized days count), §6 (unit tests without a database)
+
+## 2026-11-04 · The manager enters a price per piece; totals and shares are calculated
+
+- Decided by: the designer
+- Why: the manager knows per-piece prices; asking for item totals was a misreading of the mixed-shop answer
+- Rejected: a total cost per item as the main input (kept only as a per-item mode for two-shop days)
+- Rests on: designer feedback on the finalize form, 2026-11-04
+
+## 2026-11-04 · A day's discount is one amount, taken off equally among everyone who ate
+
+- Decided by: the designer
+- Why: same rule as the delivery fee
+- Rejected: in proportion to each person's food cost; per item by lowering its price
+- Rests on: designer answer, 2026-11-04
+
+## 2026-11-04 · Finalizing is blocked when the discount would make anyone's charge negative
+
+- Decided by: Claude, default
+- Why: an equal discount share can exceed a small order; a negative charge would pay that person out of the others' money
+- Rejected: allowing negative charges; capping each person's discount silently
+- Rests on: equal-split rule above

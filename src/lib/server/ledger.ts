@@ -12,7 +12,7 @@ import type { Db } from '#lib/server/db/index.ts';
 export async function computeLedger(db: Db) {
 	const [days, items, lines, payments, settlements] = await Promise.all([
 		db
-			.select({ id: day.id, date: day.date, deliveryFee: day.deliveryFee })
+			.select({ id: day.id, date: day.date, deliveryFee: day.deliveryFee, discount: day.discount })
 			.from(day)
 			.where(eq(day.status, 'finalized')),
 		db

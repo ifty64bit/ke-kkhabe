@@ -190,7 +190,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		meId: me.id,
 		date,
-		day: { id: today.id, status: today.status, deliveryFee: today.deliveryFee },
+		day: {
+			id: today.id,
+			status: today.status,
+			deliveryFee: today.deliveryFee,
+			discount: today.discount
+		},
 		menu: menu.map((m) => ({
 			...m,
 			purchaseUnits: unitsOf.get(m.id) ?? 0,
@@ -438,10 +443,12 @@ export const actions: Actions = {
 		if (!today || today.status !== 'closed') return failKey(409, 'manage.error.status');
 
 		const form = await request.formData();
-		const costs: Record<string, string> = {};
+		const prices: Record<string, string> = {};
+		const totals: Record<string, string> = {};
 		const final: Record<string, number> = {};
 		for (const [key, raw] of form) {
-			if (key.startsWith('cost:')) costs[key.slice(5)] = String(raw);
+			if (key.startsWith('price:')) prices[key.slice(6)] = String(raw);
+			else if (key.startsWith('total:')) totals[key.slice(6)] = String(raw);
 			else if (key.startsWith('final:')) final[key.slice(6)] = Number(raw);
 		}
 		const payerValues = form.getAll('payer').map(String);
@@ -476,7 +483,14 @@ export const actions: Actions = {
 		for (const p of existingPayers) payerIds.add(p.userId);
 
 		const result = validateFinalize(
-			{ costs, final, deliveryFee: String(form.get('deliveryFee') ?? ''), payments },
+			{
+				prices,
+				totals,
+				final,
+				deliveryFee: String(form.get('deliveryFee') ?? ''),
+				discount: String(form.get('discount') ?? ''),
+				payments
+			},
 			{
 				items: menuItems.map((m) => ({ id: m.itemId, available: m.available })),
 				lines,
@@ -515,6 +529,7 @@ export const actions: Actions = {
 				.update(day)
 				.set({
 					deliveryFee: v.deliveryFee,
+					discount: v.discount,
 					status: 'finalized',
 					finalizedAt: new Date(),
 					finalizedBy: me.id
@@ -533,6 +548,7 @@ export const actions: Actions = {
 				data: {
 					itemsTotal: v.itemsTotal,
 					deliveryFee: v.deliveryFee,
+					discount: v.discount,
 					grandTotal: v.grandTotal,
 					payments: v.payments
 				}
@@ -574,7 +590,8 @@ export const actions: Actions = {
 				data: {
 					itemsTotal,
 					deliveryFee: today.deliveryFee,
-					grandTotal: itemsTotal + today.deliveryFee,
+					discount: today.discount,
+					grandTotal: itemsTotal + today.deliveryFee - today.discount,
 					paidTotal
 				}
 			})
