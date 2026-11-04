@@ -34,6 +34,15 @@ export const formatDay = (date: string, locale: Locale) =>
 		timeZone: 'Asia/Dhaka'
 	}).format(new Date(`${date}T06:00:00Z`));
 
+/** Short date for a timestamp, e.g. "৪ নভেম্বর ২০২৬" / "4 Nov 2026". */
+export const formatDate = (d: Date | number, locale: Locale) =>
+	new Intl.DateTimeFormat(intlLocale(locale), {
+		day: 'numeric',
+		month: 'short',
+		year: 'numeric',
+		timeZone: 'Asia/Dhaka'
+	}).format(d);
+
 export type I18n = ReturnType<typeof createI18n>;
 
 export function createI18n(getLocale: () => Locale) {
@@ -45,6 +54,7 @@ export function createI18n(getLocale: () => Locale) {
 			translate(getLocale(), key, params),
 		num: (n: number) => formatNumber(n, getLocale()),
 		day: (date: string) => formatDay(date, getLocale()),
+		date: (d: Date | number) => formatDate(d, getLocale()),
 		/** Pick the localized field of a record with `xBn` / `xEn` columns; English falls back to Bangla. */
 		pick: (bnValue: string, enValue: string | null | undefined) =>
 			getLocale() === 'en' && enValue ? enValue : bnValue

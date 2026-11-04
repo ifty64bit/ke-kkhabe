@@ -116,6 +116,29 @@ export const en: Record<MessageKey, string> = {
 	'items.error.inUse': "This item has been on a menu, so it can't be deleted. Archive it instead.",
 	'items.error.notFound': 'Item not found.',
 
+	'members.you': 'You',
+	'members.fromConfig': 'From config',
+	'members.fromConfigHint': "Listed in ADMIN_EMAILS, so they can't be made a member here.",
+	'members.joined': 'Joined {date}',
+	'members.more': 'More options for {name}',
+	'members.makeManager': 'Make manager',
+	'members.makeMember': 'Make member',
+	'members.deactivate': 'Deactivate',
+	'members.reactivate': 'Reactivate',
+	'members.inactiveTitle': 'Deactivated ({count})',
+	'members.inactiveHint': "Deactivated people can't use the app, but their past records stay.",
+	'members.deactivateTitle': 'Deactivate {name}?',
+	'members.deactivateBody':
+		"They won't be able to order or see anything. Their records stay, and you can reactivate them any time.",
+	'members.count': '{count} members',
+	'members.error.self': "You can't change your own role or status. Ask another manager.",
+	'members.error.lastManager':
+		'There must be at least one active manager. Make someone else a manager first.',
+	'members.error.config':
+		'This person is in ADMIN_EMAILS. Remove their email from the config first.',
+	'members.error.invalid': 'That request was invalid. Refresh the page and try again.',
+	'members.error.notFound': 'Member not found.',
+
 	'inactive.title': 'Your account is deactivated',
 	'inactive.body': 'Ask a manager to turn it back on.',
 

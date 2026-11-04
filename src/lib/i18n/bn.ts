@@ -115,6 +115,29 @@ export const bn = {
 	'items.error.inUse': 'আইটেমটা আগে মেনুতে ছিল, তাই মোছা যাবে না। আর্কাইভ করুন।',
 	'items.error.notFound': 'আইটেমটা পাওয়া যায়নি।',
 
+	'members.you': 'আপনি',
+	'members.fromConfig': 'কনফিগ থেকে',
+	'members.fromConfigHint': 'ADMIN_EMAILS-এ আছেন, তাই এখান থেকে সদস্য বানানো যাবে না।',
+	'members.joined': 'যোগ দিয়েছেন {date}',
+	'members.more': '{name}: আরও অপশন',
+	'members.makeManager': 'ম্যানেজার বানান',
+	'members.makeMember': 'সদস্য বানান',
+	'members.deactivate': 'নিষ্ক্রিয় করুন',
+	'members.reactivate': 'আবার চালু করুন',
+	'members.inactiveTitle': 'নিষ্ক্রিয় ({count})',
+	'members.inactiveHint':
+		'নিষ্ক্রিয় সদস্যরা লগইন করে কিছু করতে পারেন না, তবে তাদের পুরনো হিসাব থেকে যায়।',
+	'members.deactivateTitle': '{name}-কে নিষ্ক্রিয় করবেন?',
+	'members.deactivateBody':
+		'উনি আর অর্ডার করতে বা কিছু দেখতে পারবেন না। পুরনো হিসাব থেকে যাবে, আর যেকোনো সময় আবার চালু করা যাবে।',
+	'members.count': '{count} জন সদস্য',
+	'members.error.self': 'নিজের ভূমিকা বা অবস্থা নিজে বদলানো যায় না। অন্য একজন ম্যানেজারকে বলুন।',
+	'members.error.lastManager':
+		'অন্তত একজন সক্রিয় ম্যানেজার থাকতে হবে। আগে আরেকজনকে ম্যানেজার বানান।',
+	'members.error.config': 'এই সদস্য ADMIN_EMAILS-এ আছেন। সদস্য বানাতে আগে কনফিগ থেকে ইমেইল সরান।',
+	'members.error.invalid': 'অনুরোধটা ঠিক নেই। পাতাটা রিফ্রেশ করে আবার চেষ্টা করুন।',
+	'members.error.notFound': 'সদস্য পাওয়া যায়নি।',
+
 	'inactive.title': 'আপনার অ্যাকাউন্ট বন্ধ আছে',
 	'inactive.body': 'আবার চালু করতে একজন ম্যানেজারকে বলুন।',
 

@@ -54,6 +54,11 @@
 		}
 	}
 
+	/** Close after choosing an item. Deferred so a submit button's form still submits first. */
+	function onMenuClick(e: MouseEvent) {
+		if ((e.target as HTMLElement).closest('[role="menuitem"]')) setTimeout(() => close(false));
+	}
+
 	function onWindowClick(e: MouseEvent) {
 		if (open && root && !root.contains(e.target as Node)) close(false);
 	}
@@ -70,6 +75,7 @@
 	bind:this={root}
 	class={cn('relative inline-block', className)}
 	{onkeydown}
+	onclick={onMenuClick}
 	role="presentation"
 >
 	<button
