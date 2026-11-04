@@ -26,7 +26,6 @@ const ctx: FinalizeContext = {
 // ৳10 × 5 paratha + ৳20 × 1 egg = ৳70 food, + ৳30 delivery = ৳100.
 const form: FinalizeForm = {
 	prices: { parata: '10', dim: '20' },
-	totals: {},
 	final: {
 		[finalKey('u1', 'parata')]: 2,
 		[finalKey('u2', 'parata')]: 3,
@@ -79,15 +78,6 @@ describe('validateFinalize: prices', () => {
 		expect(costOf(v, 'parata')).toBe(5250);
 	});
 
-	it('uses the entered total for an item in total mode (two shops)', () => {
-		// 5 paratha cost ৳53 in total across two shops.
-		const v = valid({
-			totals: { parata: '53' },
-			payments: [{ userId: 'manager', amount: '103' }]
-		});
-		expect(costOf(v, 'parata')).toBe(5300);
-	});
-
 	it('requires a price for every item someone ate; 0 is allowed', () => {
 		expect(errorsOf({ prices: { parata: '', dim: '20' } }).errors['price:parata']).toBe(
 			'manage.finalize.error.priceRequired'
@@ -99,11 +89,11 @@ describe('validateFinalize: prices', () => {
 		expect(costOf(free, 'parata')).toBe(0);
 	});
 
-	it('reports an unreadable price or total on its own field', () => {
+	it('reports an unreadable or negative price on its own field', () => {
 		expect(errorsOf({ prices: { parata: 'abc', dim: '20' } }).errors['price:parata']).toBe(
 			'manage.finalize.error.costInvalid'
 		);
-		expect(errorsOf({ totals: { parata: '-5' } }).errors['total:parata']).toBe(
+		expect(errorsOf({ prices: { parata: '-5', dim: '20' } }).errors['price:parata']).toBe(
 			'manage.finalize.error.costInvalid'
 		);
 	});

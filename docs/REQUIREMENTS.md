@@ -32,7 +32,7 @@ A day moves through these states:
 2. **Open**: members see "Aj khaben?" and choose items and quantities, or "Na, aj khabo na". They can edit or cancel any number of times.
 3. **Closed**: a manager closes ordering by hand. Members can no longer edit. The manager sees the **purchase summary** (total quantity per item, e.g. 23 paratha, 12 egg) and the per-person list.
 4. **Finalized**: after buying, a manager enters:
-   - each item's **price per piece**; the app multiplies it by the final quantities. If one item came from more than one shop at different prices that day, the manager switches that item to **total** mode and enters what it cost in total, which is split evenly per piece. Items nobody ate need no price. The form starts from the last price used,
+   - each item's **price per piece**; the app multiplies it by the final quantities. Items nobody ate need no price. The form starts from the last price used,
    - the day's **delivery fee**, if any: one total for the day (add fees together if more than one rider came),
    - the day's **discount**, if any: one amount for the day,
    - **adjusted quantities** per member where needed (an item ran out, fewer were bought, a late add),

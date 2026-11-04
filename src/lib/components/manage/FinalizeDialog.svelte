@@ -95,33 +95,23 @@
 			0
 		);
 
-	type Mode = 'price' | 'total';
-	/** Per-piece price by default; a saved total that doesn't divide evenly reopens in total mode. */
-	const initialPricing = (q: Record<string, number>) => {
+	/** Saved per-piece price after a reopen, else the last price used, else empty. */
+	const initialPrices = (q: Record<string, number>) => {
 		const prices: Record<string, string> = {};
-		const totals: Record<string, string> = {};
-		const modes: Record<string, Mode> = {};
 		for (const m of menu) {
 			const n = unitsIn(q, m.id);
-			modes[m.id] = 'price';
-			prices[m.id] = '';
-			totals[m.id] = '';
-			if (m.totalCost !== null && m.totalCost !== undefined && n > 0) {
-				if (m.totalCost % n === 0) prices[m.id] = takaInput(m.totalCost / n) || '0';
-				else {
-					modes[m.id] = 'total';
-					totals[m.id] = takaInput(m.totalCost);
-				}
-			} else if (m.suggestion) prices[m.id] = takaInput(Math.round(m.suggestion.perUnit));
+			prices[m.id] =
+				m.totalCost !== null && m.totalCost !== undefined && n > 0
+					? takaInput(Math.round(m.totalCost / n)) || '0'
+					: m.suggestion
+						? takaInput(Math.round(m.suggestion.perUnit))
+						: '';
 		}
-		return { prices, totals, modes };
+		return prices;
 	};
 
 	let finalQty = $state<Record<string, number>>(initialFinal());
-	const start = initialPricing(initialFinal());
-	let prices = $state<Record<string, string>>(start.prices);
-	let totals = $state<Record<string, string>>(start.totals);
-	let modes = $state<Record<string, Mode>>(start.modes);
+	let prices = $state<Record<string, string>>(initialPrices(initialFinal()));
 	const initialFee = () => takaInput(deliveryFee);
 	const initialDiscount = () => takaInput(discount);
 	let fee = $state(initialFee());
@@ -136,11 +126,11 @@
 	const costOf = (itemId: string): Poisha | null => {
 		const n = unitsOf(itemId);
 		if (n === 0) return 0;
-		const raw = modes[itemId] === 'total' ? totals[itemId] : prices[itemId];
+		const raw = prices[itemId];
 		if ((raw ?? '').trim() === '') return null;
 		const v = parseTaka(raw ?? '');
 		if (v === null) return null;
-		return modes[itemId] === 'total' ? v : lineTotal(n, v);
+		return lineTotal(n, v);
 	};
 
 	const makeRows = (total: Poisha): Row[] =>
@@ -163,10 +153,7 @@
 		if (!open) return;
 		untrack(() => {
 			finalQty = initialFinal();
-			const p = initialPricing(finalQty);
-			prices = p.prices;
-			totals = p.totals;
-			modes = p.modes;
+			prices = initialPrices(finalQty);
 			fee = initialFee();
 			disc = initialDiscount();
 			rows = makeRows(currentTotal());
@@ -249,50 +236,27 @@
 					{@const unit = i18n.pick(m.unitBn, m.unitEn)}
 					{@const n = unitsOf(m.id)}
 					{@const cost = costOf(m.id)}
-					{@const totalMode = modes[m.id] === 'total'}
-					<div>
-						{#if totalMode}
-							<Field
-								label={i18n.t('manage.finalize.totalLabel', { name: m.name })}
-								hint={i18n.t('manage.finalize.mixedHint', { count: i18n.num(n), unit })}
-								error={errText(`total:${m.id}`)}
-							>
-								{#snippet children(f)}
-									<Input name="total:{m.id}" bind:value={totals[m.id]} inputmode="decimal" {...f} />
-								{/snippet}
-							</Field>
-						{:else}
-							<Field
-								label={i18n.t('manage.finalize.priceLabel', { name: m.name, unit })}
-								hint={cost !== null
-									? i18n.t('manage.finalize.lineTotal', {
-											count: i18n.num(n),
-											unit,
-											price: formatTaka(parseTaka(prices[m.id] ?? '') ?? 0, i18n.locale),
-											total: formatTaka(cost, i18n.locale)
-										})
-									: m.suggestion
-										? i18n.t('manage.finalize.perUnitHint', {
-												unit,
-												price: formatTaka(Math.round(m.suggestion.perUnit), i18n.locale)
-											})
-										: i18n.t('manage.finalize.unitsTotal', { count: i18n.num(n), unit })}
-								error={errText(`price:${m.id}`)}
-							>
-								{#snippet children(f)}
-									<Input name="price:{m.id}" bind:value={prices[m.id]} inputmode="decimal" {...f} />
-								{/snippet}
-							</Field>
-						{/if}
-						<Button
-							variant="link"
-							size="sm"
-							class="mt-1 text-xs font-normal text-muted hover:text-fg"
-							onclick={() => (modes[m.id] = totalMode ? 'price' : 'total')}
-						>
-							{i18n.t(totalMode ? 'manage.finalize.usePrice' : 'manage.finalize.useTotal')}
-						</Button>
-					</div>
+					<Field
+						label={i18n.t('manage.finalize.priceLabel', { name: m.name, unit })}
+						hint={cost !== null
+							? i18n.t('manage.finalize.lineTotal', {
+									count: i18n.num(n),
+									unit,
+									price: formatTaka(parseTaka(prices[m.id] ?? '') ?? 0, i18n.locale),
+									total: formatTaka(cost, i18n.locale)
+								})
+							: m.suggestion
+								? i18n.t('manage.finalize.perUnitHint', {
+										unit,
+										price: formatTaka(Math.round(m.suggestion.perUnit), i18n.locale)
+									})
+								: i18n.t('manage.finalize.unitsTotal', { count: i18n.num(n), unit })}
+						error={errText(`price:${m.id}`)}
+					>
+						{#snippet children(f)}
+							<Input name="price:{m.id}" bind:value={prices[m.id]} inputmode="decimal" {...f} />
+						{/snippet}
+					</Field>
 				{/each}
 			</div>
 		</section>

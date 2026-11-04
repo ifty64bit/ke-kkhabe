@@ -208,11 +208,7 @@ export const bn = {
 	'manage.finalize.error.paymentsOver': '{amount} বেশি দেওয়া হয়েছে।',
 
 	'manage.finalize.priceLabel': '{name}, প্রতি {unit} (৳)',
-	'manage.finalize.totalLabel': '{name}, মোট (৳)',
 	'manage.finalize.lineTotal': '{count} {unit} × {price} = {total}',
-	'manage.finalize.useTotal': 'দুই দোকানের দাম? মোট দিন',
-	'manage.finalize.usePrice': 'প্রতি পিসের দাম দিন',
-	'manage.finalize.mixedHint': 'মোট খরচ {count} {unit}-এ সমান ভাগ হবে।',
 	'manage.finalize.discountLabel': 'ছাড় (৳)',
 	'manage.finalize.discountHint': 'যারা খেয়েছেন তাদের মধ্যে সমান ভাগ হবে।',
 	'manage.finalize.discount': 'ছাড়',

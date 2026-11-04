@@ -135,7 +135,7 @@
 
 - Decided by: the designer
 - Why: the manager knows per-piece prices; asking for item totals was a misreading of the mixed-shop answer
-- Rejected: a total cost per item as the main input (kept only as a per-item mode for two-shop days)
+- Rejected: a total cost per item as the input
 - Rests on: designer feedback on the finalize form, 2026-11-04
 
 ## 2026-11-04 · A day's discount is one amount, taken off equally among everyone who ate
@@ -151,3 +151,10 @@
 - Why: an equal discount share can exceed a small order; a negative charge would pay that person out of the others' money
 - Rejected: allowing negative charges; capping each person's discount silently
 - Rests on: equal-split rule above
+
+## 2026-11-04 · Each item has one per-piece price per day; no mixed-shop total mode
+
+- Decided by: the designer
+- Why: breakfast always comes from a single shop
+- Rejected: a per-item total mode for an item bought from two shops at different prices
+- Rests on: designer feedback, 2026-11-04 (supersedes the earlier mixed-shop split answer)

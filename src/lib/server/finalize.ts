@@ -15,14 +15,11 @@ export type FinalizeItem = { id: string; available: boolean };
 export type FinalizeLine = { userId: string; itemId: string; quantity: number };
 
 /**
- * Raw form input. For each item someone ate, the manager enters a per-piece price
- * (`prices`), or, when it came from more than one shop at different prices, the item's
- * total (`totals`; presence of the key selects total mode). Items nobody ate need neither.
- * Fee and discount are taka strings where '' means 0.
+ * Raw form input. For each item someone ate, the manager enters its price per piece;
+ * items nobody ate need none. Fee and discount are taka strings where '' means 0.
  */
 export type FinalizeForm = {
 	prices: Record<string, string>;
-	totals: Record<string, string>;
 	/** Keyed by `userId:itemId`, for every existing order line. */
 	final: Record<string, number>;
 	deliveryFee: string;
@@ -96,8 +93,7 @@ export function validateFinalize(form: FinalizeForm, ctx: FinalizeContext): Fina
 	}
 	const units = finalUnitsByItem(form, ctx);
 
-	// Costs: per-piece price × units, or the entered total for mixed-shop items.
-	// An item nobody got costs 0 and ignores its inputs.
+	// Costs: per-piece price × units. An item nobody got costs 0 and ignores its price.
 	const costs = new Map<string, Poisha>();
 	for (const item of ctx.items) {
 		const n = units.get(item.id) ?? 0;
@@ -105,16 +101,15 @@ export function validateFinalize(form: FinalizeForm, ctx: FinalizeContext): Fina
 			costs.set(item.id, 0);
 			continue;
 		}
-		const totalMode = item.id in form.totals;
-		const raw = (totalMode ? form.totals[item.id] : form.prices[item.id]) ?? '';
-		const field = totalMode ? `total:${item.id}` : `price:${item.id}`;
+		const raw = form.prices[item.id] ?? '';
+		const field = `price:${item.id}`;
 		if (raw.trim() === '') {
 			set(field, 'manage.finalize.error.priceRequired');
 			continue;
 		}
 		const value = parseTaka(raw);
 		if (value === null) set(field, 'manage.finalize.error.costInvalid');
-		else costs.set(item.id, totalMode ? value : lineTotal(n, value));
+		else costs.set(item.id, lineTotal(n, value));
 	}
 
 	const totalUnits = [...units.values()].reduce((a, b) => a + b, 0);

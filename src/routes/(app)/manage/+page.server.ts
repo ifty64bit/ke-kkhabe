@@ -444,11 +444,9 @@ export const actions: Actions = {
 
 		const form = await request.formData();
 		const prices: Record<string, string> = {};
-		const totals: Record<string, string> = {};
 		const final: Record<string, number> = {};
 		for (const [key, raw] of form) {
 			if (key.startsWith('price:')) prices[key.slice(6)] = String(raw);
-			else if (key.startsWith('total:')) totals[key.slice(6)] = String(raw);
 			else if (key.startsWith('final:')) final[key.slice(6)] = Number(raw);
 		}
 		const payerValues = form.getAll('payer').map(String);
@@ -485,7 +483,6 @@ export const actions: Actions = {
 		const result = validateFinalize(
 			{
 				prices,
-				totals,
 				final,
 				deliveryFee: String(form.get('deliveryFee') ?? ''),
 				discount: String(form.get('discount') ?? ''),
