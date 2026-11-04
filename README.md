@@ -31,14 +31,15 @@ bun run db:migrate:local   # apply to local D1 (wrangler)
 bun run db:migrate:remote  # apply to production D1
 ```
 
-### Seed data
+### Managers
 
 ```sh
-bun run db:seed:local    # item catalog + an open day for today (for trying the Today page)
-bun run db:seed:remote   # item catalog only; safe to re-run, never overwrites edits
+bun run db:seed:local    # promote ADMIN_EMAILS (from .env) to manager in local D1
+bun run db:seed:remote   # same, in production D1
+bun run db:seed:local -- a@gmail.com b@gmail.com   # or pass emails explicitly
 ```
 
-Seed files live in `scripts/seed/`. `dev-day.sql` is local-only: on production it would add a fake day to everyone's ledger.
+Accounts are created by Google sign-in, so a person must sign in once before they can be promoted. Emails listed in `ADMIN_EMAILS` are also promoted automatically on sign-in.
 
 ## Deploying
 
