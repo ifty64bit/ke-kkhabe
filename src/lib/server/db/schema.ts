@@ -47,6 +47,8 @@ export const day = sqliteTable(
 		date: text('date').notNull(),
 		status: text('status', { enum: DAY_STATUSES }).notNull().default('draft'),
 		note: text('note'),
+		/** Delivery fee for the day (poisha), split equally among everyone who ate. Validated >= 0 in the app. */
+		deliveryFee: integer('delivery_fee').notNull().default(0),
 		createdBy: userRef('created_by').notNull(),
 		createdAt: createdAt(),
 		finalizedAt: integer('finalized_at', { mode: 'timestamp_ms' }),

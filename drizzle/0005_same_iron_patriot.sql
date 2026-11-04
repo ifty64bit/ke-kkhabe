@@ -1,0 +1,1 @@
+ALTER TABLE `day` ADD `delivery_fee` integer DEFAULT 0 NOT NULL;

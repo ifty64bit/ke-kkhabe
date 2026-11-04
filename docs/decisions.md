@@ -67,3 +67,10 @@
 - Why: separate Bangla and English names were unnecessary
 - Rejected: required Bangla name with optional English name
 - Rests on: designer feedback, 2026-11-04
+
+## 2026-11-04 · The delivery fee is one total per day, split equally among people who ate
+
+- Decided by: the designer
+- Why: delivery serves each person once regardless of what they ordered
+- Rejected: split by food cost; split by pieces; separate fee per shop or rider
+- Rests on: designer answer, 2026-11-04

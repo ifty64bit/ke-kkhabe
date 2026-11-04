@@ -33,8 +33,9 @@ A day moves through these states:
 3. **Closed**: a manager closes ordering by hand. Members can no longer edit. The manager sees the **purchase summary** (total quantity per item, e.g. 23 paratha, 12 egg) and the per-person list.
 4. **Finalized**: after buying, a manager enters:
    - what each item **cost in total** that day. Prices change day to day, and on some days one item comes from more than one shop at different prices; the total covers both. The form starts from the previous day's cost so a normal day is quick to confirm,
+   - the day's **delivery fee**, if any: one total for the day (add fees together if more than one rider came),
    - **adjusted quantities** per member where needed (an item ran out, fewer were bought, a late add),
-   - **who paid** the shop: one or more members with amounts. The amounts must add up to the day's total.
+   - **who paid** the shop: one or more members with amounts. The amounts must add up to the day's total: all item costs plus the delivery fee.
 
    Finalizing posts the day to the ledger.
 
@@ -46,7 +47,7 @@ A day moves through these states:
 
 - Currency is BDT, stored as integer poisha (no floats). The timezone is Asia/Dhaka, and the "day" and "month" boundaries use it.
 - Ledger entries:
-  - **Charge**: for each item, its total cost is split across the units actually eaten (final quantities), so everyone pays the same per-piece price for that item that day. Shares are whole poisha that add up exactly to the total; leftover poisha go to the largest fractional shares in a fixed order. A member's charge for the day is the sum over items. This reduces the member's balance.
+  - **Charge**: for each item, its total cost is split across the units actually eaten (final quantities), so everyone pays the same per-piece price for that item that day. Shares are whole poisha that add up exactly to the total; leftover poisha go to the largest fractional shares in a fixed order. The day's delivery fee is split equally among everyone who ate that day (members who skipped pay none of it), again in whole poisha that add up exactly. A member's charge for the day is the sum over items plus their share of the delivery fee. Finalizing is blocked if there is a delivery fee but nobody ate. This reduces the member's balance.
   - **Bill payment**: a member paid the shop X on a day. This increases their balance.
   - **Settlement**: A paid B X (cash or bKash, outside the app). A's balance goes up and B's goes down. **Anyone** (A, B, or a manager) can log it. It records who logged it, and it can be voided (soft-delete, audited) by the logger or a manager.
 - **Net balance** per member = bill payments + settlements sent − charges − settlements received. Positive means others owe you, negative means you owe.
