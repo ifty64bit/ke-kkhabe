@@ -41,9 +41,13 @@ export const leftover = (units: number) => toBuy(units) * PORTION - units;
 export const pricePerPiece = (totalCost: Poisha, units: number): Poisha =>
 	units > 0 ? Math.round(totalCost / toBuy(units)) : 0;
 
-/** Add or remove one whole item, keeping the fraction; never above `MAX_UNITS`. */
+/**
+ * Add or remove one whole item, keeping the fraction; never above `MAX_UNITS`.
+ * Removing from a fraction-only value (e.g. ½) clears it.
+ */
 export function stepWhole(units: number, delta: 1 | -1): number {
 	const { whole, fraction } = split(units);
+	if (delta === -1 && whole === 0) return 0;
 	const next = Math.min(MAX_WHOLE, Math.max(0, whole + delta));
 	return Math.min(MAX_UNITS, join(next, fraction));
 }
@@ -70,3 +74,10 @@ export function formatQty(units: number, locale: Locale): string {
 	if (!part) return num(whole);
 	return SUM_GLYPH[fraction] ? num(whole) + part : `${num(whole)} ${part}`;
 }
+
+/**
+ * True when a receipt line's amount is more than its quantity × per-piece price, because the
+ * line carries a share of an unclaimed part of the last piece. Poisha rounding (< 1) is ignored.
+ */
+export const includesLeftover = (units: number, unitPrice: Poisha, amount: Poisha) =>
+	Math.abs(amount * PORTION - units * unitPrice) >= PORTION;

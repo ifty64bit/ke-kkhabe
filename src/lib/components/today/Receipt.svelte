@@ -2,7 +2,7 @@
 	import { Money } from '#lib/components/ui/index.ts';
 	import { useI18n } from '#lib/i18n/index.ts';
 	import { formatTaka, type Poisha } from '#lib/money.ts';
-	import { formatQty } from '#lib/quantity.ts';
+	import { formatQty, includesLeftover } from '#lib/quantity.ts';
 
 	type Line = {
 		name: string;
@@ -53,6 +53,9 @@
 							price: formatTaka(line.unitPrice, i18n.locale)
 						})}
 					</span>
+					{#if includesLeftover(line.quantity, line.unitPrice, line.amount)}
+						<span class="block text-sm text-muted">{i18n.t('today.receiptLeftover')}</span>
+					{/if}
 				</span>
 				<Money value={line.amount} />
 			</li>

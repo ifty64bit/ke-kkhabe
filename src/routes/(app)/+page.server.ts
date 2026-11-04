@@ -5,7 +5,8 @@ import type { MessageKey } from '#lib/i18n/index.ts';
 import { breakdownForDay } from '#lib/server/charges.ts';
 import { computeLedger } from '#lib/server/ledger.ts';
 import { day, dayItem, item, orderLine, response } from '#lib/server/db/schema.ts';
-import { isValidQty, pricePerPiece } from '#lib/quantity.ts';
+import { pricePerPiece } from '#lib/quantity.ts';
+import { parseOrderForm } from '#lib/server/orders.ts';
 import type { Db } from '#lib/server/db/index.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -129,15 +130,8 @@ export const actions: Actions = {
 		const allowed = new Set(offered.map((o) => o.itemId));
 
 		const form = await request.formData();
-		const wanted: { itemId: string; quantity: number }[] = [];
-		for (const [key, raw] of form) {
-			if (!key.startsWith('qty:')) continue;
-			const itemId = key.slice(4);
-			const quantity = Number(raw);
-			if (!allowed.has(itemId) || !isValidQty(quantity))
-				return fail(400, { messageKey: 'order.error.invalid' as MessageKey });
-			if (quantity > 0) wanted.push({ itemId, quantity });
-		}
+		const wanted = parseOrderForm(form, allowed);
+		if (!wanted) return fail(400, { messageKey: 'order.error.invalid' as MessageKey });
 		if (wanted.length === 0) return fail(400, { messageKey: 'order.error.empty' as MessageKey });
 
 		await db.batch([

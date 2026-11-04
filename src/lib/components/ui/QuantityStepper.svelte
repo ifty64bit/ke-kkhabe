@@ -57,7 +57,7 @@
 			type="button"
 			class={btn}
 			aria-label={i18n.t('stepper.decrease', { label })}
-			disabled={disabled || parts.whole === 0}
+			disabled={disabled || value === 0}
 			onclick={() => (value = stepWhole(value, -1))}>−</button
 		>
 		<output class="min-w-7 text-center text-lg font-semibold tabular-nums" aria-live="polite"

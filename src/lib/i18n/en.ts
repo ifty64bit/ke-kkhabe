@@ -51,6 +51,7 @@ export const en: Record<MessageKey, string> = {
 	'today.yourCost': 'Your share',
 	'today.receiptTitle': "Today's receipt",
 	'today.receiptLine': '{count} {unit} × {price}',
+	'today.receiptLeftover': 'Includes a share of the unclaimed part',
 	'today.receiptDelivery': 'Delivery, your share',
 	'today.receiptDiscount': 'Discount, your share',
 	'today.finalizedNone': "You didn't order today.",

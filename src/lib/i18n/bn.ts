@@ -49,6 +49,7 @@ export const bn = {
 	'today.yourCost': 'আপনার খরচ',
 	'today.receiptTitle': 'আজকের রসিদ',
 	'today.receiptLine': '{count} {unit} × {price}',
+	'today.receiptLeftover': 'বাড়তি অংশের ভাগ সহ',
 	'today.receiptDelivery': 'ডেলিভারি, আপনার ভাগ',
 	'today.receiptDiscount': 'ছাড়, আপনার ভাগ',
 	'today.finalizedNone': 'আজ আপনার কোনো অর্ডার ছিল না।',

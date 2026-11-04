@@ -3,7 +3,8 @@ import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import type { BatchItem } from 'drizzle-orm/batch';
 import { dhakaToday } from '#lib/date.ts';
 import { formatTaka, type Poisha } from '#lib/money.ts';
-import { isValidQty, pricePerPiece, toBuy } from '#lib/quantity.ts';
+import { pricePerPiece, toBuy } from '#lib/quantity.ts';
+import { parseOrderForm } from '#lib/server/orders.ts';
 import type { MessageKey } from '#lib/i18n/index.ts';
 import { validateFinalize } from '#lib/server/finalize.ts';
 import { chargesForDay } from '#lib/server/charges.ts';
@@ -402,14 +403,8 @@ export const actions: Actions = {
 			.where(and(eq(dayItem.dayId, today.id), eq(dayItem.available, true)));
 		const allowed = new Set(offered.map((o) => o.itemId));
 
-		const wanted: { itemId: string; quantity: number }[] = [];
-		for (const [key, raw] of form) {
-			if (!key.startsWith('qty:')) continue;
-			const itemId = key.slice(4);
-			const quantity = Number(raw);
-			if (!allowed.has(itemId) || !isValidQty(quantity)) return failKey(400, 'order.error.invalid');
-			if (quantity > 0) wanted.push({ itemId, quantity });
-		}
+		const wanted = parseOrderForm(form, allowed);
+		if (!wanted) return failKey(400, 'order.error.invalid');
 		if (eating && wanted.length === 0) return failKey(400, 'manage.memberOrder.error.empty');
 
 		const statements: BatchItem<'sqlite'>[] = [

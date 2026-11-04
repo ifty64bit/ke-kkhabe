@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	canSetFraction,
+	includesLeftover,
 	formatQty,
 	isValidQty,
 	join,
@@ -65,7 +66,7 @@ describe('pricePerPiece', () => {
 describe('stepper math', () => {
 	it('steps the whole part and keeps the fraction', () => {
 		expect(stepWhole(18, -1)).toBe(6);
-		expect(stepWhole(6, -1)).toBe(6);
+		expect(stepWhole(6, -1)).toBe(0);
 		expect(stepWhole(240, 1)).toBe(240);
 		expect(stepWhole(234, 1)).toBe(240);
 		expect(stepWhole(0, 1)).toBe(12);
@@ -100,5 +101,21 @@ describe('formatQty', () => {
 		expect(formatQty(2, 'en')).toBe('⅙');
 		expect(formatQty(13, 'en')).toBe('1 1/12');
 		expect(formatQty(7, 'bn')).toBe('৭/১২');
+	});
+});
+
+describe('review fixes', () => {
+	it('− on a fraction-only value clears it', () => {
+		expect(stepWhole(6, -1)).toBe(0);
+		expect(stepWhole(18, -1)).toBe(6);
+	});
+
+	it('flags a receipt line whose amount includes a leftover share', () => {
+		// ½ dal at ৳30 a piece, charged ৳22.50 because ⅔ of a bowl was unclaimed.
+		expect(includesLeftover(6, 3000, 2250)).toBe(true);
+		expect(includesLeftover(6, 3000, 1500)).toBe(false);
+		expect(includesLeftover(24, 1000, 2000)).toBe(false);
+		// Rounding to the poisha is not a leftover.
+		expect(includesLeftover(4, 1001, 334)).toBe(false);
 	});
 });
