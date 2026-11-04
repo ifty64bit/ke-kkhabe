@@ -1,7 +1,7 @@
 import type { Handle } from '@sveltejs/kit/hooks';
 import { redirect, error } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { building } from '$app/env';
+import { building, dev } from '$app/env';
 import { createAuth } from '#lib/server/auth.ts';
 import { isAdminEmail } from '#lib/server/admins.ts';
 import { getDb } from '#lib/server/db/index.ts';
@@ -10,7 +10,8 @@ import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { parseTheme, THEME_COOKIE } from '#lib/theme/index.ts';
 import { env } from 'cloudflare:workers';
 
-const PUBLIC_PATHS = ['/login', '/api/auth'];
+// `/ui` is the dev-only component gallery (404 in production via its load function).
+const PUBLIC_PATHS = ['/login', '/api/auth', ...(dev ? ['/ui'] : [])];
 const isPublic = (path: string) => PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 
 export const handle: Handle = async ({ event, resolve }) => {

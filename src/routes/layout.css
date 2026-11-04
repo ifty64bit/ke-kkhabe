@@ -2,7 +2,8 @@
 @plugin '@tailwindcss/typography';
 
 /*
- * Ke Khabe theme: "turmeric & tea".
+ * Ke Khabe theme: "halkhata", the red cloth-bound due ledger of Bangladeshi shops.
+ * Ledger paper, blue-black ink, khata-red binding, ruled blue lines; turmeric only for "open".
  * Semantic tokens live on :root and switch by [data-theme] (light | dark | system).
  * Components use only semantic utilities (bg-surface, text-fg, bg-primary...),
  * so they adapt to every theme without `dark:` variants.
@@ -11,91 +12,91 @@
 :root {
 	color-scheme: light;
 
-	--ke-bg: oklch(0.982 0.01 85);
-	--ke-surface: oklch(0.997 0.004 85);
-	--ke-surface-2: oklch(0.955 0.016 80);
-	--ke-fg: oklch(0.25 0.025 50);
-	--ke-muted: oklch(0.5 0.025 60);
-	--ke-border: oklch(0.89 0.018 75);
-	--ke-ring: oklch(0.7 0.16 62);
+	--ke-bg: #f6f7f2; /* ledger paper */
+	--ke-surface: #fcfdf9;
+	--ke-surface-2: #eceee6;
+	--ke-fg: #1e2a45; /* blue-black pen ink */
+	--ke-muted: #5b6579;
+	--ke-border: #c9d5e6; /* ruled-line blue */
+	--ke-ring: #2f5fa8;
 
-	--ke-primary: oklch(0.76 0.155 68); /* turmeric */
-	--ke-primary-hover: oklch(0.71 0.16 62);
-	--ke-primary-fg: oklch(0.24 0.04 50);
+	--ke-primary: #a11d1d; /* khata red: the ledger's cloth binding */
+	--ke-primary-hover: #8a1717;
+	--ke-primary-fg: #fdf8f6;
 
-	--ke-accent: oklch(0.52 0.09 45); /* cha (tea) */
-	--ke-accent-fg: oklch(0.98 0.01 85);
+	--ke-haldi: #d9951a; /* turmeric: reserved for "open today" */
+	--ke-haldi-soft: #f8ecd0;
 
-	--ke-success: oklch(0.55 0.13 150);
-	--ke-success-soft: oklch(0.95 0.04 150);
-	--ke-danger: oklch(0.55 0.2 27);
-	--ke-danger-soft: oklch(0.95 0.035 27);
-	--ke-warning: oklch(0.62 0.14 75);
-	--ke-warning-soft: oklch(0.96 0.05 85);
+	--ke-success: #2f7a4f;
+	--ke-success-soft: #e1efe6;
+	--ke-danger: #b42318;
+	--ke-danger-soft: #f8e3e0;
+	--ke-warning: #9a5b00;
+	--ke-warning-soft: #f6ead4;
 
-	--ke-shadow: 0 1px 2px oklch(0.4 0.05 60 / 0.08), 0 8px 24px -12px oklch(0.4 0.05 60 / 0.18);
+	/* Elevation is information: only floating layers (menu, dialog) get a shadow. */
+	--ke-float: 0 12px 32px -12px rgb(30 42 69 / 0.28), 0 2px 6px rgb(30 42 69 / 0.08);
 }
 
 /* Keep the two dark blocks below identical. */
 :root[data-theme='dark'] {
 	color-scheme: dark;
 
-	--ke-bg: oklch(0.17 0.012 55);
-	--ke-surface: oklch(0.21 0.014 55);
-	--ke-surface-2: oklch(0.255 0.016 55);
-	--ke-fg: oklch(0.94 0.012 80);
-	--ke-muted: oklch(0.7 0.02 70);
-	--ke-border: oklch(0.31 0.016 55);
-	--ke-ring: oklch(0.8 0.14 70);
+	--ke-bg: #121a2b; /* ledger by lamplight */
+	--ke-surface: #18223a;
+	--ke-surface-2: #1f2b47;
+	--ke-fg: #e8ebe3;
+	--ke-muted: #9aa5ba;
+	--ke-border: #2a3856;
+	--ke-ring: #8fb3ef;
 
-	--ke-primary: oklch(0.8 0.145 72);
-	--ke-primary-hover: oklch(0.85 0.13 76);
-	--ke-primary-fg: oklch(0.2 0.03 50);
+	--ke-primary: #ef6a5f;
+	--ke-primary-hover: #f4857b;
+	--ke-primary-fg: #1a0f12;
 
-	--ke-accent: oklch(0.72 0.08 50);
-	--ke-accent-fg: oklch(0.18 0.02 50);
+	--ke-haldi: #e8b04a;
+	--ke-haldi-soft: #3a3020;
 
-	--ke-success: oklch(0.74 0.13 150);
-	--ke-success-soft: oklch(0.3 0.05 150);
-	--ke-danger: oklch(0.7 0.17 27);
-	--ke-danger-soft: oklch(0.3 0.06 27);
-	--ke-warning: oklch(0.8 0.13 80);
-	--ke-warning-soft: oklch(0.32 0.05 80);
+	--ke-success: #6fcf97;
+	--ke-success-soft: #1d3a2e;
+	--ke-danger: #ff8a7a;
+	--ke-danger-soft: #3d2228;
+	--ke-warning: #f0b45a;
+	--ke-warning-soft: #3a2f1e;
 
-	--ke-shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 24px -12px oklch(0 0 0 / 0.5);
+	--ke-float: 0 16px 40px -12px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
 }
 
 @media (prefers-color-scheme: dark) {
 	:root[data-theme='system'] {
 		color-scheme: dark;
 
-		--ke-bg: oklch(0.17 0.012 55);
-		--ke-surface: oklch(0.21 0.014 55);
-		--ke-surface-2: oklch(0.255 0.016 55);
-		--ke-fg: oklch(0.94 0.012 80);
-		--ke-muted: oklch(0.7 0.02 70);
-		--ke-border: oklch(0.31 0.016 55);
-		--ke-ring: oklch(0.8 0.14 70);
+		--ke-bg: #121a2b; /* ledger by lamplight */
+		--ke-surface: #18223a;
+		--ke-surface-2: #1f2b47;
+		--ke-fg: #e8ebe3;
+		--ke-muted: #9aa5ba;
+		--ke-border: #2a3856;
+		--ke-ring: #8fb3ef;
 
-		--ke-primary: oklch(0.8 0.145 72);
-		--ke-primary-hover: oklch(0.85 0.13 76);
-		--ke-primary-fg: oklch(0.2 0.03 50);
+		--ke-primary: #ef6a5f;
+		--ke-primary-hover: #f4857b;
+		--ke-primary-fg: #1a0f12;
 
-		--ke-accent: oklch(0.72 0.08 50);
-		--ke-accent-fg: oklch(0.18 0.02 50);
+		--ke-haldi: #e8b04a;
+		--ke-haldi-soft: #3a3020;
 
-		--ke-success: oklch(0.74 0.13 150);
-		--ke-success-soft: oklch(0.3 0.05 150);
-		--ke-danger: oklch(0.7 0.17 27);
-		--ke-danger-soft: oklch(0.3 0.06 27);
-		--ke-warning: oklch(0.8 0.13 80);
-		--ke-warning-soft: oklch(0.32 0.05 80);
+		--ke-success: #6fcf97;
+		--ke-success-soft: #1d3a2e;
+		--ke-danger: #ff8a7a;
+		--ke-danger-soft: #3d2228;
+		--ke-warning: #f0b45a;
+		--ke-warning-soft: #3a2f1e;
 
-		--ke-shadow: 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 24px -12px oklch(0 0 0 / 0.5);
+		--ke-float: 0 16px 40px -12px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
 	}
 }
 
-/* `dark:` variant for the rare one-off case; follows the same rules as the tokens. */
 @custom-variant dark {
 	&:where([data-theme='dark'], [data-theme='dark'] *) {
 		@slot;
@@ -118,24 +119,43 @@
 	--color-primary: var(--ke-primary);
 	--color-primary-hover: var(--ke-primary-hover);
 	--color-primary-fg: var(--ke-primary-fg);
-	--color-accent: var(--ke-accent);
-	--color-accent-fg: var(--ke-accent-fg);
+	--color-haldi: var(--ke-haldi);
+	--color-haldi-soft: var(--ke-haldi-soft);
 	--color-success: var(--ke-success);
 	--color-success-soft: var(--ke-success-soft);
 	--color-danger: var(--ke-danger);
 	--color-danger-soft: var(--ke-danger-soft);
 	--color-warning: var(--ke-warning);
 	--color-warning-soft: var(--ke-warning-soft);
-	--shadow-card: var(--ke-shadow);
+	--shadow-float: var(--ke-float);
 }
 
 @theme {
 	--font-sans: 'Hind Siliguri', ui-sans-serif, system-ui, sans-serif;
-	--font-display: 'Anek Bangla', 'Hind Siliguri', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Tiro Bangla', 'Noto Serif Bengali', Georgia, serif;
 	--font-google: 'Roboto', arial, sans-serif;
 
-	--radius-card: 1.25rem;
-	--radius-control: 0.75rem;
+	--radius-card: 0.875rem;
+	--radius-control: 0.625rem;
+}
+
+/*
+ * The signature: a ledger page's red margin rule down the left of the main column.
+ * Use once per page on the primary content column.
+ */
+@utility khata-page {
+	position: relative;
+	padding-left: 1.25rem;
+	&::before {
+		content: '';
+		position: absolute;
+		inset-block: 0;
+		left: 0;
+		width: 2px;
+		background: var(--color-primary);
+		opacity: 0.55;
+		border-radius: 1px;
+	}
 }
 
 @layer base {
@@ -162,5 +182,19 @@
 			transition-duration: 0.01ms !important;
 			animation-duration: 0.01ms !important;
 		}
+	}
+}
+
+@keyframes ke-dialog-in {
+	from {
+		opacity: 0;
+		transform: translateY(12px) scale(0.98);
+	}
+}
+
+@keyframes ke-pop-in {
+	from {
+		opacity: 0;
+		transform: scale(0.96);
 	}
 }
