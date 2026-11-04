@@ -14,7 +14,7 @@
 	} = $props();
 </script>
 
-<header class="mx-auto flex h-16 w-full max-w-3xl items-center justify-between gap-3 px-4">
+<header class="container flex h-16 items-center justify-between gap-3">
 	<a href={resolve('/(app)')} aria-label="কে খাবে, আজকের পাতা" class="rounded-xl">
 		<Logo size="sm" wordmark />
 	</a>
