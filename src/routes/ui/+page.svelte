@@ -26,7 +26,7 @@
 
 	let dialogOpen = $state(false);
 	let sheetOpen = $state(false);
-	let qty = $state(2);
+	let qty = $state(18); // 1½, in twelfths
 	let view = $state<'day' | 'month'>('day');
 	let name = $state('');
 	const nameError = $derived(name.length > 0 && name.length < 3 ? 'কমপক্ষে ৩ অক্ষর' : null);

@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { Alert, Button, Dialog, QuantityStepper } from '#lib/components/ui/index.ts';
 	import { useI18n, type MessageKey } from '#lib/i18n/index.ts';
+	import { formatQty } from '#lib/quantity.ts';
 
 	type Item = {
 		id: string;
@@ -73,7 +74,7 @@
 						{name}
 						{#if (qty[item.id] ?? 0) > 0}
 							<span class="block text-sm text-muted">
-								{i18n.num(qty[item.id])}
+								{formatQty(qty[item.id], i18n.locale)}
 								{i18n.pick(item.unitBn, item.unitEn)}
 							</span>
 						{/if}

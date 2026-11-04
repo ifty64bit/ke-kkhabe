@@ -22,6 +22,9 @@ export const bn = {
 
 	'stepper.decrease': '{label} কমান',
 	'stepper.increase': '{label} বাড়ান',
+	'stepper.share': 'ভাগ',
+	'stepper.fraction': '{fraction} {label}',
+	'stepper.noFraction': 'ভাগ নেই',
 
 	'login.title': 'কে খাবে?',
 	'login.tagline': 'অফিসের নাস্তা, অর্ডার আর হিসাব এক জায়গায়',

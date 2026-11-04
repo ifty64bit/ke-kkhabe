@@ -33,10 +33,12 @@
 ### Task 1: `quantity.ts`, the pure quantity module
 
 **Files:**
+
 - Create: `src/lib/quantity.ts`
 - Test: `src/lib/quantity.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Locale` from `#lib/money.ts`; `formatNumber` from `#lib/i18n/index.ts` (check that importing it doesn't pull in Svelte context; if it does, use `Intl.NumberFormat` with `bn-BD`/`en-BD` directly).
 - Produces:
   - `PORTION = 12`
@@ -74,11 +76,13 @@
 ### Task 2: Finalize and charge math in twelfths
 
 **Files:**
+
 - Modify: `src/lib/server/finalize.ts` (remove `MAX_QTY`; quantity check at ~line 90; cost at ~line 110)
 - Modify: `src/lib/charges.ts` (doc comments only: weights are twelfths)
 - Test: `src/lib/server/finalize.test.ts`, `src/lib/charges.test.ts`
 
 **Interfaces:**
+
 - Consumes: `isValidQty`, `toBuy` from Task 1.
 - Produces: `validateFinalize` with unchanged types. `FinalizeLine.quantity` and `FinalizeForm.final[...]` are now twelfths (document this in the comments). `MAX_QTY` is removed; its callers use `isValidQty`.
 
@@ -94,6 +98,7 @@
 ### Task 3: Schema, regenerated migrations and server code
 
 **Files:**
+
 - Modify: `src/lib/server/db/schema.ts` (`orderLine`)
 - Delete and regenerate: `drizzle/*.sql`, `drizzle/meta/*`
 - Modify: `src/routes/(app)/+page.server.ts` (`MAX_QTY` at line 11, order action ~138, receipt `unitPrice` ~95)
@@ -102,6 +107,7 @@
 - Modify: `scripts/reset-orders.ts` if it names the columns
 
 **Interfaces:**
+
 - Consumes: `isValidQty`, `pricePerPiece`, `toBuy` from Task 1.
 - Produces: Drizzle props `orderLine.quantity12ths` (column `quantity_12ths`) and `orderLine.finalQuantity12ths` (column `final_quantity_12ths`), keeping the existing nonneg checks. Page data shapes keep their field names (`quantity`, `finalQuantity`, `purchaseUnits`, `units`), whose values are now twelfths. Manage page data adds `purchaseBuy: number` (`toBuy(units)`) per menu item.
 
@@ -115,6 +121,7 @@
 ### Task 4: Fraction-aware `QuantityStepper` and the order dialogs
 
 **Files:**
+
 - Modify: `src/lib/components/ui/QuantityStepper.svelte`
 - Modify: `src/lib/components/today/OrderDialog.svelte` (the line under the item name uses `formatQty`)
 - Modify: `src/lib/components/manage/MemberOrderDialog.svelte`
@@ -122,6 +129,7 @@
 - Modify: `src/lib/i18n/en.ts`, `src/lib/i18n/bn.ts`
 
 **Interfaces:**
+
 - Consumes: `stepWhole`, `setFraction`, `canSetFraction`, `split`, `formatQty`, `FRACTIONS`, `FRACTION_GLYPH` from Task 1.
 - Produces: `QuantityStepper` props unchanged (`value` in twelfths, `name`, `label`, `disabled`, `class`). The `min`/`max` props are removed. The hidden input submits twelfths.
 
@@ -135,12 +143,14 @@
 ### Task 5: Purchase summary, finalize dialog, receipt and order text
 
 **Files:**
+
 - Modify: `src/routes/(app)/manage/+page.svelte` (`purchaseSummary` ~68, shopping card ~232, `orderText` ~74)
 - Modify: `src/lib/components/manage/FinalizeDialog.svelte` (`initialPrices` ~105, `costOf` ~131, stepper ~310)
 - Modify: `src/lib/components/today/Receipt.svelte` (line 49 count)
 - Modify: `src/lib/i18n/en.ts`, `src/lib/i18n/bn.ts`
 
 **Interfaces:**
+
 - Consumes: `toBuy`, `leftover`, `formatQty`, `pricePerPiece` from Task 1; `purchaseBuy` from Task 3.
 
 - [ ] **Step 1: Shopping card.** The big number is `i18n.num(m.purchaseBuy)`. When `leftover(m.purchaseUnits) > 0`, add a muted line `manage.shopping.ordered` with `{ordered: formatQty(units), leftover: formatQty(leftover(units))}`. en: `'{ordered} ordered · {leftover} left over'`. bn: `'{ordered} অর্ডার · {leftover} বাড়তি'`. `purchaseSummary` uses `purchaseBuy`.
@@ -153,6 +163,7 @@
 ### Task 6: Decision record and requirements
 
 **Files:**
+
 - Modify: `docs/decisions.md` (append), `docs/REQUIREMENTS.md` (charge rule at line 51; ordering description)
 
 - [ ] **Step 1: Append to `docs/decisions.md`** in the existing format: "## 2026-11-04 · Quantities are twelfths; an item's cost is whole items bought, split by what each person ate". Decided by: the designer. Why: people share one item (e.g. dal), and the shop charges per whole item. Rejected: half-steps only; explicit "share with…" links; any decimal. Rests on: the per-piece price decision.

@@ -24,6 +24,9 @@ export const en: Record<MessageKey, string> = {
 
 	'stepper.decrease': 'Fewer {label}',
 	'stepper.increase': 'More {label}',
+	'stepper.share': 'Share',
+	'stepper.fraction': '{fraction} {label}',
+	'stepper.noFraction': 'No share',
 
 	'login.title': 'Ke Khabe?',
 	'login.tagline': 'Office breakfast orders and dues, all in one place',
