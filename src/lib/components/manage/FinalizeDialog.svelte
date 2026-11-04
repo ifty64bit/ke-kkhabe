@@ -35,7 +35,8 @@
 		lines: { itemId: string; quantity: number; finalQuantity: number | null }[];
 	};
 
-	type PaymentRow = { id: number; userId: string; amount: string };
+	/** `auto`: the amount follows the bill total until the manager types their own. */
+	type PaymentRow = { id: number; userId: string; amount: string; auto: boolean };
 
 	let {
 		open = $bindable(false),
@@ -68,8 +69,13 @@
 	const i18n = useI18n();
 
 	const lineKey = (userId: string, itemId: string) => `${userId}:${itemId}`;
-	const takaInput = (p: Poisha) =>
-		p === 0 ? '' : p % 100 === 0 ? String(p / 100) : (p / 100).toFixed(2);
+	/** Poisha to an input string; anything that isn't a finite amount becomes empty, never "NaN". */
+	const takaInput = (p: Poisha | null | undefined) =>
+		typeof p !== 'number' || !Number.isFinite(p) || p === 0
+			? ''
+			: p % 100 === 0
+				? String(p / 100)
+				: (p / 100).toFixed(2);
 	const isAvailable = (itemId: string) => menu.find((m) => m.id === itemId)?.available !== false;
 	/** Same rule as the server: an empty taka field means 0. */
 	const takaOrZero = (raw: string | undefined) =>
@@ -138,9 +144,10 @@
 			? existingPayments.map((p) => ({
 					id: rowId++,
 					userId: p.userId,
-					amount: takaInput(p.amount)
+					amount: takaInput(p.amount),
+					auto: false
 				}))
-			: [{ id: rowId++, userId: meId, amount: total <= 0 ? '' : takaInput(total) }];
+			: [{ id: rowId++, userId: meId, amount: total <= 0 ? '' : takaInput(total), auto: true }];
 	const currentTotal = () =>
 		menu.reduce((a, m) => a + (costOf(m.id) ?? 0), 0) +
 		(takaOrZero(fee) ?? 0) -
@@ -197,6 +204,13 @@
 			rows.every((r) => takaOrZero(r.amount) !== null)
 	);
 	const canSubmit = $derived(amountsValid && !discountTooHigh && mismatch === 0);
+
+	// One payer who hasn't typed an amount paid the whole bill: keep their amount equal to the total.
+	$effect(() => {
+		const total = grandTotal;
+		if (rows.length !== 1 || !rows[0].auto) return;
+		untrack(() => (rows[0].amount = total > 0 ? takaInput(total) : ''));
+	});
 	const previewRows = $derived(
 		people
 			.map((p) => ({ person: p, amount: preview.get(p.id) ?? null }))
@@ -356,7 +370,13 @@
 							class="w-28 sm:w-36"
 						>
 							{#snippet children(f)}
-								<Input name="paid" bind:value={row.amount} inputmode="decimal" {...f} />
+								<Input
+									name="paid"
+									bind:value={row.amount}
+									oninput={() => (row.auto = false)}
+									inputmode="decimal"
+									{...f}
+								/>
 							{/snippet}
 						</Field>
 						<IconButton
@@ -380,7 +400,7 @@
 				variant="ghost"
 				size="sm"
 				class="mt-1"
-				onclick={() => rows.push({ id: rowId++, userId: '', amount: '' })}
+				onclick={() => rows.push({ id: rowId++, userId: '', amount: '', auto: false })}
 			>
 				+ {i18n.t('manage.finalize.addPayment')}
 			</Button>
