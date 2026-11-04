@@ -22,7 +22,9 @@
 		"db:migrate:remote": "wrangler d1 migrations apply ke-khabe --remote",
 		"clean": "rm -rf .svelte-kit/output .svelte-kit/cloudflare",
 		"db:seed:local": "bun scripts/seed/managers.ts --local",
-		"db:seed:remote": "bun scripts/seed/managers.ts --remote"
+		"db:seed:remote": "bun scripts/seed/managers.ts --remote",
+		"db:reset-orders:local": "bun scripts/reset-orders.ts --local",
+		"db:reset-orders:remote": "bun scripts/reset-orders.ts --remote"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

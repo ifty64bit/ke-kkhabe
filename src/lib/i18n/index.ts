@@ -66,5 +66,5 @@ const KEY = Symbol('i18n');
 /** Call once in the root layout with a getter for the current locale. */
 export const setI18n = (getLocale: () => Locale) => setContext(KEY, createI18n(getLocale));
 
-/** Translation helpers for the current request/page. Falls back to Bangla outside the app tree. */
-export const useI18n = () => getContext<I18n | undefined>(KEY) ?? createI18n(() => 'bn');
+/** Translation helpers for the current request/page. Falls back to English outside the app tree. */
+export const useI18n = () => getContext<I18n | undefined>(KEY) ?? createI18n(() => 'en');

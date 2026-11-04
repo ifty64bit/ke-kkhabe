@@ -46,7 +46,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		? cookieLocale
 		: isLocale(event.locals.user?.locale)
 			? event.locals.user.locale
-			: 'bn';
+			: 'en';
 
 	const path = event.url.pathname;
 

@@ -30,7 +30,7 @@ export function lineTotal(quantity: number, unitPrice: Poisha): Poisha {
 export const sum = (values: Poisha[]): Poisha => values.reduce((a, b) => a + b, 0);
 
 /** Format poisha for display, e.g. 125050 → "৳১,২৫০.৫০" (bn) or "৳1,250.50" (en). Drops ".00". */
-export function formatTaka(poisha: Poisha, locale: Locale = 'bn', opts: { sign?: boolean } = {}) {
+export function formatTaka(poisha: Poisha, locale: Locale = 'en', opts: { sign?: boolean } = {}) {
 	const abs = Math.abs(poisha);
 	const hasFraction = abs % 100 !== 0;
 	const formatted = new Intl.NumberFormat(locale === 'bn' ? 'bn-BD' : 'en-BD', {

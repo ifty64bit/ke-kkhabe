@@ -38,7 +38,7 @@ const authConfig = {
 			locale: {
 				type: ['bn', 'en'],
 				required: false,
-				defaultValue: 'bn',
+				defaultValue: 'en',
 				input: false
 			}
 		}
