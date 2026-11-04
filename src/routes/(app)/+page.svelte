@@ -2,7 +2,8 @@
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import OrderDialog from '#lib/components/today/OrderDialog.svelte';
-	import { Alert, Button, Money } from '#lib/components/ui/index.ts';
+	import Receipt from '#lib/components/today/Receipt.svelte';
+	import { Alert, Button } from '#lib/components/ui/index.ts';
 	import { useI18n, type MessageKey } from '#lib/i18n/index.ts';
 	import { formatTaka } from '#lib/money.ts';
 	import type { PageProps } from './$types';
@@ -127,16 +128,21 @@
 			</p>
 			<p class="text-sm text-muted">{i18n.t('today.closedNote')}</p>
 		{:else if status === 'finalized'}
-			{#if eating}
-				<p class="text-lg">
-					{i18n.t('today.ate')} <span class="font-semibold">{orderSummary}</span>
-				</p>
-				{#if data.charge !== null}
-					<p class="text-muted">
-						{i18n.t('today.yourCost')}
-						<Money value={data.charge} class="font-semibold text-fg" />
-					</p>
-				{/if}
+			{#if data.receipt}
+				<Receipt
+					lines={data.receipt.lines.map((l) => {
+						const item = data.items.find((i) => i.id === l.itemId);
+						return {
+							...l,
+							name: item?.name ?? '',
+							unitBn: item?.unitBn ?? '',
+							unitEn: item?.unitEn ?? ''
+						};
+					})}
+					deliveryShare={data.receipt.deliveryShare}
+					discountShare={data.receipt.discountShare}
+					total={data.receipt.total}
+				/>
 			{:else}
 				<p class="text-lg text-muted">{i18n.t('today.finalizedNone')}</p>
 			{/if}

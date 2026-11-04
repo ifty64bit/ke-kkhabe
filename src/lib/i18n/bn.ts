@@ -44,6 +44,10 @@ export const bn = {
 	'today.closedNote': 'অর্ডার নেওয়া বন্ধ। ম্যানেজার নাস্তা আনতে গেছেন।',
 	'today.ate': 'আজ খেয়েছেন:',
 	'today.yourCost': 'আপনার খরচ',
+	'today.receiptTitle': 'আজকের রসিদ',
+	'today.receiptLine': '{count} {unit} × {price}',
+	'today.receiptDelivery': 'ডেলিভারি, আপনার ভাগ',
+	'today.receiptDiscount': 'ছাড়, আপনার ভাগ',
 	'today.finalizedNone': 'আজ আপনার কোনো অর্ডার ছিল না।',
 
 	'links.label': 'অন্যান্য পাতা',

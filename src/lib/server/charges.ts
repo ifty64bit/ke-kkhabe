@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { computeCharges } from '#lib/charges.ts';
+import { computeBreakdown, computeCharges } from '#lib/charges.ts';
 import type { Poisha } from '#lib/money.ts';
 import { day, dayItem, orderLine } from '#lib/server/db/schema.ts';
 import type { Db } from '#lib/server/db/index.ts';
@@ -31,4 +31,28 @@ export async function chargesForDay(db: Db, dayId: string): Promise<Map<string, 
 			.where(eq(orderLine.dayId, dayId))
 	]);
 	return computeCharges(costs, lines, theDay?.deliveryFee ?? 0, theDay?.discount ?? 0);
+}
+
+/** Each member's line-by-line charge for a day (for receipts). */
+export async function breakdownForDay(db: Db, dayId: string) {
+	const [[theDay], costs, lines] = await Promise.all([
+		db
+			.select({ deliveryFee: day.deliveryFee, discount: day.discount })
+			.from(day)
+			.where(eq(day.id, dayId))
+			.limit(1),
+		db
+			.select({ itemId: dayItem.itemId, totalCost: dayItem.totalCost })
+			.from(dayItem)
+			.where(eq(dayItem.dayId, dayId)),
+		db
+			.select({
+				userId: orderLine.userId,
+				itemId: orderLine.itemId,
+				finalQuantity: orderLine.finalQuantity
+			})
+			.from(orderLine)
+			.where(eq(orderLine.dayId, dayId))
+	]);
+	return computeBreakdown(costs, lines, theDay?.deliveryFee ?? 0, theDay?.discount ?? 0);
 }

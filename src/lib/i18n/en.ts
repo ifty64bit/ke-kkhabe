@@ -46,6 +46,10 @@ export const en: Record<MessageKey, string> = {
 	'today.closedNote': 'Orders are closed. The manager is getting breakfast.',
 	'today.ate': 'You had:',
 	'today.yourCost': 'Your share',
+	'today.receiptTitle': "Today's receipt",
+	'today.receiptLine': '{count} {unit} × {price}',
+	'today.receiptDelivery': 'Delivery, your share',
+	'today.receiptDiscount': 'Discount, your share',
 	'today.finalizedNone': "You didn't order today.",
 
 	'links.label': 'Other pages',

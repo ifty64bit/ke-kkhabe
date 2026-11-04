@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeCharges } from '#lib/charges.ts';
+import { computeBreakdown, computeCharges } from '#lib/charges.ts';
 import { sum } from '#lib/money.ts';
 
 const item = (itemId: string, totalCost: number | null) => ({ itemId, totalCost });
@@ -87,5 +87,35 @@ describe('computeCharges: discount', () => {
 
 	it('defaults to no discount', () => {
 		expect(computeCharges(items, lines, 0)).toEqual(computeCharges(items, lines, 0, 0));
+	});
+});
+
+describe('computeBreakdown', () => {
+	const items = [
+		{ itemId: 'p', totalCost: 12000 },
+		{ itemId: 't', totalCost: 1000 }
+	];
+	const lines = [
+		{ userId: 'a', itemId: 'p', finalQuantity: 6 },
+		{ userId: 'b', itemId: 'p', finalQuantity: 6 },
+		{ userId: 'b', itemId: 't', finalQuantity: 1 }
+	];
+
+	it("each member's lines add up exactly to their total", () => {
+		for (const b of computeBreakdown(items, lines, 3001, 999).values()) {
+			const itemsSum = [...b.items.values()].reduce((x, y) => x + y, 0);
+			expect(itemsSum + b.deliveryShare - b.discountShare).toBe(b.total);
+		}
+	});
+
+	it('totals match computeCharges', () => {
+		const breakdown = computeBreakdown(items, lines, 3001, 999);
+		const charges = computeCharges(items, lines, 3001, 999);
+		for (const [id, b] of breakdown) expect(b.total).toBe(charges.get(id));
+	});
+
+	it('lists only the items a member ate', () => {
+		const a = computeBreakdown(items, lines, 0).get('a')!;
+		expect([...a.items.keys()]).toEqual(['p']);
 	});
 });
