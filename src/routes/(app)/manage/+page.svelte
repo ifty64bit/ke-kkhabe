@@ -228,14 +228,15 @@
 	</div>
 {:else if status === 'closed'}
 	<Card title={i18n.t('manage.shopping.title')} description={i18n.t('manage.shopping.hint')}>
-		<ul class="flex flex-col gap-3">
+		<!-- Shared columns (name | quantity | unit) so quantities line up whatever the unit's length. -->
+		<ul class="grid grid-cols-[1fr_auto_auto] items-baseline gap-x-2 gap-y-3">
 			{#each data.menu.filter((m) => m.purchaseUnits > 0) as m (m.id)}
-				<li class="flex items-baseline justify-between gap-4">
+				<li class="col-span-3 grid grid-cols-subgrid items-baseline">
 					<span class="text-xl">{m.name}</span>
-					<span class="text-3xl font-semibold tabular-nums">
+					<span class="text-right text-3xl font-semibold tabular-nums">
 						{i18n.num(m.purchaseUnits)}
-						<span class="text-base font-normal text-muted">{i18n.pick(m.unitBn, m.unitEn)}</span>
 					</span>
+					<span class="text-base text-muted">{i18n.pick(m.unitBn, m.unitEn)}</span>
 				</li>
 			{/each}
 		</ul>
