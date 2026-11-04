@@ -4,7 +4,7 @@
 	import { useI18n, type MessageKey } from '#lib/i18n/index.ts';
 	import { UNITS, unitIdFor } from '#lib/units.ts';
 
-	type Item = { id: string; nameBn: string; nameEn: string; unitEn: string };
+	type Item = { id: string; name: string; unitEn: string };
 
 	let {
 		open = $bindable(false),
@@ -17,17 +17,15 @@
 
 	const i18n = useI18n();
 
-	let nameBn = $state('');
-	let nameEn = $state('');
+	let name = $state('');
 	let unit = $state<string>('pc');
-	let errors = $state<Partial<Record<'nameBn' | 'nameEn' | 'unitId', MessageKey>>>({});
+	let errors = $state<Partial<Record<'name' | 'unitId', MessageKey>>>({});
 	let formError = $state<MessageKey | null>(null);
 	let saving = $state(false);
 
 	$effect.pre(() => {
 		if (open) {
-			nameBn = item?.nameBn ?? '';
-			nameEn = item?.nameEn ?? '';
+			name = item?.name ?? '';
 			unit = item ? unitIdFor(item.unitEn) : 'pc';
 			errors = {};
 			formError = null;
@@ -63,37 +61,9 @@
 	>
 		{#if item}<input type="hidden" name="id" value={item.id} />{/if}
 
-		<Field
-			label={i18n.t('items.nameBn')}
-			error={errors.nameBn ? i18n.t(errors.nameBn) : null}
-			required
-		>
+		<Field label={i18n.t('items.name')} error={errors.name ? i18n.t(errors.name) : null} required>
 			{#snippet children(f)}
-				<Input
-					name="nameBn"
-					bind:value={nameBn}
-					maxlength={40}
-					lang="bn"
-					autocomplete="off"
-					{...f}
-				/>
-			{/snippet}
-		</Field>
-
-		<Field
-			label={i18n.t('items.nameEn')}
-			hint={i18n.t('items.nameEnHint')}
-			error={errors.nameEn ? i18n.t(errors.nameEn) : null}
-		>
-			{#snippet children(f)}
-				<Input
-					name="nameEn"
-					bind:value={nameEn}
-					maxlength={40}
-					lang="en"
-					autocomplete="off"
-					{...f}
-				/>
+				<Input name="name" bind:value={name} maxlength={40} autocomplete="off" {...f} />
 			{/snippet}
 		</Field>
 

@@ -19,8 +19,7 @@ async function loadToday(db: Db, userId: string) {
 		db
 			.select({
 				id: item.id,
-				nameBn: item.nameBn,
-				nameEn: item.nameEn,
+				name: item.name,
 				unitBn: item.unitBn,
 				unitEn: item.unitEn,
 				unitPrice: dayItem.unitPrice,
@@ -29,7 +28,7 @@ async function loadToday(db: Db, userId: string) {
 			.from(dayItem)
 			.innerJoin(item, eq(item.id, dayItem.itemId))
 			.where(eq(dayItem.dayId, today.id))
-			.orderBy(item.nameBn),
+			.orderBy(item.name),
 		db
 			.select({ eating: response.eating })
 			.from(response)

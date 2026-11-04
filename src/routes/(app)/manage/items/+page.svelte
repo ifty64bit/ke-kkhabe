@@ -26,8 +26,7 @@
 	let deleteOpen = $state(false);
 	let actionError = $state<MessageKey | null>(null);
 
-	const byName = (a: Row, b: Row) =>
-		i18n.pick(a.nameBn, a.nameEn).localeCompare(i18n.pick(b.nameBn, b.nameEn), i18n.locale);
+	const byName = (a: Row, b: Row) => a.name.localeCompare(b.name, i18n.locale);
 	const active = $derived(data.items.filter((i) => !i.archived).toSorted(byName));
 	const archived = $derived(data.items.filter((i) => i.archived).toSorted(byName));
 
@@ -76,7 +75,7 @@
 {/snippet}
 
 {#snippet rowMenu(row: Row)}
-	{@const name = i18n.pick(row.nameBn, row.nameEn)}
+	{@const name = row.name}
 	<Menu label={i18n.t('items.more', { name })}>
 		{#snippet trigger()}
 			<span
@@ -148,15 +147,12 @@
 						type="button"
 						class="min-w-0 flex-1 text-left"
 						onclick={() => openEdit(row)}
-						aria-label="{i18n.t('items.edit')}: {i18n.pick(row.nameBn, row.nameEn)}"
+						aria-label="{i18n.t('items.edit')}: {row.name}"
 					>
 						<span class="block truncate text-lg">
-							{i18n.pick(row.nameBn, row.nameEn)}
+							{row.name}
 							<span class="text-base text-muted">({i18n.pick(row.unitBn, row.unitEn)})</span>
 						</span>
-						{#if i18n.locale === 'bn' && row.nameEn}
-							<span class="block truncate text-sm text-muted" lang="en">{row.nameEn}</span>
-						{/if}
 						{@render rowMeta(row)}
 					</button>
 					{@render rowMenu(row)}
@@ -188,7 +184,7 @@
 					<li class="flex items-center gap-3 px-4 py-3">
 						<div class="min-w-0 flex-1 opacity-70">
 							<span class="block truncate text-lg">
-								{i18n.pick(row.nameBn, row.nameEn)}
+								{row.name}
 								<span class="text-base text-muted">({i18n.pick(row.unitBn, row.unitEn)})</span>
 							</span>
 							{@render rowMeta(row)}
@@ -207,9 +203,7 @@
 <Dialog
 	bind:open={deleteOpen}
 	size="sm"
-	title={deleting
-		? i18n.t('items.deleteTitle', { name: i18n.pick(deleting.nameBn, deleting.nameEn) })
-		: ''}
+	title={deleting ? i18n.t('items.deleteTitle', { name: deleting.name }) : ''}
 	description={i18n.t('items.deleteBody')}
 >
 	{#snippet footer({ close })}

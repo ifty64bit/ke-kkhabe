@@ -5,8 +5,7 @@
 
 	type Item = {
 		id: string;
-		nameBn: string;
-		nameEn: string;
+		name: string;
 		unitBn: string;
 		unitEn: string;
 		available: boolean;
@@ -40,11 +39,7 @@
 	});
 
 	const offered = $derived(
-		items
-			.filter((i) => i.available)
-			.toSorted((a, b) =>
-				i18n.pick(a.nameBn, a.nameEn).localeCompare(i18n.pick(b.nameBn, b.nameEn), i18n.locale)
-			)
+		items.filter((i) => i.available).toSorted((a, b) => a.name.localeCompare(b.name, i18n.locale))
 	);
 	const total = $derived(Object.values(qty).reduce((a, b) => a + b, 0));
 	const isChange = $derived(Object.values(initial).some((q) => q > 0));
@@ -72,7 +67,7 @@
 	>
 		<ul class="divide-y divide-border">
 			{#each offered as item (item.id)}
-				{@const name = i18n.pick(item.nameBn, item.nameEn)}
+				{@const name = item.name}
 				<li class="flex items-center justify-between gap-4 py-3">
 					<span class="text-lg">
 						{name}

@@ -18,10 +18,7 @@
 	const orderSummary = $derived(
 		data.items
 			.filter((i) => (data.lines[i.id] ?? 0) > 0)
-			.map(
-				(i) =>
-					`${i18n.pick(i.nameBn, i.nameEn)} ${i18n.num(data.lines[i.id])} ${i18n.pick(i.unitBn, i.unitEn)}`
-			)
+			.map((i) => `${i.name} ${i18n.num(data.lines[i.id])} ${i18n.pick(i.unitBn, i.unitEn)}`)
 			.join(', ')
 	);
 	const answered = $derived(data.response !== null);

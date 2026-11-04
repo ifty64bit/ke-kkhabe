@@ -29,8 +29,7 @@ const userRef = (name: string) => text(name).references(() => user.id);
 /** Master catalog of breakfast items. Never hard-deleted once used; archive instead. */
 export const item = sqliteTable('item', {
 	id: id(),
-	nameBn: text('name_bn').notNull(),
-	nameEn: text('name_en').notNull(),
+	name: text('name').notNull().default(''),
 	unitBn: text('unit_bn').notNull().default('টি'),
 	unitEn: text('unit_en').notNull().default('pc'),
 	archived: integer('archived', { mode: 'boolean' }).notNull().default(false),

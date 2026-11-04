@@ -14,8 +14,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const rows = await locals.db
 		.select({
 			id: item.id,
-			nameBn: item.nameBn,
-			nameEn: item.nameEn,
+			name: item.name,
 			unitBn: item.unitBn,
 			unitEn: item.unitEn,
 			archived: item.archived,
@@ -24,38 +23,38 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.from(item)
 		.leftJoin(dayItem, eq(dayItem.itemId, item.id))
 		.groupBy(item.id)
-		.orderBy(item.nameBn);
+		.orderBy(item.name);
 	return { items: rows };
 };
 
-type Fields = { nameBn: string; nameEn: string; unitId: string };
+type Fields = { name: string; unitId: string };
 const fieldsOf = (form: FormData): Fields => ({
-	nameBn: String(form.get('nameBn') ?? '').trim(),
-	nameEn: String(form.get('nameEn') ?? '').trim(),
+	name: String(form.get('name') ?? '')
+		.trim()
+		.replace(/\s+/g, ' '),
 	unitId: String(form.get('unit') ?? '')
 });
 
 /** Validate and normalize item fields; returns errors keyed by field. */
 async function validate(db: Db, f: Fields, exceptId?: string) {
 	const errors: Partial<Record<keyof Fields, MessageKey>> = {};
-	if (!f.nameBn) errors.nameBn = 'items.error.nameRequired';
-	else if (f.nameBn.length > MAX_NAME) errors.nameBn = 'items.error.tooLong';
-	if (f.nameEn.length > MAX_NAME) errors.nameEn = 'items.error.tooLong';
+	if (!f.name) errors.name = 'items.error.nameRequired';
+	else if (f.name.length > MAX_NAME) errors.name = 'items.error.tooLong';
 	const unit = unitById(f.unitId);
 	if (!unit) errors.unitId = 'items.error.unit';
 
-	if (!errors.nameBn) {
+	if (!errors.name) {
 		const [dupe] = await db
 			.select({ id: item.id })
 			.from(item)
 			.where(
 				and(
-					sql`lower(${item.nameBn}) = lower(${f.nameBn})`,
+					sql`lower(${item.name}) = lower(${f.name})`,
 					exceptId ? ne(item.id, exceptId) : undefined
 				)
 			)
 			.limit(1);
-		if (dupe) errors.nameBn = 'items.error.duplicate';
+		if (dupe) errors.name = 'items.error.duplicate';
 	}
 	return { errors, unit };
 }
@@ -70,8 +69,7 @@ export const actions: Actions = {
 		if (Object.keys(errors).length || !unit) return fail(400, { errors, values: f });
 
 		await locals.db.insert(item).values({
-			nameBn: f.nameBn,
-			nameEn: f.nameEn,
+			name: f.name,
 			unitBn: unit.bn,
 			unitEn: unit.en
 		});
@@ -91,7 +89,7 @@ export const actions: Actions = {
 
 		await locals.db
 			.update(item)
-			.set({ nameBn: f.nameBn, nameEn: f.nameEn, unitBn: unit.bn, unitEn: unit.en })
+			.set({ name: f.name, unitBn: unit.bn, unitEn: unit.en })
 			.where(eq(item.id, id));
 		return { saved: true };
 	},
