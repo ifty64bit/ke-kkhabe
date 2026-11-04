@@ -31,7 +31,13 @@
 	class={cn('rounded-card border border-border bg-surface', pad[padding], className)}
 >
 	{#if title || actions}
-		<header class="mb-4 flex items-start justify-between gap-3">
+		<!-- Edge-to-edge cards (padding="none") still inset their header to line up with row content. -->
+		<header
+			class={cn(
+				'mb-4 flex items-start justify-between gap-3',
+				padding === 'none' && 'mb-1 px-4 pt-4'
+			)}
+		>
 			<div class="min-w-0">
 				{#if title}<h2 class="text-base leading-snug font-semibold">{title}</h2>{/if}
 				{#if description}<p class="mt-1 text-sm text-muted">{description}</p>{/if}
@@ -41,7 +47,12 @@
 	{/if}
 	{@render children?.()}
 	{#if footer}
-		<footer class="mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
+		<footer
+			class={cn(
+				'mt-5 flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4',
+				padding === 'none' && 'px-4 pb-4'
+			)}
+		>
 			{@render footer()}
 		</footer>
 	{/if}

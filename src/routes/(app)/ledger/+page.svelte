@@ -153,6 +153,7 @@
 				class="mt-8"
 				title={i18n.t('ledger.suggestTitle')}
 				description={i18n.t('ledger.suggestBody')}
+				padding="sm"
 			>
 				<ul class="-mx-1 divide-y divide-border">
 					{#each data.suggestions as s, i (i)}
