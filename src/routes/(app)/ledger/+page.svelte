@@ -228,7 +228,6 @@
 	people={data.people}
 	meId={data.meId}
 	isManager={data.isManager}
-	suggestions={data.suggestions}
 	balances={Object.fromEntries(data.balances.map((b) => [b.id, b.balance]))}
 	today={data.today}
 />

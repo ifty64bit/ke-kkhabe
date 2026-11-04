@@ -14,7 +14,7 @@
 	import { formatTaka, parseTaka, type Poisha } from '#lib/money.ts';
 
 	type Person = { id: string; name: string; active: boolean };
-	type Suggestion = { from: string; to: string; amount: Poisha };
+	type Transfer = { from: string; to: string; amount: Poisha };
 
 	let {
 		open = $bindable(false),
@@ -22,17 +22,15 @@
 		people,
 		meId,
 		isManager,
-		suggestions,
 		balances,
 		today
 	}: {
 		open?: boolean;
 		/** A suggested transfer to start from, or null for a blank form. */
-		prefill?: Suggestion | null;
+		prefill?: Transfer | null;
 		people: Person[];
 		meId: string;
 		isManager: boolean;
-		suggestions: Suggestion[];
 		/** Current balance per user id (poisha), for the soft over-payment warning. */
 		balances: Record<string, Poisha>;
 		/** Today in Dhaka, the default settlement date. */
