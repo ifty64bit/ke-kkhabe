@@ -228,13 +228,13 @@
 	</div>
 {:else if status === 'closed'}
 	<Card title={i18n.t('manage.shopping.title')} description={i18n.t('manage.shopping.hint')}>
-		<ul class="flex flex-col gap-3">
+		<ul class="divide-y divide-border text-lg">
 			{#each data.menu.filter((m) => m.purchaseUnits > 0) as m (m.id)}
-				<li class="flex items-baseline justify-between gap-4">
-					<span class="text-xl">{m.name}</span>
-					<span class="text-3xl font-semibold tabular-nums">
-						{i18n.num(m.purchaseUnits)}
-						<span class="text-base font-normal text-muted">{i18n.pick(m.unitBn, m.unitEn)}</span>
+				<li class="flex items-baseline justify-between gap-4 py-2.5">
+					<span>{m.name}</span>
+					<span class="whitespace-nowrap">
+						<span class="font-semibold tabular-nums">{i18n.num(m.purchaseUnits)}</span>
+						<span class="text-muted">{i18n.pick(m.unitBn, m.unitEn)}</span>
 					</span>
 				</li>
 			{/each}
