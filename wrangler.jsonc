@@ -1,0 +1,21 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "ke-khabe",
+	"compatibility_date": "2026-11-04",
+	"compatibility_flags": ["nodejs_als"],
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "ke-khabe",
+			"database_id": "67cf4def-ace4-485a-9b7b-8fcd97f8d7f9",
+			"migrations_dir": "drizzle"
+		}
+	],
+	"workers_dev": true,
+	"preview_urls": true
+}

@@ -1,0 +1,21 @@
+import { defineEnvVars } from '@sveltejs/kit/env';
+
+export const variables = defineEnvVars({
+	ORIGIN: {
+		description: 'The app origin (base URL), e.g. `http://localhost:5173`.'
+	},
+	BETTER_AUTH_SECRET: {
+		description:
+			'Secret used to sign tokens. For production use 32 characters generated with high entropy. See [Better Auth installation](https://www.better-auth.com/docs/installation).'
+	},
+	GOOGLE_CLIENT_ID: {
+		description: 'Google OAuth client ID.'
+	},
+	GOOGLE_CLIENT_SECRET: {
+		description: 'Google OAuth client secret.'
+	},
+	ADMIN_EMAILS: {
+		description:
+			'Comma-separated emails that become managers when they sign in, e.g. `a@gmail.com,b@gmail.com`.'
+	}
+});
