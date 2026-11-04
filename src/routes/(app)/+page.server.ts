@@ -3,6 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { dhakaToday } from '#lib/date.ts';
 import type { MessageKey } from '#lib/i18n/index.ts';
 import { chargesForDay } from '#lib/server/charges.ts';
+import { computeLedger } from '#lib/server/ledger.ts';
 import { day, dayItem, item, orderLine, response } from '#lib/server/db/schema.ts';
 import type { Db } from '#lib/server/db/index.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -58,12 +59,18 @@ async function loadToday(db: Db, userId: string) {
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const t = await loadToday(locals.db, locals.user!.id);
-	const charge =
-		t.day?.status === 'finalized'
-			? ((await chargesForDay(locals.db, t.day.id)).get(locals.user!.id) ?? 0)
-			: null;
-	return { ...t, charge };
+	const meId = locals.user!.id;
+	const t = await loadToday(locals.db, meId);
+	// The viewer's own balance for the ledger link; the full ledger is computed once, on the server.
+	const [charges, ledger] = await Promise.all([
+		t.day?.status === 'finalized' ? chargesForDay(locals.db, t.day.id) : Promise.resolve(null),
+		computeLedger(locals.db)
+	]);
+	return {
+		...t,
+		charge: charges?.get(meId) ?? null,
+		myBalance: ledger.balances.get(meId) ?? 0
+	};
 };
 
 /** Shared preconditions for changing today's answer. */

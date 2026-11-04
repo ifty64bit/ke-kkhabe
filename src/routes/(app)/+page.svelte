@@ -4,6 +4,7 @@
 	import OrderDialog from '#lib/components/today/OrderDialog.svelte';
 	import { Alert, Button, Money } from '#lib/components/ui/index.ts';
 	import { useI18n, type MessageKey } from '#lib/i18n/index.ts';
+	import { formatTaka } from '#lib/money.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -28,9 +29,28 @@
 		route: '/(app)/ledger' | '/(app)/reports' | '/(app)/manage';
 		label: MessageKey;
 		hint: MessageKey;
+		hintParams?: Record<string, string>;
 	};
+	const ledgerHint = $derived<{ hint: MessageKey; hintParams?: Record<string, string> }>(
+		data.myBalance > 0
+			? {
+					hint: 'links.ledgerHintPos',
+					hintParams: { amount: formatTaka(data.myBalance, i18n.locale) }
+				}
+			: data.myBalance < 0
+				? {
+						hint: 'links.ledgerHintNeg',
+						hintParams: { amount: formatTaka(data.myBalance, i18n.locale) }
+					}
+				: { hint: 'links.ledgerHintZero' }
+	);
 	const links = $derived<Link[]>([
-		{ route: '/(app)/ledger', label: 'links.ledger', hint: 'links.ledgerHint' },
+		{
+			route: '/(app)/ledger',
+			label: 'links.ledger',
+			hint: ledgerHint.hint,
+			hintParams: ledgerHint.hintParams
+		},
 		{ route: '/(app)/reports', label: 'links.reports', hint: 'links.reportsHint' },
 		...(isManager
 			? [{ route: '/(app)/manage', label: 'links.manage', hint: 'links.manageHint' } satisfies Link]
@@ -140,7 +160,7 @@
 					class="flex flex-col items-center gap-0.5 rounded-control px-2 py-3 text-center transition-colors hover:bg-surface-2"
 				>
 					<span class="font-semibold">{i18n.t(link.label)}</span>
-					<span class="text-xs text-muted">{i18n.t(link.hint)}</span>
+					<span class="text-xs text-muted">{i18n.t(link.hint, link.hintParams)}</span>
 				</a>
 			</li>
 		{/each}

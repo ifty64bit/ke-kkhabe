@@ -102,3 +102,31 @@
 - Why: the tests cover pure modules only, so the app's Vite/SvelteKit pipeline stays untouched
 - Rejected: adding a `test` block to vite.config.ts (couples the dev pipeline to tests)
 - Rests on: daily-controls prompt §6 (Vitest for `allocate`, `validateFinalize`, the charge preview)
+
+## 2026-11-04 · Settlement rows read "করিম → রহিম ৳৮৫", never a case-suffixed name
+
+- Decided by: Claude, default
+- Why: Bangla case endings can't be built onto arbitrary names (an English name would break the grammar); the ledger prompt's i18n rule says names should stand alone
+- Rejected: "করিম রহিমকে দিয়েছেন ৳৮৫" (suffixes an ending onto any given name)
+- Rests on: ledger prompt §3.4 vs §4 (the i18n rule wins over the example copy)
+
+## 2026-11-04 · The over-amount warning compares against the suggested transfer for that pair
+
+- Decided by: Claude, default
+- Why: balances hold no pairwise debt, so the settle-up suggestion is the closest computable "current debt or credit"; it stays a soft warning either way
+- Rejected: rejecting the submit (the spec forbids it); comparing against the payer's whole balance (wrong axis)
+- Rests on: ledger prompt §2 (record validation: never reject, do warn)
+
+## 2026-11-04 · The 30-day settlement window cuts on the Dhaka date, computed in the app
+
+- Decided by: Claude, default
+- Why: SQLite `date('now')` is UTC and would clip the boundary wrong after 18:00 BST; the stored `settlement.date` is the Dhaka date key anyway
+- Rejected: `date('now', '-30 days')` in SQL
+- Rests on: ledger prompt §3.4 (recent settlements, last 30 days), Asia/Dhaka day boundary
+
+## 2026-11-04 · `balancesFrom` also drops rows whose day is not finalized
+
+- Decided by: Claude, default
+- Why: a reopened day must vanish from balances; doing it in the pure fold as well as the SQL join makes it unit-testable and keeps `computeLedger` honest
+- Rejected: trusting the SQL join alone
+- Rests on: ledger prompt §2 (only finalized days count), §6 (unit tests without a database)
