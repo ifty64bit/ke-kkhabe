@@ -45,8 +45,9 @@ export function createI18n(getLocale: () => Locale) {
 			translate(getLocale(), key, params),
 		num: (n: number) => formatNumber(n, getLocale()),
 		day: (date: string) => formatDay(date, getLocale()),
-		/** Pick the localized field of a record with `xBn` / `xEn` columns. */
-		pick: (bnValue: string, enValue: string) => (getLocale() === 'bn' ? bnValue : enValue)
+		/** Pick the localized field of a record with `xBn` / `xEn` columns; English falls back to Bangla. */
+		pick: (bnValue: string, enValue: string | null | undefined) =>
+			getLocale() === 'en' && enValue ? enValue : bnValue
 	};
 }
 
