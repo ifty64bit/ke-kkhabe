@@ -17,6 +17,6 @@ export const actions: Actions = {
 			body: { provider: 'google', callbackURL: safeNext(form.get('next')) }
 		});
 		if (!result?.url) return fail(500, { message: 'Could not start Google sign-in' });
-		redirect(303, result.url);
+		redirect(303, result.url, { external: ['https://accounts.google.com'] });
 	}
 };
