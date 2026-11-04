@@ -50,7 +50,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 		if (u.active === false && path !== '/inactive' && path !== '/logout') {
 			redirect(303, '/inactive');
 		}
-		if (path.startsWith('/manage') && u.role !== 'manager') {
+		// Page views are guarded in manage/+layout.server.ts (renders the themed error page).
+		// Actions run before layout loads, so block non-GET requests here as well.
+		if (path.startsWith('/manage') && event.request.method !== 'GET' && u.role !== 'manager') {
 			error(403, 'Managers only');
 		}
 	}

@@ -12,6 +12,7 @@ export { default as Menu } from './Menu.svelte';
 export { default as MenuItem } from './MenuItem.svelte';
 export { default as MenuLabel } from './MenuLabel.svelte';
 export { default as Money } from './Money.svelte';
+export { default as PageHeader } from './PageHeader.svelte';
 export { default as QuantityStepper } from './QuantityStepper.svelte';
 export { default as SegmentedControl } from './SegmentedControl.svelte';
 export { default as Select } from './Select.svelte';
