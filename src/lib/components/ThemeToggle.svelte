@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { SegmentedControl } from '#lib/components/ui/index.ts';
+	import { useI18n } from '#lib/i18n/index.ts';
 	import { THEME_COOKIE, type Theme } from '#lib/theme/index.ts';
+
+	const i18n = useI18n();
 
 	let { theme = $bindable('system') }: { theme?: Theme } = $props();
 
@@ -47,12 +50,12 @@
 
 <SegmentedControl
 	bind:value={theme}
-	label="থিম"
+	label={i18n.t('theme.label')}
 	iconOnly
 	onchange={apply}
 	options={[
-		{ value: 'light', label: 'লাইট', icon: sun },
-		{ value: 'system', label: 'সিস্টেম', icon: monitor },
-		{ value: 'dark', label: 'ডার্ক', icon: moon }
+		{ value: 'light', label: i18n.t('theme.light'), icon: sun },
+		{ value: 'system', label: i18n.t('theme.system'), icon: monitor },
+		{ value: 'dark', label: i18n.t('theme.dark'), icon: moon }
 	]}
 />

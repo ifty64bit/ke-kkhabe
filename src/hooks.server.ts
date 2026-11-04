@@ -8,10 +8,11 @@ import { getDb } from '#lib/server/db/index.ts';
 import { user as userTable } from '#lib/server/db/schema.ts';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { parseTheme, THEME_COOKIE } from '#lib/theme/index.ts';
+import { isLocale, LOCALE_COOKIE } from '#lib/i18n/index.ts';
 import { env } from 'cloudflare:workers';
 
 // `/ui` is the dev-only component gallery (404 in production via its load function).
-const PUBLIC_PATHS = ['/login', '/api/auth', ...(dev ? ['/ui'] : [])];
+const PUBLIC_PATHS = ['/login', '/api/auth', '/locale', ...(dev ? ['/ui'] : [])];
 const isPublic = (path: string) => PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -39,6 +40,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 		event.locals.user = u;
 	}
 
+	// Language: the device's explicit choice (cookie), else the account's saved language, else Bangla.
+	const cookieLocale = event.cookies.get(LOCALE_COOKIE);
+	event.locals.locale = isLocale(cookieLocale)
+		? cookieLocale
+		: isLocale(event.locals.user?.locale)
+			? event.locals.user.locale
+			: 'bn';
+
 	const path = event.url.pathname;
 
 	if (!isPublic(path)) {
@@ -57,11 +66,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	const { theme } = event.locals;
+	const { theme, locale } = event.locals;
 	return svelteKitHandler({
 		event,
 		resolve: (e) =>
-			resolve(e, { transformPageChunk: ({ html }) => html.replace('%ke.theme%', theme) }),
+			resolve(e, {
+				transformPageChunk: ({ html }) =>
+					html.replace('%ke.theme%', theme).replace('%ke.lang%', locale)
+			}),
 		auth,
 		building
 	});

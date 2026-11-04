@@ -1,6 +1,9 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { useI18n } from '#lib/i18n/index.ts';
 	import { cn } from '#lib/utils/cn.ts';
+
+	const i18n = useI18n();
 
 	let {
 		open = $bindable(false),
@@ -92,7 +95,7 @@
 					<button
 						type="button"
 						onclick={close}
-						aria-label="বন্ধ করুন"
+						aria-label={i18n.t('common.close')}
 						class="-mt-1 -mr-2 grid size-9 place-items-center rounded-full text-muted hover:bg-surface-2 hover:text-fg"
 					>
 						<svg

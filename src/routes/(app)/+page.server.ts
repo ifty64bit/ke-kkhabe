@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
-import { dhakaToday, formatDayBn } from '#lib/date.ts';
+import { dhakaToday } from '#lib/date.ts';
+import type { MessageKey } from '#lib/i18n/index.ts';
 import { lineTotal, sum } from '#lib/money.ts';
 import { day, dayItem, item, orderLine, response } from '#lib/server/db/schema.ts';
 import type { Db } from '#lib/server/db/index.ts';
@@ -19,7 +20,9 @@ async function loadToday(db: Db, userId: string) {
 			.select({
 				id: item.id,
 				nameBn: item.nameBn,
+				nameEn: item.nameEn,
 				unitBn: item.unitBn,
+				unitEn: item.unitEn,
 				unitPrice: dayItem.unitPrice,
 				available: dayItem.available
 			})
@@ -62,15 +65,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 		t.day?.status === 'finalized'
 			? sum(t.items.map((i) => lineTotal(t.lines[i.id] ?? 0, i.unitPrice ?? 0)))
 			: null;
-	return { ...t, dateLabel: formatDayBn(t.date), charge };
+	return { ...t, charge };
 };
 
 /** Shared preconditions for changing today's answer. */
 async function openDay(db: Db) {
 	const [today] = await db.select().from(day).where(eq(day.date, dhakaToday())).limit(1);
-	if (!today) return { error: fail(409, { message: 'আজকের মেনু এখনো দেওয়া হয়নি।' }) };
+	if (!today) return { error: fail(409, { messageKey: 'order.error.noMenu' as MessageKey }) };
 	if (today.status !== 'open')
-		return { error: fail(409, { message: 'আজকের অর্ডার নেওয়া বন্ধ হয়ে গেছে।' }) };
+		return { error: fail(409, { messageKey: 'order.error.closed' as MessageKey }) };
 	return { today };
 }
 
@@ -94,11 +97,10 @@ export const actions: Actions = {
 			const itemId = key.slice(4);
 			const quantity = Number(raw);
 			if (!allowed.has(itemId) || !Number.isInteger(quantity) || quantity < 0 || quantity > MAX_QTY)
-				return fail(400, { message: 'অর্ডারে ভুল পরিমাণ আছে। আবার চেষ্টা করুন।' });
+				return fail(400, { messageKey: 'order.error.invalid' as MessageKey });
 			if (quantity > 0) wanted.push({ itemId, quantity });
 		}
-		if (wanted.length === 0)
-			return fail(400, { message: 'অন্তত একটা আইটেম বেছে নিন, অথবা "আজ না" বলুন।' });
+		if (wanted.length === 0) return fail(400, { messageKey: 'order.error.empty' as MessageKey });
 
 		await db.batch([
 			db

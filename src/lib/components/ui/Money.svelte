@@ -1,14 +1,22 @@
 <script lang="ts">
 	import { formatTaka, type Locale, type Poisha } from '#lib/money.ts';
+	import { useI18n } from '#lib/i18n/index.ts';
 	import { cn } from '#lib/utils/cn.ts';
+
+	const i18n = useI18n();
 
 	let {
 		value,
-		locale = 'bn',
+		locale,
 		/** Color positive green / negative red, with explicit sign (for balances). */
 		balance = false,
 		class: className
-	}: { value: Poisha; locale?: Locale; balance?: boolean; class?: string } = $props();
+	}: {
+		value: Poisha;
+		/** Defaults to the page language. */ locale?: Locale;
+		balance?: boolean;
+		class?: string;
+	} = $props();
 </script>
 
 <span
@@ -17,5 +25,5 @@
 		balance && value > 0 && 'text-success',
 		balance && value < 0 && 'text-danger',
 		className
-	)}>{formatTaka(value, locale, { sign: balance })}</span
+	)}>{formatTaka(value, locale ?? i18n.locale, { sign: balance })}</span
 >

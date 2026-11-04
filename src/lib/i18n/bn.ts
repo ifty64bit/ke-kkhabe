@@ -1,0 +1,103 @@
+/** Bangla UI strings. The source of truth for keys; `en.ts` must provide every key. */
+export const bn = {
+	'app.name': 'কে খাবে',
+	'nav.home': 'কে খাবে, আজকের পাতা',
+
+	'common.cancel': 'বাতিল',
+	'common.close': 'বন্ধ করুন',
+	'common.loading': 'লোড হচ্ছে',
+	'common.logout': 'লগআউট',
+
+	'theme.label': 'থিম',
+	'theme.light': 'লাইট',
+	'theme.system': 'সিস্টেম',
+	'theme.dark': 'ডার্ক',
+
+	'lang.short': 'EN',
+	'lang.switch': 'Switch to English',
+
+	'account.label': 'অ্যাকাউন্ট',
+	'account.manager': 'ম্যানেজার',
+	'account.member': 'সদস্য',
+
+	'stepper.decrease': '{label} কমান',
+	'stepper.increase': '{label} বাড়ান',
+
+	'login.title': 'কে খাবে?',
+	'login.tagline': 'অফিসের নাস্তা, অর্ডার আর হিসাব এক জায়গায়',
+	'login.google': 'Google দিয়ে সাইন ইন করুন',
+	'login.error': 'Google সাইন-ইন শুরু করা যায়নি। আবার চেষ্টা করুন।',
+
+	'today.headTitle': 'আজ খাবেন?',
+	'today.prompt': 'আজ খাবেন, {name}?',
+	'today.noMenu': 'আজকের মেনু এখনো দেওয়া হয়নি।',
+	'today.noMenuCta': 'আজকের মেনু দিন',
+	'today.noMenuMember': 'মেনু এলে এখানেই অর্ডার করতে পারবেন।',
+	'today.yourOrder': 'আপনার অর্ডার:',
+	'today.change': 'অর্ডার বদলান',
+	'today.skipToday': 'আজ খাবো না',
+	'today.yes': 'হ্যাঁ, খাবো',
+	'today.no': 'আজ না',
+	'today.saidNo': 'আজ খাচ্ছেন না বলে রেখেছেন।',
+	'today.editUntilClose': 'ম্যানেজার অর্ডার বন্ধ করার আগ পর্যন্ত বদলাতে পারবেন।',
+	'today.closedNone': 'আজ আপনার কোনো অর্ডার নেই।',
+	'today.closedNote': 'অর্ডার নেওয়া বন্ধ। ম্যানেজার নাস্তা আনতে গেছেন।',
+	'today.ate': 'আজ খেয়েছেন:',
+	'today.yourCost': 'আপনার খরচ',
+	'today.finalizedNone': 'আজ আপনার কোনো অর্ডার ছিল না।',
+
+	'links.label': 'অন্যান্য পাতা',
+	'links.ledger': 'হিসাব',
+	'links.ledgerHint': 'কার কাছে কত বাকি',
+	'links.reports': 'রিপোর্ট',
+	'links.reportsHint': 'মাসের হিসাব',
+	'links.manage': 'ম্যানেজ',
+	'links.manageHint': 'আজকের দিন চালান',
+
+	'order.title': 'আজ কী খাবেন?',
+	'order.description': 'যা যা লাগবে, কয়টা লাগবে বেছে নিন।',
+	'order.submit': 'অর্ডার করুন',
+	'order.change': 'অর্ডার বদলান',
+	'order.saveFailed': 'অর্ডার সেভ করা যায়নি। আবার চেষ্টা করুন।',
+	'order.error.noMenu': 'আজকের মেনু এখনো দেওয়া হয়নি।',
+	'order.error.closed': 'আজকের অর্ডার নেওয়া বন্ধ হয়ে গেছে।',
+	'order.error.invalid': 'অর্ডারে ভুল পরিমাণ আছে। আবার চেষ্টা করুন।',
+	'order.error.empty': 'অন্তত একটা আইটেম বেছে নিন, অথবা "আজ না" বলুন।',
+
+	'ledger.title': 'হিসাব',
+	'ledger.description': 'কে কত পাবে, কে কত দেবে, আর কীভাবে মিটিয়ে ফেলা যায়।',
+	'ledger.emptyTitle': 'এখনো কোনো হিসাব নেই',
+	'ledger.emptyBody': 'প্রথম দিনের নাস্তা চূড়ান্ত হলে সবার ব্যালান্স এখানে দেখাবে।',
+
+	'reports.headTitle': 'রিপোর্ট',
+	'reports.title': 'মাসিক রিপোর্ট',
+	'reports.description': 'প্রতি মাসে কে কী খেয়েছে, কত দিয়েছে, আর মাস শেষে কার কত বাকি।',
+	'reports.emptyTitle': 'এই মাসের রিপোর্ট এখনো খালি',
+	'reports.emptyBody': 'চূড়ান্ত হওয়া প্রতিটি দিন এখানে যোগ হবে।',
+
+	'manage.title': 'ম্যানেজ',
+	'manage.tabs.today': 'আজকের দিন',
+	'manage.tabs.items': 'আইটেম',
+	'manage.tabs.members': 'সদস্য',
+	'manage.today.emptyTitle': 'আজকের দিন এখনো শুরু হয়নি',
+	'manage.today.emptyBody': 'আইটেম তালিকা থেকে আজকের মেনু বেছে অর্ডার নেওয়া শুরু করবেন এখান থেকে।',
+	'manage.items.emptyTitle': 'কোনো আইটেম নেই',
+	'manage.items.emptyBody':
+		'পরোটা, ডিম, চা—যা যা সাধারণত আসে, সেগুলো এখানে একবার যোগ করলেই প্রতিদিন বেছে নেওয়া যাবে।',
+	'manage.members.emptyTitle': 'সদস্যদের তালিকা',
+	'manage.members.emptyBody':
+		'যারা Google দিয়ে লগইন করেছেন তারা এখানে দেখাবেন। এখান থেকে কাউকে ম্যানেজার বানানো বা বন্ধ করা যাবে।',
+
+	'inactive.title': 'আপনার অ্যাকাউন্ট বন্ধ আছে',
+	'inactive.body': 'আবার চালু করতে একজন ম্যানেজারকে বলুন।',
+
+	'error.403.title': 'এই পাতাটা শুধু ম্যানেজারদের জন্য',
+	'error.403.body': 'আপনার অ্যাকাউন্ট সদস্য হিসেবে আছে। ম্যানেজার হতে চাইলে একজন ম্যানেজারকে বলুন।',
+	'error.404.title': 'এই পাতাটা খুঁজে পাওয়া যায়নি',
+	'error.404.body': 'লিংকটা ভুল হতে পারে, অথবা পাতাটা সরিয়ে ফেলা হয়েছে।',
+	'error.generic.title': 'কিছু একটা ঠিকমতো কাজ করেনি',
+	'error.generic.body': 'একটু পরে আবার চেষ্টা করুন। সমস্যা থেকে গেলে ম্যানেজারকে জানান।',
+	'error.home': 'আজকের পাতায় যান'
+} as const;
+
+export type MessageKey = keyof typeof bn;

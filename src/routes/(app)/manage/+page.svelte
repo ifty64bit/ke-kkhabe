@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { Card, EmptyState } from '#lib/components/ui/index.ts';
+	import { useI18n } from '#lib/i18n/index.ts';
+
+	const i18n = useI18n();
 </script>
 
-<svelte:head><title>ম্যানেজ · কে খাবে</title></svelte:head>
+<svelte:head><title>{i18n.t('manage.title')} · {i18n.t('app.name')}</title></svelte:head>
 
 <Card padding="none">
 	<EmptyState
-		title="আজকের দিন এখনো শুরু হয়নি"
-		description="আইটেম তালিকা থেকে আজকের মেনু বেছে অর্ডার নেওয়া শুরু করবেন এখান থেকে।"
+		title={i18n.t('manage.today.emptyTitle')}
+		description={i18n.t('manage.today.emptyBody')}
 	/>
 </Card>

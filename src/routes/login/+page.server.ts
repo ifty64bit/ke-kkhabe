@@ -16,7 +16,7 @@ export const actions: Actions = {
 		const result = await locals.auth.api.signInSocial({
 			body: { provider: 'google', callbackURL: safeNext(form.get('next')) }
 		});
-		if (!result?.url) return fail(500, { message: 'Could not start Google sign-in' });
+		if (!result?.url) return fail(500, { failed: true });
 		redirect(303, result.url, { external: ['https://accounts.google.com'] });
 	}
 };

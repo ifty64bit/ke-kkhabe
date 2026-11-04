@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { Avatar, Menu, MenuItem, MenuLabel, Separator } from '#lib/components/ui/index.ts';
+	import { useI18n } from '#lib/i18n/index.ts';
+
+	const i18n = useI18n();
 
 	let {
 		user,
@@ -13,7 +16,7 @@
 	} = $props();
 </script>
 
-<Menu label="অ্যাকাউন্ট" {align} class={showName ? 'w-full' : ''}>
+<Menu label={i18n.t('account.label')} {align} class={showName ? 'w-full' : ''}>
 	{#snippet trigger()}
 		<span class="flex items-center gap-2.5 {showName ? 'rounded-control px-1 py-1 text-left' : ''}">
 			<Avatar name={user.name} src={user.image} />
@@ -21,7 +24,7 @@
 				<span class="min-w-0">
 					<span class="block truncate text-sm font-medium">{user.name}</span>
 					<span class="block text-xs text-muted">
-						{user.role === 'manager' ? 'ম্যানেজার' : 'সদস্য'}
+						{i18n.t(user.role === 'manager' ? 'account.manager' : 'account.member')}
 					</span>
 				</span>
 			{/if}
@@ -33,6 +36,6 @@
 	</MenuLabel>
 	<Separator />
 	<form method="POST" action="/logout">
-		<MenuItem type="submit" tone="danger">লগআউট</MenuItem>
+		<MenuItem type="submit" tone="danger">{i18n.t('common.logout')}</MenuItem>
 	</form>
 </Menu>

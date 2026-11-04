@@ -1,6 +1,7 @@
 import type { Auth, AuthSession, AuthUser } from '#lib/server/auth.ts';
 import type { Db } from '#lib/server/db/index.ts';
 import type { Theme } from '#lib/theme/index.ts';
+import type { Locale } from '#lib/i18n/index.ts';
 
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
@@ -12,6 +13,7 @@ declare global {
 			auth: Auth;
 			db: Db;
 			theme: Theme;
+			locale: Locale;
 		}
 
 		// interface Error {}

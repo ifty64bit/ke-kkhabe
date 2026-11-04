@@ -60,7 +60,7 @@
 	</Card>
 
 	<Card title="Google">
-		<GoogleSignInButton />
+		<GoogleSignInButton label="Google দিয়ে সাইন ইন করুন" />
 	</Card>
 
 	<Card title="Badge & Money">

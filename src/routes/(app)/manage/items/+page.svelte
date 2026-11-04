@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { Card, EmptyState } from '#lib/components/ui/index.ts';
+	import { useI18n } from '#lib/i18n/index.ts';
+
+	const i18n = useI18n();
 </script>
 
-<svelte:head><title>আইটেম · কে খাবে</title></svelte:head>
+<svelte:head><title>{i18n.t('manage.tabs.items')} · {i18n.t('app.name')}</title></svelte:head>
 
 <Card padding="none">
 	<EmptyState
-		title="কোনো আইটেম নেই"
-		description="পরোটা, ডিম, চা—যা যা সাধারণত আসে, সেগুলো এখানে একবার যোগ করলেই প্রতিদিন বেছে নেওয়া যাবে।"
+		title={i18n.t('manage.items.emptyTitle')}
+		description={i18n.t('manage.items.emptyBody')}
 	/>
 </Card>

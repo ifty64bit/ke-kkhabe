@@ -1,5 +1,8 @@
 <script lang="ts">
+	import { useI18n } from '#lib/i18n/index.ts';
 	import { cn } from '#lib/utils/cn.ts';
+
+	const i18n = useI18n();
 
 	let {
 		value = $bindable(0),
@@ -38,17 +41,17 @@
 	<button
 		type="button"
 		class={btn}
-		aria-label="{label} কমান"
+		aria-label={i18n.t('stepper.decrease', { label })}
 		disabled={disabled || value <= min}
 		onclick={() => set(value - 1)}>−</button
 	>
 	<output class="w-7 text-center text-lg font-semibold tabular-nums" aria-live="polite"
-		>{value}</output
+		>{i18n.num(value)}</output
 	>
 	<button
 		type="button"
 		class={btn}
-		aria-label="{label} বাড়ান"
+		aria-label={i18n.t('stepper.increase', { label })}
 		disabled={disabled || value >= max}
 		onclick={() => set(value + 1)}>+</button
 	>

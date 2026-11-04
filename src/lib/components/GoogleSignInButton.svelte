@@ -2,8 +2,7 @@
 	import type { HTMLButtonAttributes } from 'svelte/elements';
 	import GoogleLogo from './GoogleLogo.svelte';
 
-	let { label = 'Google দিয়ে সাইন ইন করুন', ...rest }: { label?: string } & HTMLButtonAttributes =
-		$props();
+	let { label, ...rest }: { label: string } & HTMLButtonAttributes = $props();
 </script>
 
 <!--
