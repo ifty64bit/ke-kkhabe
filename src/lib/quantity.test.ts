@@ -94,4 +94,11 @@ describe('formatQty', () => {
 		expect(formatQty(6, 'bn')).toBe('½');
 		expect(formatQty(24, 'bn')).toBe('২');
 	});
+
+	it('formats any sum of twelfths, e.g. ⅓ + ½ = ⅚ ordered, ⅙ left over', () => {
+		expect(formatQty(10, 'en')).toBe('⅚');
+		expect(formatQty(2, 'en')).toBe('⅙');
+		expect(formatQty(13, 'en')).toBe('1 1/12');
+		expect(formatQty(7, 'bn')).toBe('৭/১২');
+	});
 });

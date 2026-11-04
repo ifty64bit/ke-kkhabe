@@ -177,6 +177,7 @@ export const bn = {
 
 	'manage.shopping.title': 'কেনার তালিকা',
 	'manage.shopping.hint': 'দোকানে এই পরিমাণ কিনুন।',
+	'manage.shopping.ordered': '{ordered} অর্ডার · {leftover} বাড়তি',
 
 	'manage.finalize.title': 'হিসাব চূড়ান্ত করুন',
 	'manage.finalize.description':

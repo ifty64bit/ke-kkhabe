@@ -181,6 +181,7 @@ export const en: Record<MessageKey, string> = {
 
 	'manage.shopping.title': 'Shopping list',
 	'manage.shopping.hint': 'Buy these amounts at the shop.',
+	'manage.shopping.ordered': '{ordered} ordered · {leftover} left over',
 
 	'manage.finalize.title': 'Finalize the bill',
 	'manage.finalize.description':

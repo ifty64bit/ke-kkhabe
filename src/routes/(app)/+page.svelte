@@ -6,6 +6,7 @@
 	import { Alert, Button } from '#lib/components/ui/index.ts';
 	import { useI18n, type MessageKey } from '#lib/i18n/index.ts';
 	import { formatTaka } from '#lib/money.ts';
+	import { formatQty } from '#lib/quantity.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -20,7 +21,10 @@
 	const orderSummary = $derived(
 		data.items
 			.filter((i) => (data.lines[i.id] ?? 0) > 0)
-			.map((i) => `${i.name} ${i18n.num(data.lines[i.id])} ${i18n.pick(i.unitBn, i.unitEn)}`)
+			.map(
+				(i) =>
+					`${i.name} ${formatQty(data.lines[i.id], i18n.locale)} ${i18n.pick(i.unitBn, i.unitEn)}`
+			)
 			.join(', ')
 	);
 	const answered = $derived(data.response !== null);

@@ -2,11 +2,13 @@
 	import { Money } from '#lib/components/ui/index.ts';
 	import { useI18n } from '#lib/i18n/index.ts';
 	import { formatTaka, type Poisha } from '#lib/money.ts';
+	import { formatQty } from '#lib/quantity.ts';
 
 	type Line = {
 		name: string;
 		unitBn: string;
 		unitEn: string;
+		/** In twelfths of an item. */
 		quantity: number;
 		unitPrice: Poisha;
 		amount: Poisha;
@@ -46,7 +48,7 @@
 					<span class="block">{line.name}</span>
 					<span class="block text-sm text-muted tabular-nums">
 						{i18n.t('today.receiptLine', {
-							count: i18n.num(line.quantity),
+							count: formatQty(line.quantity, i18n.locale),
 							unit,
 							price: formatTaka(line.unitPrice, i18n.locale)
 						})}

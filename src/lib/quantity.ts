@@ -55,10 +55,18 @@ export const canSetFraction = (units: number, fraction: number) =>
 export const setFraction = (units: number, fraction: number) =>
 	canSetFraction(units, fraction) ? join(split(units).whole, fraction) : units;
 
-/** Display a quantity, e.g. 16 → "1⅓", 6 → "½" (Bangla digits in `bn`). */
+/** Glyphs for twelfths that only appear in sums (⅓ + ½ = ⅚); the rest show as "n/12". */
+const SUM_GLYPH: Record<number, string> = { ...FRACTION_GLYPH, 2: '⅙', 10: '⅚' };
+
+/**
+ * Display a quantity, e.g. 16 → "1⅓", 6 → "½" (Bangla digits in `bn`). Sums of different
+ * fractions can be any twelfth: 10 → "⅚", 13 → "1 1/12".
+ */
 export function formatQty(units: number, locale: Locale): string {
 	const { whole, fraction } = split(units);
-	const glyph = FRACTION_GLYPH[fraction] ?? '';
-	if (whole === 0 && glyph) return glyph;
-	return formatNumber(whole, locale) + glyph;
+	const num = (n: number) => formatNumber(n, locale);
+	const part = fraction === 0 ? '' : (SUM_GLYPH[fraction] ?? `${num(fraction)}/${num(PORTION)}`);
+	if (whole === 0) return part || num(0);
+	if (!part) return num(whole);
+	return SUM_GLYPH[fraction] ? num(whole) + part : `${num(whole)} ${part}`;
 }

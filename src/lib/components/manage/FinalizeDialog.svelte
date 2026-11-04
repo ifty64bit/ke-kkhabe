@@ -3,6 +3,7 @@
 	import { untrack } from 'svelte';
 	import { computeCharges } from '#lib/charges.ts';
 	import { formatTaka, lineTotal, parseTaka, type Poisha } from '#lib/money.ts';
+	import { formatQty, pricePerPiece, toBuy } from '#lib/quantity.ts';
 	import {
 		Alert,
 		Avatar,
@@ -108,7 +109,7 @@
 			const n = unitsIn(q, m.id);
 			prices[m.id] =
 				m.totalCost !== null && m.totalCost !== undefined && n > 0
-					? takaInput(Math.round(m.totalCost / n)) || '0'
+					? takaInput(pricePerPiece(m.totalCost, n)) || '0'
 					: m.suggestion
 						? takaInput(Math.round(m.suggestion.perUnit))
 						: '';
@@ -136,7 +137,7 @@
 		if ((raw ?? '').trim() === '') return null;
 		const v = parseTaka(raw ?? '');
 		if (v === null) return null;
-		return lineTotal(n, v);
+		return lineTotal(toBuy(n), v);
 	};
 
 	const makeRows = (total: Poisha): Row[] =>
@@ -254,7 +255,7 @@
 						label={i18n.t('manage.finalize.priceLabel', { name: m.name, unit })}
 						hint={cost !== null
 							? i18n.t('manage.finalize.lineTotal', {
-									count: i18n.num(n),
+									count: i18n.num(toBuy(n)),
 									unit,
 									price: formatTaka(parseTaka(prices[m.id] ?? '') ?? 0, i18n.locale),
 									total: formatTaka(cost, i18n.locale)
@@ -264,7 +265,7 @@
 										unit,
 										price: formatTaka(Math.round(m.suggestion.perUnit), i18n.locale)
 									})
-								: i18n.t('manage.finalize.unitsTotal', { count: i18n.num(n), unit })}
+								: i18n.t('manage.finalize.unitsTotal', { count: formatQty(n, i18n.locale), unit })}
 						error={errText(`price:${m.id}`)}
 					>
 						{#snippet children(f)}
@@ -292,7 +293,9 @@
 								>
 									<Avatar name={p.name} src={p.image} size="sm" />
 									<span class="min-w-0 flex-1 truncate">{p.name}</span>
-									<span class="text-sm text-muted tabular-nums">{i18n.num(units)}</span>
+									<span class="text-sm text-muted tabular-nums"
+										>{formatQty(units, i18n.locale)}</span
+									>
 									<svg
 										viewBox="0 0 24 24"
 										class="size-4 text-muted transition-transform group-open:rotate-90"

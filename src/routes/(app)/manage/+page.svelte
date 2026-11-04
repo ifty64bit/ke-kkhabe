@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import FinalizeDialog from '#lib/components/manage/FinalizeDialog.svelte';
+	import { formatQty, leftover } from '#lib/quantity.ts';
 	import MemberOrderDialog from '#lib/components/manage/MemberOrderDialog.svelte';
 	import MenuDialog from '#lib/components/manage/MenuDialog.svelte';
 	import {
@@ -66,7 +67,7 @@
 	const purchaseSummary = $derived(
 		data.menu
 			.filter((m) => m.purchaseUnits > 0)
-			.map((m) => `${m.name} ${i18n.num(m.purchaseUnits)} ${i18n.pick(m.unitBn, m.unitEn)}`)
+			.map((m) => `${m.name} ${i18n.num(m.purchaseBuy)} ${i18n.pick(m.unitBn, m.unitEn)}`)
 			.join(' · ')
 	);
 
@@ -75,7 +76,9 @@
 			.filter((l) => l.quantity > 0)
 			.map((l) => {
 				const m = data.menu.find((x) => x.id === l.itemId);
-				return m ? `${m.name} ${i18n.num(l.quantity)} ${i18n.pick(m.unitBn, m.unitEn)}` : '';
+				return m
+					? `${m.name} ${formatQty(l.quantity, i18n.locale)} ${i18n.pick(m.unitBn, m.unitEn)}`
+					: '';
 			})
 			.filter(Boolean)
 			.join(', ');
@@ -234,9 +237,17 @@
 				<li class="col-span-3 grid grid-cols-subgrid items-baseline">
 					<span class="text-xl">{m.name}</span>
 					<span class="text-right text-3xl font-semibold tabular-nums">
-						{i18n.num(m.purchaseUnits)}
+						{i18n.num(m.purchaseBuy)}
 					</span>
 					<span class="text-base text-muted">{i18n.pick(m.unitBn, m.unitEn)}</span>
+					{#if leftover(m.purchaseUnits) > 0}
+						<span class="col-span-3 -mt-2 text-sm text-muted tabular-nums">
+							{i18n.t('manage.shopping.ordered', {
+								ordered: formatQty(m.purchaseUnits, i18n.locale),
+								leftover: formatQty(leftover(m.purchaseUnits), i18n.locale)
+							})}
+						</span>
+					{/if}
 				</li>
 			{/each}
 		</ul>
