@@ -1,5 +1,6 @@
 <script lang="ts">
 	import GoogleSignInButton from '#lib/components/GoogleSignInButton.svelte';
+	import Logo from '#lib/components/Logo.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import { Alert } from '#lib/components/ui/index.ts';
 	import type { PageProps } from './$types';
@@ -12,15 +13,14 @@
 	<ThemeToggle theme={data.theme} />
 </div>
 
-<main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 py-16">
-	<div class="khata-page py-2">
-		<h1 class="font-display text-6xl leading-[1.05]">কে খাবে</h1>
-		<p class="mt-4 max-w-[28ch] text-lg text-muted">
-			অফিসের নাস্তার অর্ডার, দাম আর কার কাছে কত বাকি, সব এক খাতায়।
-		</p>
+<main class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 py-12">
+	<div class="text-center">
+		<Logo size="lg" />
+		<h1 class="mt-6 font-display text-5xl leading-tight">কে খাবে?</h1>
+		<p class="mt-2 text-muted">অফিসের নাস্তা, অর্ডার আর হিসাব এক জায়গায়</p>
 	</div>
 
-	<form method="POST" action="?/google" class="mt-12" onsubmit={() => (submitting = true)}>
+	<form method="POST" action="?/google" class="mt-10" onsubmit={() => (submitting = true)}>
 		<input type="hidden" name="next" value={data.next} />
 		<GoogleSignInButton disabled={submitting} />
 	</form>

@@ -9,7 +9,7 @@
 | Reports     | রিপোর্ট | `/reports` | everyone | Monthly report per member and month overview                      |
 | Manage      | ম্যানেজ | `/manage`  | managers | Run today's day: menu, close, finalize with prices and payers     |
 
-Order follows frequency of use: daily, weekly, monthly, then the managers' tools.
+Order follows frequency of use: daily, weekly, monthly, then the managers' tools. Today is the home page; the others are reached from the link row under the prompt.
 
 ### Manage sub-sections
 
@@ -22,25 +22,24 @@ Order follows frequency of use: daily, weekly, monthly, then the managers' tools
 ## Shell
 
 ```
-Phone (< 1024px)                      Desktop (≥ 1024px)
-┌──────────────────────────┐          ┌────────────┬──────────────────────────┐
-│ কে খাবে          ◐  (A)  │ header   │ কে খাবে     │                          │
-├──────────────────────────┤          │            │  page content            │
-│                          │          │ ▣ আজ        │  (max ~42rem, left-      │
-│  page content            │          │ ▢ হিসাব     │   aligned to the rail)   │
-│                          │          │ ▢ রিপোর্ট    │                          │
-│                          │          │ ▢ ম্যানেজ    │                          │
-├──────────────────────────┤          │            │                          │
-│  আজ   হিসাব  রিপোর্ট  ম্যানেজ │ tab bar  │ (A) Ifty  ◐ │                          │
-└──────────────────────────┘          └────────────┴──────────────────────────┘
+ (🍳) কে খাবে                         ◐  (A)
+
+                 বুধবার, ৪ নভেম্বর
+              আজ খাবেন, Ifty?
+
+        [ হ্যাঁ, খাবো ]      [ আজ না ]
+
+   ─────────────────────────────────────
+        হিসাব          রিপোর্ট         ম্যানেজ
 ```
 
-- Phone: top header holds the wordmark, theme toggle and account menu; destinations live in a bottom tab bar within thumb reach, padded for the home indicator.
-- Desktop: a left rail holds the wordmark, destinations, and account plus theme at the bottom; the header and tab bar are not shown.
-- The current destination is marked with `aria-current="page"` and a filled icon plus label weight, not color alone.
-- Members never see the Manage tab; managers see it last.
-- Account menu: name, role, logout.
-- Login, the inactive-account page and the dev gallery sit outside the shell.
+- One column, centered, on every screen size. No sidebar or tab bar.
+- Top bar on every signed-in page: egg-pan mark and wordmark (links to Today), theme toggle, account menu.
+- Today is the prompt itself; its answer area changes with the day's status (no menu, open, ordered, said no, closed, finalized).
+- "হ্যাঁ, খাবো" and "অর্ডার বদলান" open the item dialog: every offered item with a quantity stepper; "অর্ডার করুন" is enabled once at least one item is picked.
+- Links to হিসাব, রিপোর্ট and, for managers, ম্যানেজ sit in a row under the prompt, each with a one-line hint.
+- Other pages return to Today through the mark in the top bar.
+- Login, the inactive-account page and the dev gallery sit outside the signed-in layout.
 
 ## Empty states
 

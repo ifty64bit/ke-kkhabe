@@ -19,7 +19,8 @@
 		"auth:schema": "auth generate --config src/lib/server/auth.ts --output src/lib/server/db/auth.schema.ts --yes",
 		"db:migrate:local": "wrangler d1 migrations apply ke-khabe --local",
 		"db:migrate:remote": "wrangler d1 migrations apply ke-khabe --remote",
-		"clean": "rm -rf .svelte-kit/output .svelte-kit/cloudflare"
+		"clean": "rm -rf .svelte-kit/output .svelte-kit/cloudflare",
+		"db:seed:local": "wrangler d1 execute ke-khabe --local --file scripts/seed-dev.sql"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
