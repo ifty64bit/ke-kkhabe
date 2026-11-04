@@ -20,7 +20,8 @@
 		"db:migrate:local": "wrangler d1 migrations apply ke-khabe --local",
 		"db:migrate:remote": "wrangler d1 migrations apply ke-khabe --remote",
 		"clean": "rm -rf .svelte-kit/output .svelte-kit/cloudflare",
-		"db:seed:local": "wrangler d1 execute ke-khabe --local --file scripts/seed-dev.sql"
+		"db:seed:local": "wrangler d1 execute ke-khabe --local --file scripts/seed/items.sql && wrangler d1 execute ke-khabe --local --file scripts/seed/dev-day.sql",
+		"db:seed:remote": "wrangler d1 execute ke-khabe --remote --file scripts/seed/items.sql"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

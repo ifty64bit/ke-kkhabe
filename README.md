@@ -31,6 +31,15 @@ bun run db:migrate:local   # apply to local D1 (wrangler)
 bun run db:migrate:remote  # apply to production D1
 ```
 
+### Seed data
+
+```sh
+bun run db:seed:local    # item catalog + an open day for today (for trying the Today page)
+bun run db:seed:remote   # item catalog only; safe to re-run, never overwrites edits
+```
+
+Seed files live in `scripts/seed/`. `dev-day.sql` is local-only: on production it would add a fake day to everyone's ledger.
+
 ## Deploying
 
 1. `wrangler d1 create ke-khabe` and put the returned `database_id` in `wrangler.jsonc`
