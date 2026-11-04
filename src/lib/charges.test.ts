@@ -11,7 +11,11 @@ const line = (userId: string, itemId: string, finalQuantity: number | null) => (
 
 describe('computeCharges', () => {
 	it('splits an item cost across final quantities', () => {
-		const charges = computeCharges([item('a', 1000)], [line('u1', 'a', 36), line('u2', 'a', 12)], 0);
+		const charges = computeCharges(
+			[item('a', 1000)],
+			[line('u1', 'a', 36), line('u2', 'a', 12)],
+			0
+		);
 		expect(charges.get('u1')).toBe(750);
 		expect(charges.get('u2')).toBe(250);
 	});

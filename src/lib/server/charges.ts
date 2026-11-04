@@ -25,7 +25,7 @@ export async function chargesForDay(db: Db, dayId: string): Promise<Map<string, 
 			.select({
 				userId: orderLine.userId,
 				itemId: orderLine.itemId,
-				finalQuantity: orderLine.finalQuantity
+				finalQuantity: orderLine.finalQuantity12ths
 			})
 			.from(orderLine)
 			.where(eq(orderLine.dayId, dayId))
@@ -49,7 +49,7 @@ export async function breakdownForDay(db: Db, dayId: string) {
 			.select({
 				userId: orderLine.userId,
 				itemId: orderLine.itemId,
-				finalQuantity: orderLine.finalQuantity
+				finalQuantity: orderLine.finalQuantity12ths
 			})
 			.from(orderLine)
 			.where(eq(orderLine.dayId, dayId))

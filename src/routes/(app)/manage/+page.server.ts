@@ -3,6 +3,7 @@ import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import type { BatchItem } from 'drizzle-orm/batch';
 import { dhakaToday } from '#lib/date.ts';
 import { formatTaka, type Poisha } from '#lib/money.ts';
+import { isValidQty, pricePerPiece, toBuy } from '#lib/quantity.ts';
 import type { MessageKey } from '#lib/i18n/index.ts';
 import { validateFinalize } from '#lib/server/finalize.ts';
 import { chargesForDay } from '#lib/server/charges.ts';
@@ -70,8 +71,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.select({
 						userId: orderLine.userId,
 						itemId: orderLine.itemId,
-						quantity: orderLine.quantity,
-						finalQuantity: orderLine.finalQuantity
+						quantity: orderLine.quantity12ths,
+						finalQuantity: orderLine.finalQuantity12ths
 					})
 					.from(orderLine)
 					.where(eq(orderLine.dayId, today.id))
@@ -95,7 +96,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	}
 
-	const unitsExpr = today.status === 'finalized' ? orderLine.finalQuantity : orderLine.quantity;
+	const unitsExpr =
+		today.status === 'finalized' ? orderLine.finalQuantity12ths : orderLine.quantity12ths;
 	const [menu, unitRows, paymentRows] = await Promise.all([
 		db
 			.select({
@@ -134,7 +136,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.select({
 						itemId: dayItem.itemId,
 						totalCost: dayItem.totalCost,
-						units: sql<number>`(select coalesce(sum(ol.final_quantity), 0) from order_line ol
+						units: sql<number>`(select coalesce(sum(ol.final_quantity_12ths), 0) from order_line ol
 						where ol.day_id = ${dayItem.dayId} and ol.item_id = ${dayItem.itemId})`.mapWith(Number)
 					})
 					.from(dayItem)
@@ -146,8 +148,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const units = unitsOf.get(itemId) ?? 0;
 		const past = history.find((h) => h.itemId === itemId && h.units > 0);
 		if (!past || !past.totalCost || units === 0) return null;
-		const perUnit = past.totalCost / past.units;
-		return { suggestion: Math.round(perUnit * units), perUnit };
+		const perUnit = pricePerPiece(past.totalCost, past.units);
+		return { suggestion: perUnit * toBuy(units), perUnit };
 	};
 
 	const respOf = new Map(responses.map((r) => [r.userId, r]));
@@ -199,6 +201,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		menu: menu.map((m) => ({
 			...m,
 			purchaseUnits: unitsOf.get(m.id) ?? 0,
+			purchaseBuy: toBuy(unitsOf.get(m.id) ?? 0),
 			suggestion: suggestionOf(m.id)
 		})),
 		items: catalog,
@@ -267,7 +270,7 @@ export const actions: Actions = {
 			db
 				.select({
 					itemId: orderLine.itemId,
-					qty: sql<number>`sum(${orderLine.quantity})`.mapWith(Number)
+					qty: sql<number>`sum(${orderLine.quantity12ths})`.mapWith(Number)
 				})
 				.from(orderLine)
 				.where(eq(orderLine.dayId, today.id))
@@ -404,8 +407,7 @@ export const actions: Actions = {
 			if (!key.startsWith('qty:')) continue;
 			const itemId = key.slice(4);
 			const quantity = Number(raw);
-			if (!allowed.has(itemId) || !Number.isInteger(quantity) || quantity < 0 || quantity > 20)
-				return failKey(400, 'order.error.invalid');
+			if (!allowed.has(itemId) || !isValidQty(quantity)) return failKey(400, 'order.error.invalid');
 			if (quantity > 0) wanted.push({ itemId, quantity });
 		}
 		if (eating && wanted.length === 0) return failKey(400, 'manage.memberOrder.error.empty');
@@ -429,7 +431,14 @@ export const actions: Actions = {
 		];
 		if (eating)
 			statements.push(
-				db.insert(orderLine).values(wanted.map((w) => ({ dayId: today.id, userId, ...w })))
+				db.insert(orderLine).values(
+					wanted.map((w) => ({
+						dayId: today.id,
+						userId,
+						itemId: w.itemId,
+						quantity12ths: w.quantity
+					}))
+				)
 			);
 		await runBatch(db, statements);
 		return { saved: true };
@@ -465,7 +474,7 @@ export const actions: Actions = {
 				.select({
 					userId: orderLine.userId,
 					itemId: orderLine.itemId,
-					quantity: orderLine.quantity
+					quantity: orderLine.quantity12ths
 				})
 				.from(orderLine)
 				.where(eq(orderLine.dayId, today.id)),
@@ -513,7 +522,7 @@ export const actions: Actions = {
 			...v.final.map((f) =>
 				db
 					.update(orderLine)
-					.set({ finalQuantity: f.quantity })
+					.set({ finalQuantity12ths: f.quantity })
 					.where(
 						and(
 							eq(orderLine.dayId, today.id),

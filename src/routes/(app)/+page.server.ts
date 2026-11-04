@@ -5,10 +5,9 @@ import type { MessageKey } from '#lib/i18n/index.ts';
 import { breakdownForDay } from '#lib/server/charges.ts';
 import { computeLedger } from '#lib/server/ledger.ts';
 import { day, dayItem, item, orderLine, response } from '#lib/server/db/schema.ts';
+import { isValidQty, pricePerPiece } from '#lib/quantity.ts';
 import type { Db } from '#lib/server/db/index.ts';
 import type { Actions, PageServerLoad } from './$types';
-
-const MAX_QTY = 20;
 
 async function loadToday(db: Db, userId: string) {
 	const date = dhakaToday();
@@ -38,8 +37,8 @@ async function loadToday(db: Db, userId: string) {
 		db
 			.select({
 				itemId: orderLine.itemId,
-				quantity: orderLine.quantity,
-				finalQuantity: orderLine.finalQuantity
+				quantity: orderLine.quantity12ths,
+				finalQuantity: orderLine.finalQuantity12ths
 			})
 			.from(orderLine)
 			.where(and(eq(orderLine.dayId, today.id), eq(orderLine.userId, userId)))
@@ -68,14 +67,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 		computeLedger(locals.db)
 	]);
 	const mine = breakdown?.get(meId) ?? null;
-	// Units eaten per item that day, to show the per-piece price (total cost ÷ units).
+	// Twelfths eaten per item that day, to show the per-piece price (total cost ÷ whole items bought).
 	const units = mine
 		? new Map(
 				(
 					await locals.db
 						.select({
 							itemId: orderLine.itemId,
-							n: sql<number>`coalesce(sum(${orderLine.finalQuantity}), 0)`.mapWith(Number)
+							n: sql<number>`coalesce(sum(${orderLine.finalQuantity12ths}), 0)`.mapWith(Number)
 						})
 						.from(orderLine)
 						.where(eq(orderLine.dayId, t.day!.id))
@@ -91,7 +90,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.map((i) => ({
 						itemId: i.id,
 						quantity: t.lines[i.id] ?? 0,
-						unitPrice: units?.get(i.id) ? Math.round((i.totalCost ?? 0) / units.get(i.id)!) : 0,
+						unitPrice: pricePerPiece(i.totalCost ?? 0, units?.get(i.id) ?? 0),
 						amount: mine.items.get(i.id) ?? 0
 					})),
 				deliveryShare: mine.deliveryShare,
@@ -135,7 +134,7 @@ export const actions: Actions = {
 			if (!key.startsWith('qty:')) continue;
 			const itemId = key.slice(4);
 			const quantity = Number(raw);
-			if (!allowed.has(itemId) || !Number.isInteger(quantity) || quantity < 0 || quantity > MAX_QTY)
+			if (!allowed.has(itemId) || !isValidQty(quantity))
 				return fail(400, { messageKey: 'order.error.invalid' as MessageKey });
 			if (quantity > 0) wanted.push({ itemId, quantity });
 		}
@@ -150,7 +149,14 @@ export const actions: Actions = {
 					set: { eating: true, updatedAt: new Date(), addedBy: null }
 				}),
 			db.delete(orderLine).where(and(eq(orderLine.dayId, today.id), eq(orderLine.userId, userId))),
-			db.insert(orderLine).values(wanted.map((w) => ({ dayId: today.id, userId, ...w })))
+			db.insert(orderLine).values(
+				wanted.map((w) => ({
+					dayId: today.id,
+					userId,
+					itemId: w.itemId,
+					quantity12ths: w.quantity
+				}))
+			)
 		]);
 		return { saved: 'order' as const };
 	},

@@ -1,1 +1,0 @@
-ALTER TABLE `day` ADD `discount` integer DEFAULT 0 NOT NULL;

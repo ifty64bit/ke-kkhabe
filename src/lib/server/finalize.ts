@@ -87,8 +87,7 @@ export function validateFinalize(form: FinalizeForm, ctx: FinalizeContext): Fina
 	for (const line of ctx.lines) {
 		const key = finalKey(line.userId, line.itemId);
 		const qty = form.final[key] ?? (availableOf.get(line.itemId) === false ? 0 : line.quantity);
-		if (!isValidQty(qty))
-			set(`final:${key}`, 'manage.finalize.error.qtyInvalid');
+		if (!isValidQty(qty)) set(`final:${key}`, 'manage.finalize.error.qtyInvalid');
 		else final.set(key, qty);
 	}
 	const units = finalUnitsByItem(form, ctx);

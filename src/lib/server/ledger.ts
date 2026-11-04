@@ -25,7 +25,7 @@ export async function computeLedger(db: Db) {
 				dayId: orderLine.dayId,
 				userId: orderLine.userId,
 				itemId: orderLine.itemId,
-				finalQuantity: orderLine.finalQuantity
+				finalQuantity: orderLine.finalQuantity12ths
 			})
 			.from(orderLine)
 			.innerJoin(day, eq(day.id, orderLine.dayId))

@@ -97,7 +97,10 @@ export const response = sqliteTable(
 	(t) => [primaryKey({ columns: [t.dayId, t.userId] })]
 );
 
-/** Ordered quantity per member per item. `finalQuantity` is what gets charged once finalized. */
+/**
+ * Ordered quantity per member per item, in twelfths of an item (12 = 1, 6 = ½, 4 = ⅓; see
+ * `#lib/quantity.ts`). `finalQuantity12ths` is what gets charged once finalized.
+ */
 export const orderLine = sqliteTable(
 	'order_line',
 	{
@@ -108,14 +111,17 @@ export const orderLine = sqliteTable(
 		itemId: text('item_id')
 			.notNull()
 			.references(() => item.id),
-		quantity: integer('quantity').notNull(),
-		finalQuantity: integer('final_quantity')
+		quantity12ths: integer('quantity_12ths').notNull(),
+		finalQuantity12ths: integer('final_quantity_12ths')
 	},
 	(t) => [
 		primaryKey({ columns: [t.dayId, t.userId, t.itemId] }),
 		index('order_line_user_idx').on(t.userId),
-		check('order_line_qty_nonneg', sql`${t.quantity} >= 0`),
-		check('order_line_final_qty_nonneg', sql`${t.finalQuantity} IS NULL OR ${t.finalQuantity} >= 0`)
+		check('order_line_qty_nonneg', sql`${t.quantity12ths} >= 0`),
+		check(
+			'order_line_final_qty_nonneg',
+			sql`${t.finalQuantity12ths} IS NULL OR ${t.finalQuantity12ths} >= 0`
+		)
 	]
 );
 

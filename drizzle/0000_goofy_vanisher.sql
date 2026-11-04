@@ -27,6 +27,8 @@ CREATE TABLE `day` (
 	`date` text NOT NULL,
 	`status` text DEFAULT 'draft' NOT NULL,
 	`note` text,
+	`delivery_fee` integer DEFAULT 0 NOT NULL,
+	`discount` integer DEFAULT 0 NOT NULL,
 	`created_by` text NOT NULL,
 	`created_at` integer NOT NULL,
 	`finalized_at` integer,
@@ -39,18 +41,17 @@ CREATE UNIQUE INDEX `day_date_uq` ON `day` (`date`);--> statement-breakpoint
 CREATE TABLE `day_item` (
 	`day_id` text NOT NULL,
 	`item_id` text NOT NULL,
-	`unit_price` integer,
+	`total_cost` integer,
 	`available` integer DEFAULT true NOT NULL,
 	PRIMARY KEY(`day_id`, `item_id`),
 	FOREIGN KEY (`day_id`) REFERENCES `day`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`item_id`) REFERENCES `item`(`id`) ON UPDATE no action ON DELETE no action,
-	CONSTRAINT "day_item_price_nonneg" CHECK("day_item"."unit_price" IS NULL OR "day_item"."unit_price" >= 0)
+	CONSTRAINT "day_item_cost_nonneg" CHECK("day_item"."total_cost" IS NULL OR "day_item"."total_cost" >= 0)
 );
 --> statement-breakpoint
 CREATE TABLE `item` (
 	`id` text PRIMARY KEY NOT NULL,
-	`name_bn` text NOT NULL,
-	`name_en` text NOT NULL,
+	`name` text DEFAULT '' NOT NULL,
 	`unit_bn` text DEFAULT 'টি' NOT NULL,
 	`unit_en` text DEFAULT 'pc' NOT NULL,
 	`archived` integer DEFAULT false NOT NULL,
@@ -61,14 +62,14 @@ CREATE TABLE `order_line` (
 	`day_id` text NOT NULL,
 	`user_id` text NOT NULL,
 	`item_id` text NOT NULL,
-	`quantity` integer NOT NULL,
-	`final_quantity` integer,
+	`quantity_12ths` integer NOT NULL,
+	`final_quantity_12ths` integer,
 	PRIMARY KEY(`day_id`, `user_id`, `item_id`),
 	FOREIGN KEY (`day_id`) REFERENCES `day`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`item_id`) REFERENCES `item`(`id`) ON UPDATE no action ON DELETE no action,
-	CONSTRAINT "order_line_qty_nonneg" CHECK("order_line"."quantity" >= 0),
-	CONSTRAINT "order_line_final_qty_nonneg" CHECK("order_line"."final_quantity" IS NULL OR "order_line"."final_quantity" >= 0)
+	CONSTRAINT "order_line_qty_nonneg" CHECK("order_line"."quantity_12ths" >= 0),
+	CONSTRAINT "order_line_final_qty_nonneg" CHECK("order_line"."final_quantity_12ths" IS NULL OR "order_line"."final_quantity_12ths" >= 0)
 );
 --> statement-breakpoint
 CREATE INDEX `order_line_user_idx` ON `order_line` (`user_id`);--> statement-breakpoint
