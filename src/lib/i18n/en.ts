@@ -100,6 +100,8 @@ export const en: Record<MessageKey, string> = {
 	'ledger.loggedBy': 'Logged by {name}',
 	'ledger.rowMenu': 'Settlement: more options',
 	'ledger.voidTitle': 'Void this settlement?',
+	'ledger.cancelTitle': 'Cancel this request?',
+	'ledger.cancelBody': 'It was never counted. The receiver will no longer see it.',
 	'ledger.voidBody': 'A voided entry stops counting toward balances but stays in the history.',
 	'ledger.voidCta': 'Void',
 	'ledger.cancelRequest': 'Cancel request',

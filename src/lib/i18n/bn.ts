@@ -98,6 +98,8 @@ export const bn = {
 	'ledger.loggedBy': 'লিখেছেন {name}',
 	'ledger.rowMenu': 'লেনদেন: আরও অপশন',
 	'ledger.voidTitle': 'লেনদেন বাতিল করবেন?',
+	'ledger.cancelTitle': 'অনুরোধটি বাতিল করবেন?',
+	'ledger.cancelBody': 'এটি কখনো হিসাবে যোগ হয়নি। প্রাপক আর এটি দেখবেন না।',
 	'ledger.voidBody': 'বাতিল করলে এটা আর কারো ব্যালান্সে গোনা হবে না; ইতিহাসে থেকে যাবে।',
 	'ledger.voidCta': 'বাতিল করুন',
 	'ledger.cancelRequest': 'অনুরোধ বাতিল করুন',

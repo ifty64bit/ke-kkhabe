@@ -1,5 +1,5 @@
 import { fail } from '@sveltejs/kit';
-import { and, asc, desc, eq, gte, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import { dhakaToday } from '#lib/date.ts';
 import {
@@ -142,6 +142,19 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 const failKey = (status: number, key: MessageKey) => fail(status, { messageKey: key });
 
+/**
+ * WHERE clause for a decision: the row must still be pending, unvoided and owed to me at
+ * write time, not just when it was read. Two decisions (or a decision and a cancel) racing
+ * on D1 both pass the read; only the first write matches, and the second gets 409.
+ */
+const stillPendingFor = (id: string, meId: string) =>
+	and(
+		eq(settlement.id, id),
+		eq(settlement.toUserId, meId),
+		eq(settlement.status, 'pending'),
+		isNull(settlement.voidedAt)
+	);
+
 export const actions: Actions = {
 	/** Record "A paid B ৳X". The row itself is the record; no audit entry is written. */
 	record: async ({ locals, request }) => {
@@ -196,19 +209,26 @@ export const actions: Actions = {
 			return failKey(403, 'ledger.error.voidPermission');
 		if (row.voidedAt) return failKey(409, 'ledger.error.voided');
 
-		await db.batch([
-			db
-				.update(settlement)
-				.set({ voidedAt: new Date(), voidedBy: me.id })
-				.where(eq(settlement.id, row.id)),
-			db.insert(auditLog).values({
-				actorId: me.id,
-				action: 'settlement.void',
-				entity: 'settlement',
-				entityId: row.id,
-				data: { from: row.fromUserId, to: row.toUserId, amount: row.amount, date: row.date }
-			})
-		]);
+		// Guarded write: a concurrent reject or void makes this a no-op (checked below).
+		const changed = await db
+			.update(settlement)
+			.set({ voidedAt: new Date(), voidedBy: me.id })
+			.where(
+				and(
+					eq(settlement.id, row.id),
+					ne(settlement.status, 'rejected'),
+					isNull(settlement.voidedAt)
+				)
+			)
+			.returning({ id: settlement.id });
+		if (changed.length === 0) return failKey(409, 'ledger.error.notPending');
+		await db.insert(auditLog).values({
+			actorId: me.id,
+			action: 'settlement.void',
+			entity: 'settlement',
+			entityId: row.id,
+			data: { from: row.fromUserId, to: row.toUserId, amount: row.amount, date: row.date }
+		});
 		return { saved: true };
 	},
 
@@ -223,19 +243,19 @@ export const actions: Actions = {
 		if (me.id !== row.toUserId) return failKey(403, 'ledger.error.decidePermission');
 		if (!canDecideSettlement(me.id, row)) return failKey(409, 'ledger.error.notPending');
 
-		await db.batch([
-			db
-				.update(settlement)
-				.set({ status: 'approved', decidedBy: me.id, decidedAt: new Date() })
-				.where(eq(settlement.id, row.id)),
-			db.insert(auditLog).values({
-				actorId: me.id,
-				action: 'settlement.approve',
-				entity: 'settlement',
-				entityId: row.id,
-				data: { from: row.fromUserId, to: row.toUserId, amount: row.amount, date: row.date }
-			})
-		]);
+		const changed = await db
+			.update(settlement)
+			.set({ status: 'approved', decidedBy: me.id, decidedAt: new Date() })
+			.where(stillPendingFor(row.id, me.id))
+			.returning({ id: settlement.id });
+		if (changed.length === 0) return failKey(409, 'ledger.error.notPending');
+		await db.insert(auditLog).values({
+			actorId: me.id,
+			action: 'settlement.approve',
+			entity: 'settlement',
+			entityId: row.id,
+			data: { from: row.fromUserId, to: row.toUserId, amount: row.amount, date: row.date }
+		});
 		return { saved: true };
 	},
 
@@ -261,24 +281,24 @@ export const actions: Actions = {
 		};
 		if (reason.value !== null) data.reason = reason.value;
 
-		await db.batch([
-			db
-				.update(settlement)
-				.set({
-					status: 'rejected',
-					decidedBy: me.id,
-					decidedAt: new Date(),
-					rejectReason: reason.value
-				})
-				.where(eq(settlement.id, row.id)),
-			db.insert(auditLog).values({
-				actorId: me.id,
-				action: 'settlement.reject',
-				entity: 'settlement',
-				entityId: row.id,
-				data
+		const changed = await db
+			.update(settlement)
+			.set({
+				status: 'rejected',
+				decidedBy: me.id,
+				decidedAt: new Date(),
+				rejectReason: reason.value
 			})
-		]);
+			.where(stillPendingFor(row.id, me.id))
+			.returning({ id: settlement.id });
+		if (changed.length === 0) return failKey(409, 'ledger.error.notPending');
+		await db.insert(auditLog).values({
+			actorId: me.id,
+			action: 'settlement.reject',
+			entity: 'settlement',
+			entityId: row.id,
+			data
+		});
 		return { saved: true };
 	}
 };

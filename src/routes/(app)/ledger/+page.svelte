@@ -102,6 +102,7 @@
 
 	const approveEnhance = (id: string) => {
 		approving = id;
+		approveError = null;
 		return async ({
 			result,
 			update
@@ -111,7 +112,9 @@
 		}) => {
 			approving = null;
 			if (result.type === 'failure') approveError = failKeyOf(result.data);
-			else await update();
+			// Refresh either way: a 409 means someone else already handled or cancelled it,
+			// so the stale row should leave the list.
+			await update();
 		};
 	};
 
@@ -125,9 +128,14 @@
 			update: () => Promise<void>;
 		}) => {
 			rejectSaving = false;
-			if (result.type === 'failure') {
-				const reason = result.data?.errors as Record<string, MessageKey> | undefined;
-				rejectError = reason?.reason ?? failKeyOf(result.data);
+			if (result.type === 'failure' && result.data?.errors) {
+				const reason = result.data.errors as Record<string, MessageKey>;
+				rejectError = reason.reason ?? 'ledger.error.invalid';
+			} else if (result.type === 'failure') {
+				// Already handled or gone: close, show why, and drop the stale row.
+				rejectOpen = false;
+				approveError = failKeyOf(result.data);
+				await update();
 			} else {
 				rejectOpen = false;
 				await update();
@@ -193,6 +201,12 @@
 		</Card>
 	{/if}
 
+	{#if sentTo}
+		<Alert tone="success" class="mt-8">
+			{i18n.t('ledger.sentForApproval', { name: sentTo })}
+		</Alert>
+	{/if}
+
 	{#if !data.hasFinalized}
 		<Card class="mt-8" padding="none">
 			<EmptyState title={i18n.t('ledger.emptyTitle')} description={i18n.t('ledger.emptyBody')} />
@@ -206,11 +220,6 @@
 				<p class="mt-1 text-sm text-muted">
 					{i18n.t('ledger.myPending', { amount: formatTaka(data.myPending, i18n.locale) })}
 				</p>
-			{/if}
-			{#if sentTo}
-				<Alert tone="success" class="mt-4">
-					{i18n.t('ledger.sentForApproval', { name: sentTo })}
-				</Alert>
 			{/if}
 			{#if myTransfers.length > 0}
 				<ul class="mt-4 space-y-2">
@@ -395,18 +404,24 @@
 	{/snippet}
 </Dialog>
 
-<Dialog bind:open={voidOpen} size="sm" title={i18n.t('ledger.voidTitle')}>
+<Dialog
+	bind:open={voidOpen}
+	size="sm"
+	title={i18n.t(voiding?.status === 'pending' ? 'ledger.cancelTitle' : 'ledger.voidTitle')}
+>
 	{#if voiding}
 		<p class="font-medium">{transferText(voiding)}</p>
 	{/if}
-	<p class="mt-2 text-sm text-muted">{i18n.t('ledger.voidBody')}</p>
+	<p class="mt-2 text-sm text-muted">
+		{i18n.t(voiding?.status === 'pending' ? 'ledger.cancelBody' : 'ledger.voidBody')}
+	</p>
 	{#if voidError}<Alert tone="danger" class="mt-3">{i18n.t(voidError)}</Alert>{/if}
 	{#snippet footer({ close })}
 		<Button variant="secondary" onclick={close}>{i18n.t('common.cancel')}</Button>
 		<form method="POST" action="?/void" use:enhance={voidEnhance}>
 			<input type="hidden" name="id" value={voiding?.id} />
 			<Button type="submit" variant="danger" loading={voidSaving}>
-				{i18n.t('ledger.voidCta')}
+				{i18n.t(voiding?.status === 'pending' ? 'ledger.cancelRequest' : 'ledger.voidCta')}
 			</Button>
 		</form>
 	{/snippet}
