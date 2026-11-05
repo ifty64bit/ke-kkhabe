@@ -9,8 +9,17 @@ import type { Poisha } from '#lib/money.ts';
  */
 export const PORTION = 12;
 
-/** Allowed fractional parts, in twelfths: —, ¼, ⅓, ½, ⅔, ¾. */
-export const FRACTIONS: readonly number[] = [0, 3, 4, 6, 8, 9];
+/**
+ * Allowed fractional parts, in twelfths. For now only halves: — and ½.
+ *
+ * FUTURE: storage, validation, display and the charge math all support ¼, ⅓, ⅔ and ¾
+ * already (`[0, 3, 4, 6, 8, 9]`). Before enabling them, decide who pays for an unclaimed
+ * part. With halves only, an unmatched ½ simply becomes a whole for the person who ordered
+ * a half last (`topUpLeftovers` in `#lib/sharing.ts`). With mixed fractions that rule is
+ * ambiguous: ½ + ⅓ leaves ⅙ open, and the app only sees totals, not who meant to share
+ * with whom. Revisit `topUpLeftovers` and `shareHolders` then.
+ */
+export const FRACTIONS: readonly number[] = [0, 6];
 
 export const FRACTION_GLYPH: Record<number, string> = { 3: '¼', 4: '⅓', 6: '½', 8: '⅔', 9: '¾' };
 

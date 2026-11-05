@@ -33,7 +33,13 @@
 		id: string;
 		name: string;
 		image: string | null;
-		lines: { itemId: string; quantity: number; finalQuantity: number | null }[];
+		/** Twelfths. `suggestedFinal` is the order with an unmatched half made whole. */
+		lines: {
+			itemId: string;
+			quantity: number;
+			finalQuantity: number | null;
+			suggestedFinal: number;
+		}[];
 	};
 
 	/** `auto`: the amount follows the bill total until the manager types their own. */
@@ -87,7 +93,7 @@
 			people.flatMap((p) =>
 				p.lines.map((l) => [
 					lineKey(p.id, l.itemId),
-					l.finalQuantity ?? (isAvailable(l.itemId) ? l.quantity : 0)
+					l.finalQuantity ?? (isAvailable(l.itemId) ? l.suggestedFinal : 0)
 				])
 			)
 		);

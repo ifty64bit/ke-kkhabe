@@ -353,11 +353,41 @@
 			noAnswer: i18n.num(data.counts.noAnswer)
 		})}
 	</p>
+	{#each data.shareWarnings as w (w.itemId)}
+		{@const m = data.menu.find((x) => x.id === w.itemId)}
+		{@const unit = m ? i18n.pick(m.unitBn, m.unitEn) : ''}
+		<Alert tone="warning" class="mt-3">
+			<p class="font-semibold">
+				{i18n.t('manage.share.unclaimed', {
+					name: m?.name ?? '',
+					amount: formatQty(w.open, i18n.locale),
+					unit
+				})}
+			</p>
+			<ul class="mt-1">
+				{#each w.holders as h, i (h.userId)}
+					<li>
+						{h.name} ({formatQty(h.quantity, i18n.locale)})
+						{#if i === 0}
+							· <span class="font-semibold">{i18n.t('manage.share.latest')}</span>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+			<p class="mt-1">
+				{i18n.t('manage.share.paysWhole', { name: w.holders[0]?.name ?? '' })}
+			</p>
+		</Alert>
+	{/each}
 	{#if actionError}<Alert tone="danger" class="mt-3">{i18n.t(actionError)}</Alert>{/if}
 	{#snippet footer({ close })}
 		<Button variant="secondary" onclick={close}>{i18n.t('common.cancel')}</Button>
 		<form method="POST" action="?/close" use:enhance={rowAction}>
-			<Button type="submit">{i18n.t('manage.day.closeOrders')}</Button>
+			<Button type="submit">
+				{i18n.t(
+					data.shareWarnings.length > 0 ? 'manage.share.closeAnyway' : 'manage.day.closeOrders'
+				)}
+			</Button>
 		</form>
 	{/snippet}
 </Dialog>

@@ -1,11 +1,12 @@
 import { fail } from '@sveltejs/kit';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import { dhakaToday } from '#lib/date.ts';
 import type { MessageKey } from '#lib/i18n/index.ts';
 import { breakdownForDay } from '#lib/server/charges.ts';
 import { computeLedger } from '#lib/server/ledger.ts';
 import { day, dayItem, item, orderLine, response } from '#lib/server/db/schema.ts';
 import { pricePerPiece } from '#lib/quantity.ts';
+import { openShares } from '#lib/sharing.ts';
 import { parseOrderForm } from '#lib/server/orders.ts';
 import type { Db } from '#lib/server/db/index.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -14,9 +15,16 @@ async function loadToday(db: Db, userId: string) {
 	const date = dhakaToday();
 	const [today] = await db.select().from(day).where(eq(day.date, date)).limit(1);
 	if (!today)
-		return { date, day: null, items: [], response: null, lines: {} as Record<string, number> };
+		return {
+			date,
+			day: null,
+			items: [],
+			response: null,
+			lines: {} as Record<string, number>,
+			openShares: {} as Record<string, number>
+		};
 
-	const [items, [mine], lines] = await Promise.all([
+	const [items, [mine], lines, others] = await Promise.all([
 		db
 			.select({
 				id: item.id,
@@ -42,7 +50,16 @@ async function loadToday(db: Db, userId: string) {
 				finalQuantity: orderLine.finalQuantity12ths
 			})
 			.from(orderLine)
-			.where(and(eq(orderLine.dayId, today.id), eq(orderLine.userId, userId)))
+			.where(and(eq(orderLine.dayId, today.id), eq(orderLine.userId, userId))),
+		// Everyone else's orders, to show halves still open to share.
+		db
+			.select({
+				userId: orderLine.userId,
+				itemId: orderLine.itemId,
+				quantity: orderLine.quantity12ths
+			})
+			.from(orderLine)
+			.where(and(eq(orderLine.dayId, today.id), ne(orderLine.userId, userId)))
 	]);
 
 	return {
@@ -55,7 +72,12 @@ async function loadToday(db: Db, userId: string) {
 				l.itemId,
 				today.status === 'finalized' ? (l.finalQuantity ?? 0) : l.quantity
 			])
-		) as Record<string, number>
+		) as Record<string, number>,
+		/** Item id to the part others left unclaimed (twelfths), while orders are open. */
+		openShares:
+			today.status === 'open'
+				? Object.fromEntries(openShares(others))
+				: ({} as Record<string, number>)
 	};
 }
 

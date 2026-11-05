@@ -165,3 +165,10 @@
 - Why: people share one item (e.g. a bowl of dal), and the shop charges per whole item. Twelfths make ¼, ⅓, ½, ⅔ and ¾ exact integers, like poisha for money
 - Rejected: half-steps only; explicit "share with…" links between members; any decimal (cannot express ⅓); per-item opt-in for fractions
 - Rests on: per-piece price decision above; designer answers, 2026-11-04
+
+## 2026-11-05 · Only halves for now; an unclaimed half becomes a whole for whoever ordered a half last
+
+- Decided by: the designer
+- Why: with mixed fractions (½ + ⅓ leaves ⅙) there is no clear rule for who pays an unclaimed part; with halves only, the person who left the half open pays for it. Others see the open half when they order, and closing orders warns with names
+- Rejected: hard-blocking an order until it is matched (the first sharer is always unmatched); hard-blocking close (breakfast has a deadline); splitting the leftover across all eaters
+- Rests on: twelfths decision above (storage and math still support ¼, ⅓, ⅔, ¾; see the FUTURE note on `FRACTIONS` in `src/lib/quantity.ts`)

@@ -4,6 +4,7 @@ import type { BatchItem } from 'drizzle-orm/batch';
 import { dhakaToday } from '#lib/date.ts';
 import { formatTaka, type Poisha } from '#lib/money.ts';
 import { pricePerPiece, toBuy } from '#lib/quantity.ts';
+import { openShares, shareHolders, topUpLeftovers } from '#lib/sharing.ts';
 import { parseOrderForm } from '#lib/server/orders.ts';
 import type { MessageKey } from '#lib/i18n/index.ts';
 import { validateFinalize } from '#lib/server/finalize.ts';
@@ -62,7 +63,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.select({
 						userId: response.userId,
 						eating: response.eating,
-						addedBy: response.addedBy
+						addedBy: response.addedBy,
+						updatedAt: response.updatedAt
 					})
 					.from(response)
 					.where(eq(response.dayId, today.id))
@@ -90,6 +92,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			members: allUsers,
 			people: [],
 			counts: { yes: 0, no: 0, noAnswer: 0 },
+			shareWarnings: [],
 			lastDayItems: lastDayItems.map((r) => r.itemId),
 			payments: null,
 			charges: null,
@@ -154,8 +157,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 	};
 
 	const respOf = new Map(responses.map((r) => [r.userId, r]));
-	const linesOf = new Map<string, typeof lines>();
-	for (const line of lines) {
+	// When each person last changed their order: the latest unmatched half becomes a whole.
+	const timed = lines.map((l) => ({ ...l, at: respOf.get(l.userId)?.updatedAt?.getTime() ?? 0 }));
+	const suggestedOf = new Map(
+		topUpLeftovers(timed).map((l) => [`${l.userId}:${l.itemId}`, l.quantity])
+	);
+	type DayLine = (typeof lines)[number] & { suggestedFinal: number };
+	const linesOf = new Map<string, DayLine[]>();
+	for (const raw of lines) {
+		const line = {
+			...raw,
+			suggestedFinal: suggestedOf.get(`${raw.userId}:${raw.itemId}`) ?? raw.quantity
+		};
 		const list = linesOf.get(line.userId) ?? [];
 		list.push(line);
 		linesOf.set(line.userId, list);
@@ -172,6 +185,20 @@ export const load: PageServerLoad = async ({ locals }) => {
 			addedBy: respOf.get(u.id)?.addedBy ?? null,
 			lines: linesOf.get(u.id) ?? []
 		}));
+
+	// Items with a half nobody matched, and who holds a half of each (latest first).
+	const nameOf = new Map(allUsers.map((u) => [u.id, u.name]));
+	const openOf = openShares(lines);
+	const shareWarnings = [...shareHolders(timed)].map(([itemId, holders]) => ({
+		itemId,
+		open: openOf.get(itemId) ?? 0,
+		holders: holders.map((h) => ({
+			userId: h.userId,
+			name: nameOf.get(h.userId) ?? '',
+			quantity: h.quantity,
+			at: h.at
+		}))
+	}));
 
 	const counts = { yes: 0, no: 0, noAnswer: 0 };
 	for (const u of allUsers) {
@@ -208,6 +235,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		items: catalog,
 		members: allUsers,
 		people,
+		shareWarnings,
 		counts,
 		lastDayItems: lastDayItems.map((r) => r.itemId),
 		payments: paymentRows.length > 0 || today.status === 'finalized' ? paymentRows : null,
@@ -469,9 +497,14 @@ export const actions: Actions = {
 				.select({
 					userId: orderLine.userId,
 					itemId: orderLine.itemId,
-					quantity: orderLine.quantity12ths
+					quantity: orderLine.quantity12ths,
+					updatedAt: response.updatedAt
 				})
 				.from(orderLine)
+				.leftJoin(
+					response,
+					and(eq(response.dayId, orderLine.dayId), eq(response.userId, orderLine.userId))
+				)
 				.where(eq(orderLine.dayId, today.id)),
 			db.select({ id: user.id, active: user.active }).from(user),
 			db
@@ -494,7 +527,15 @@ export const actions: Actions = {
 			},
 			{
 				items: menuItems.map((m) => ({ id: m.itemId, available: m.available })),
-				lines,
+				// A missing final quantity defaults to the order, with an unmatched half made whole.
+				lines: topUpLeftovers(
+					lines.map((l) => ({
+						userId: l.userId,
+						itemId: l.itemId,
+						quantity: l.quantity,
+						at: l.updatedAt?.getTime() ?? 0
+					}))
+				),
 				payerIds
 			}
 		);

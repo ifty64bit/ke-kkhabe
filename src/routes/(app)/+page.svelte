@@ -178,5 +178,10 @@
 </nav>
 
 {#if status === 'open'}
-	<OrderDialog bind:open={ordering} items={data.items} initial={data.lines} />
+	<OrderDialog
+		bind:open={ordering}
+		items={data.items}
+		initial={data.lines}
+		openShares={data.openShares}
+	/>
 {/if}

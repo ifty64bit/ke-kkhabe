@@ -227,13 +227,13 @@ describe('validateFinalize: payments', () => {
 
 describe('validateFinalize: shared items (fractions)', () => {
 	it('charges whole items bought and shares the leftover', () => {
-		// Two people order ½ dal and one orders ⅓: 1⅓ ordered, 2 bought at ৳30.
+		// Three people order ½ dal: 1½ ordered, 2 bought at ৳30.
 		const dalCtx: FinalizeContext = {
 			items: [{ id: 'dal', available: true }],
 			lines: [
 				{ userId: 'u1', itemId: 'dal', quantity: 6 },
 				{ userId: 'u2', itemId: 'dal', quantity: 6 },
-				{ userId: 'u3', itemId: 'dal', quantity: 4 }
+				{ userId: 'u3', itemId: 'dal', quantity: 6 }
 			],
 			payerIds: new Set(['manager'])
 		};
@@ -254,10 +254,10 @@ describe('validateFinalize: shared items (fractions)', () => {
 			result.value.final.map((f) => ({ ...f, finalQuantity: f.quantity })),
 			0
 		);
-		// ৳60 over 16 twelfths: ½ → ৳22.50, ⅓ → ৳15.
-		expect(charges.get('u1')).toBe(2250);
-		expect(charges.get('u2')).toBe(2250);
-		expect(charges.get('u3')).toBe(1500);
+		// ৳60 over 18 twelfths: each ½ → ৳20.
+		expect(charges.get('u1')).toBe(2000);
+		expect(charges.get('u2')).toBe(2000);
+		expect(charges.get('u3')).toBe(2000);
 	});
 
 	it('a fraction-only eater shares the delivery fee', () => {

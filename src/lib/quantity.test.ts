@@ -16,11 +16,15 @@ import {
 
 describe('isValidQty', () => {
 	it('accepts wholes and the allowed fractions up to 20 items', () => {
-		for (const n of [0, 3, 4, 6, 8, 9, 12, 16, 240]) expect(isValidQty(n)).toBe(true);
+		for (const n of [0, 6, 12, 18, 240]) expect(isValidQty(n)).toBe(true);
 	});
 
 	it('rejects other twelfths, out-of-range and non-integers', () => {
-		for (const n of [5, 7, 13, 241, 249, -6, 1.5, NaN]) expect(isValidQty(n)).toBe(false);
+		for (const n of [5, 7, 13, 241, 246, -6, 1.5, NaN]) expect(isValidQty(n)).toBe(false);
+	});
+
+	it('only allows halves for now (¼, ⅓, ⅔, ¾ are disabled)', () => {
+		for (const n of [3, 4, 8, 9, 16]) expect(isValidQty(n)).toBe(false);
 	});
 });
 
@@ -77,7 +81,7 @@ describe('stepper math', () => {
 		expect(setFraction(18, 0)).toBe(12);
 		expect(setFraction(240, 6)).toBe(240);
 		expect(canSetFraction(240, 6)).toBe(false);
-		expect(canSetFraction(228, 9)).toBe(true);
+		expect(canSetFraction(228, 6)).toBe(true);
 	});
 });
 

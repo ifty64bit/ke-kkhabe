@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { Alert, Button, Dialog, QuantityStepper } from '#lib/components/ui/index.ts';
 	import { useI18n, type MessageKey } from '#lib/i18n/index.ts';
-	import { formatQty } from '#lib/quantity.ts';
+	import { formatQty, setFraction, split } from '#lib/quantity.ts';
 
 	type Item = {
 		id: string;
@@ -15,12 +15,15 @@
 	let {
 		open = $bindable(false),
 		items,
-		initial
+		initial,
+		openShares = {}
 	}: {
 		open?: boolean;
 		items: Item[];
-		/** Current quantities by item id, used when changing an order. */
+		/** Current quantities by item id (twelfths), used when changing an order. */
 		initial: Record<string, number>;
+		/** Item id to the part others left unclaimed (twelfths), offered to share. */
+		openShares?: Record<string, number>;
 	} = $props();
 
 	const i18n = useI18n();
@@ -69,17 +72,39 @@
 		<ul class="divide-y divide-border">
 			{#each offered as item (item.id)}
 				{@const name = item.name}
-				<li class="flex items-center justify-between gap-4 py-3">
-					<span class="text-lg">
-						{name}
-						{#if (qty[item.id] ?? 0) > 0}
-							<span class="block text-sm text-muted">
-								{formatQty(qty[item.id], i18n.locale)}
-								{i18n.pick(item.unitBn, item.unitEn)}
+				{@const share = openShares[item.id] ?? 0}
+				<li class="py-3">
+					<div class="flex items-center justify-between gap-4">
+						<span class="text-lg">
+							{name}
+							{#if (qty[item.id] ?? 0) > 0}
+								<span class="block text-sm text-muted">
+									{formatQty(qty[item.id], i18n.locale)}
+									{i18n.pick(item.unitBn, item.unitEn)}
+								</span>
+							{/if}
+						</span>
+						<QuantityStepper bind:value={qty[item.id]} name="qty:{item.id}" label={name} />
+					</div>
+					{#if share > 0 && split(qty[item.id] ?? 0).fraction === 0}
+						<div
+							class="mt-2 flex items-center justify-between gap-4 rounded-control bg-surface-2 px-3 py-2 text-sm"
+						>
+							<span>
+								{i18n.t('order.shareOpen', {
+									amount: formatQty(share, i18n.locale),
+									unit: i18n.pick(item.unitBn, item.unitEn)
+								})}
 							</span>
-						{/if}
-					</span>
-					<QuantityStepper bind:value={qty[item.id]} name="qty:{item.id}" label={name} />
+							<Button
+								size="sm"
+								variant="secondary"
+								onclick={() => (qty[item.id] = setFraction(qty[item.id] ?? 0, share))}
+							>
+								{i18n.t('order.takeShare', { amount: formatQty(share, i18n.locale) })}
+							</Button>
+						</div>
+					{/if}
 				</li>
 			{/each}
 		</ul>
