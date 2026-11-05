@@ -50,7 +50,7 @@ A day moves through these states:
 - Ledger entries:
   - **Charge**: for each item, its total cost (price per piece × whole pieces bought) is split across what each person actually ate (final quantities, fractions included), so everyone pays the same price per amount eaten for that item that day; an unclaimed part of the last piece is shared by that item's eaters in proportion. Shares are whole poisha that add up exactly to the total; leftover poisha go to the largest fractional shares in a fixed order. The day's delivery fee is split equally among everyone who ate that day (members who skipped pay none of it), again in whole poisha that add up exactly. The day's discount is taken off in equal shares among everyone who ate, the same way. A member's charge for the day is the sum over items, plus their share of the delivery fee, minus their share of the discount. Finalizing is blocked if a discount would push anyone's charge below zero. Finalizing is blocked if there is a delivery fee but nobody ate. This reduces the member's balance.
   - **Bill payment**: a member paid the shop X on a day. This increases their balance.
-  - **Settlement**: A paid B X (cash or bKash, outside the app). A's balance goes up and B's goes down. **Anyone** (A, B, or a manager) can log it. It records who logged it, and it can be voided (soft-delete, audited) by the logger or a manager.
+  - **Settlement**: A paid B X (cash or bKash, outside the app). **Anyone** (A, B, or a manager) can log it, and it records who logged it. The receiver's own entry counts at once; the payer's or a manager's entry stays pending until the receiver approves ("পেয়েছি") or rejects it ("পাইনি", with an optional reason). Only approved settlements change balances (A's up, B's down). Rejected entries are final: they can't be approved, voided or reopened. The logger or a manager can cancel a pending entry, or void an approved one (soft-delete, audited).
 - **Net balance** per member = bill payments + settlements sent − charges − settlements received. Positive means others owe you, negative means you owe.
 - **Settle-up suggestions**: a simplified set of transfers (fewest payments) that would bring every balance to zero, Splitwise-style.
 
@@ -77,5 +77,5 @@ A day moves through these states:
 ## Open points (defaults chosen; change if needed)
 
 - A member who doesn't respond on an open day is treated as "not eating".
-- Settlement suggestions are only suggestions. Balances change only when a settlement is logged.
+- Settlement suggestions are only suggestions. Balances change only when a settlement is approved.
 - Rounding: no rounding needed because prices are per unit and charges are integer poisha.

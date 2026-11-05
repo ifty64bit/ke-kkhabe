@@ -172,3 +172,10 @@
 - Why: with mixed fractions (½ + ⅓ leaves ⅙) there is no clear rule for who pays an unclaimed part; with halves only, the person who left the half open pays for it. Others see the open half when they order, and closing orders warns with names
 - Rejected: hard-blocking an order until it is matched (the first sharer is always unmatched); hard-blocking close (breakfast has a deadline); splitting the leftover across all eaters
 - Rests on: twelfths decision above (storage and math still support ¼, ⅓, ⅔, ¾; see the FUTURE note on `FRACTIONS` in `src/lib/quantity.ts`)
+
+## 2026-11-05 · A settlement counts once the receiver approves it
+
+- Decided by: the designer
+- Why: only the receiver knows the money arrived
+- Rejected: approving a different amount (log a new settlement instead); manager entries counting at once
+- Rests on: the settlement ledger rules
