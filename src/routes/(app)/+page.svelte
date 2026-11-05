@@ -82,6 +82,14 @@
 	</h1>
 
 	<div class="mt-10 flex w-full flex-col items-center gap-4">
+		{#if data.awaitingMeCount > 0}
+			<Alert tone="info" class="w-full max-w-sm text-left">
+				{i18n.t('today.awaitingApproval', { count: data.awaitingMeCount })}
+				<a class="font-semibold underline" href={resolve('/(app)/ledger')}>
+					{i18n.t('today.awaitingApprovalCta')}
+				</a>
+			</Alert>
+		{/if}
 		{#if !status || status === 'draft'}
 			<p class="text-lg text-muted">{i18n.t('today.noMenu')}</p>
 			{#if isManager}

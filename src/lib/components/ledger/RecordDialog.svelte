@@ -23,7 +23,8 @@
 		meId,
 		isManager,
 		balances,
-		today
+		today,
+		onsaved
 	}: {
 		open?: boolean;
 		/** A suggested transfer to start from, or null for a blank form. */
@@ -35,6 +36,8 @@
 		balances: Record<string, Poisha>;
 		/** Today in Dhaka, the default settlement date. */
 		today: string;
+		/** Called after a successful save, with whether the entry waits for approval. */
+		onsaved?: (pending: boolean, toName: string) => void;
 	} = $props();
 
 	const i18n = useI18n();
@@ -101,6 +104,10 @@
 		from !== '' && to !== '' && from !== to && parsedAmount !== null && parsedAmount > owedBetween
 	);
 	const ready = $derived(from !== '' && to !== '' && from !== to && parsedAmount !== null);
+	// Someone else's entry only counts once they confirm it, so say so up front.
+	const needsApprovalName = $derived(
+		to !== '' && to !== meId ? (people.find((p) => p.id === to)?.name ?? null) : null
+	);
 
 	const fieldError = (field: string) => {
 		const key = result?.errors?.[field];
@@ -118,6 +125,8 @@
 		}) => {
 			saving = false;
 			if (r.type === 'success') {
+				const toName = people.find((p) => p.id === to)?.name ?? '';
+				onsaved?.(r.data?.pending === true, toName);
 				result = null;
 				open = false;
 				await update();
@@ -193,6 +202,12 @@
 					/>
 				{/snippet}
 			</Field>
+		{/if}
+
+		{#if needsApprovalName}
+			<p class="text-sm text-muted">
+				{i18n.t('ledger.needsApproval', { name: needsApprovalName })}
+			</p>
 		{/if}
 
 		<Field label={i18n.t('ledger.amountLabel')} error={fieldError('amount')}>

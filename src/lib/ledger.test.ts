@@ -53,7 +53,14 @@ const input: LedgerInput = {
 		{ dayId: 'd3', userId: 'u3', amount: 12000 }
 	],
 	settlements: [
-		{ id: 's1', fromUserId: 'u1', toUserId: 'u2', amount: 10000, voidedAt: null, status: 'approved' },
+		{
+			id: 's1',
+			fromUserId: 'u1',
+			toUserId: 'u2',
+			amount: 10000,
+			voidedAt: null,
+			status: 'approved'
+		},
 		{
 			id: 's2',
 			fromUserId: 'u2',
