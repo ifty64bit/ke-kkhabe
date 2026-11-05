@@ -43,6 +43,22 @@ export const formatDate = (d: Date | number, locale: Locale) =>
 		timeZone: 'Asia/Dhaka'
 	}).format(d);
 
+/** A YYYY-MM month, e.g. "নভেম্বর ২০২৬" / "November 2026". */
+export const formatMonth = (month: string, locale: Locale) =>
+	new Intl.DateTimeFormat(intlLocale(locale), {
+		month: 'long',
+		year: 'numeric',
+		timeZone: 'Asia/Dhaka'
+	}).format(new Date(`${month}-15T06:00:00Z`));
+
+/** A short YYYY-MM-DD day for ledger rows, e.g. "৫ নভে" / "5 Nov". */
+export const formatShortDay = (date: string, locale: Locale) =>
+	new Intl.DateTimeFormat(intlLocale(locale), {
+		day: 'numeric',
+		month: 'short',
+		timeZone: 'Asia/Dhaka'
+	}).format(new Date(`${date}T06:00:00Z`));
+
 export type I18n = ReturnType<typeof createI18n>;
 
 export function createI18n(getLocale: () => Locale) {
@@ -55,6 +71,8 @@ export function createI18n(getLocale: () => Locale) {
 		num: (n: number) => formatNumber(n, getLocale()),
 		day: (date: string) => formatDay(date, getLocale()),
 		date: (d: Date | number) => formatDate(d, getLocale()),
+		month: (month: string) => formatMonth(month, getLocale()),
+		shortDay: (date: string) => formatShortDay(date, getLocale()),
 		/** Pick the localized field of a record with `xBn` / `xEn` columns; English falls back to Bangla. */
 		pick: (bnValue: string, enValue: string | null | undefined) =>
 			getLocale() === 'en' && enValue ? enValue : bnValue

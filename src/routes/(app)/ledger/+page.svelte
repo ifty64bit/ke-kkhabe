@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import RecordDialog from '#lib/components/ledger/RecordDialog.svelte';
 	import { canRecordSettlement, canVoidSettlement } from '#lib/ledger.ts';
 	import { formatTaka } from '#lib/money.ts';
@@ -288,6 +289,14 @@
 		{/if}
 
 		<Card class="mt-8" title={i18n.t('ledger.recentTitle')} padding="none">
+			{#snippet actions()}
+				<a
+					href={resolve('/(app)/ledger/history')}
+					class="shrink-0 rounded-control text-sm font-medium text-primary underline-offset-2 hover:underline"
+				>
+					{i18n.t('history.seeAll')}
+				</a>
+			{/snippet}
 			{#if data.recent.length === 0}
 				<p class="px-4 pb-4 text-sm text-muted">{i18n.t('ledger.recentEmpty')}</p>
 			{:else}

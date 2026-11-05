@@ -227,3 +227,50 @@ export function validateSettlementInput(
 		}
 	};
 }
+
+/** The fields `groupHistory` needs from a settlement row. */
+export type HistoryRow = {
+	date: string;
+	fromId: string;
+	toId: string;
+	amount: Poisha;
+	status: SettlementStatus;
+	voidedAt: Date | null;
+};
+
+export type HistoryMonth<T extends HistoryRow> = {
+	/** YYYY-MM */
+	month: string;
+	entries: (T & { direction: 'in' | 'out'; counts: boolean })[];
+	/** Approved, unvoided totals for the month, so they match the balance. */
+	paid: Poisha;
+	received: Poisha;
+};
+
+/**
+ * A member's settlement history as khata pages: only rows where `meId` paid or received,
+ * grouped by month (newest first), each entry marked in/out and whether it counts.
+ * Rows within a month keep their given order after a stable sort by date, newest first.
+ */
+export function groupHistory<T extends HistoryRow>(rows: T[], meId: string): HistoryMonth<T>[] {
+	const months = new Map<string, HistoryMonth<T>>();
+	const mine = rows
+		.filter((r) => r.fromId === meId || r.toId === meId)
+		.toSorted((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+	for (const r of mine) {
+		const key = r.date.slice(0, 7);
+		let m = months.get(key);
+		if (!m) {
+			m = { month: key, entries: [], paid: 0, received: 0 };
+			months.set(key, m);
+		}
+		const direction = r.fromId === meId ? 'out' : 'in';
+		const counts = r.status === 'approved' && !r.voidedAt;
+		m.entries.push({ ...r, direction, counts });
+		if (counts) {
+			if (direction === 'out') m.paid += r.amount;
+			else m.received += r.amount;
+		}
+	}
+	return [...months.values()];
+}

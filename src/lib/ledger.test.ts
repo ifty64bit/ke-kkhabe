@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	balancesFrom,
+	groupHistory,
 	canDecideSettlement,
 	canRecordSettlement,
 	canVoidSettlement,
@@ -323,3 +324,49 @@ function mulberry32(seed: number) {
 		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 	};
 }
+
+describe('groupHistory', () => {
+	const row = (
+		id: string,
+		date: string,
+		fromId: string,
+		toId: string,
+		amount: number,
+		status: 'pending' | 'approved' | 'rejected' = 'approved',
+		voidedAt: Date | null = null
+	) => ({ id, date, fromId, toId, amount, status, voidedAt });
+
+	it('groups my settlements by month, newest first', () => {
+		const months = groupHistory(
+			[
+				row('a', '2026-10-30', 'me', 'x', 1000),
+				row('b', '2026-11-05', 'me', 'x', 5000),
+				row('c', '2026-11-04', 'y', 'me', 12000)
+			],
+			'me'
+		);
+		expect(months.map((m) => m.month)).toEqual(['2026-11', '2026-10']);
+		expect(months[0].entries.map((e) => e.id)).toEqual(['b', 'c']);
+		expect(months[0].entries.map((e) => e.direction)).toEqual(['out', 'in']);
+	});
+
+	it('totals only approved, unvoided entries', () => {
+		const [nov] = groupHistory(
+			[
+				row('a', '2026-11-05', 'me', 'x', 5000),
+				row('b', '2026-11-05', 'me', 'x', 700, 'pending'),
+				row('c', '2026-11-04', 'y', 'me', 12000),
+				row('d', '2026-11-03', 'me', 'z', 3000, 'rejected'),
+				row('e', '2026-11-02', 'y', 'me', 900, 'approved', new Date())
+			],
+			'me'
+		);
+		expect(nov.paid).toBe(5000);
+		expect(nov.received).toBe(12000);
+		expect(nov.entries.map((e) => e.counts)).toEqual([true, false, true, false, false]);
+	});
+
+	it('leaves out rows I am not part of', () => {
+		expect(groupHistory([row('a', '2026-11-05', 'x', 'y', 100)], 'me')).toEqual([]);
+	});
+});
