@@ -25,11 +25,11 @@ confirms that the money arrived, so a mistaken or wishful entry moves balances.
 
 Who logs "B → A ৳X" decides the starting status:
 
-| Logged by | Status |
-|---|---|
-| A (the receiver) | `approved` |
-| B (the payer) | `pending` |
-| A manager who is not A | `pending` |
+| Logged by              | Status     |
+| ---------------------- | ---------- |
+| A (the receiver)       | `approved` |
+| B (the payer)          | `pending`  |
+| A manager who is not A | `pending`  |
 
 Who may record is unchanged (`canRecordSettlement`: the payer, the receiver, or a manager).
 
