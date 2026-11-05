@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
 	balancesFrom,
+	canDecideSettlement,
 	canRecordSettlement,
 	canVoidSettlement,
+	initialSettlementStatus,
 	suggestSettlements,
+	validateRejectReason,
 	validateSettlementInput,
-	type LedgerInput
+	type LedgerInput,
+	type SettlementStatus
 } from '#lib/ledger.ts';
 
 /**
@@ -49,8 +53,15 @@ const input: LedgerInput = {
 		{ dayId: 'd3', userId: 'u3', amount: 12000 }
 	],
 	settlements: [
-		{ id: 's1', fromUserId: 'u1', toUserId: 'u2', amount: 10000, voidedAt: null },
-		{ id: 's2', fromUserId: 'u2', toUserId: 'u3', amount: 5000, voidedAt: new Date() }
+		{ id: 's1', fromUserId: 'u1', toUserId: 'u2', amount: 10000, voidedAt: null, status: 'approved' },
+		{
+			id: 's2',
+			fromUserId: 'u2',
+			toUserId: 'u3',
+			amount: 5000,
+			voidedAt: new Date(),
+			status: 'approved'
+		}
 	]
 };
 
@@ -76,7 +87,16 @@ describe('balancesFrom', () => {
 		// A ৳175 settlement squares u2 away exactly; they still appear, as settled.
 		const balances = balancesFrom({
 			...input,
-			settlements: [{ id: 's1', fromUserId: 'u2', toUserId: 'u1', amount: 17500, voidedAt: null }]
+			settlements: [
+				{
+					id: 's1',
+					fromUserId: 'u2',
+					toUserId: 'u1',
+					amount: 17500,
+					voidedAt: null,
+					status: 'approved'
+				}
+			]
 		});
 		// u2 pays u1 back ৳175 exactly: u2 lands on 0 and stays in the map, u1 drops to −20000.
 		expect(balances.get('u1')).toBe(-20000);
@@ -152,9 +172,72 @@ describe('permission rules', () => {
 	});
 
 	it('lets the creator or a manager void, blocks others', () => {
-		expect(canVoidSettlement('u1', false, 'u1')).toBe(true);
-		expect(canVoidSettlement('u2', false, 'u1')).toBe(false);
-		expect(canVoidSettlement('boss', true, 'u1')).toBe(true);
+		expect(canVoidSettlement('u1', false, 'u1', 'approved')).toBe(true);
+		expect(canVoidSettlement('u2', false, 'u1', 'approved')).toBe(false);
+		expect(canVoidSettlement('boss', true, 'u1', 'approved')).toBe(true);
+	});
+});
+
+describe('settlement status rules', () => {
+	it('starts approved only when the receiver logs it', () => {
+		expect(initialSettlementStatus('a', 'a')).toBe('approved');
+		expect(initialSettlementStatus('b', 'a')).toBe('pending');
+		expect(initialSettlementStatus('m', 'a')).toBe('pending');
+	});
+
+	it('lets only the receiver decide a pending, non-voided row', () => {
+		const row = { toUserId: 'a', status: 'pending' as SettlementStatus, voidedAt: null };
+		expect(canDecideSettlement('a', row)).toBe(true);
+		expect(canDecideSettlement('b', row)).toBe(false);
+		expect(canDecideSettlement('m', row)).toBe(false);
+		expect(canDecideSettlement('a', { ...row, status: 'approved' })).toBe(false);
+		expect(canDecideSettlement('a', { ...row, status: 'rejected' })).toBe(false);
+		expect(canDecideSettlement('a', { ...row, voidedAt: new Date() })).toBe(false);
+	});
+
+	it('refuses to void rejected rows, allows cancelling a pending one', () => {
+		expect(canVoidSettlement('b', false, 'b', 'rejected')).toBe(false);
+		expect(canVoidSettlement('m', true, 'b', 'rejected')).toBe(false);
+		expect(canVoidSettlement('b', false, 'b', 'pending')).toBe(true);
+	});
+
+	it('never counts a pending or rejected settlement toward balances', () => {
+		const base = balancesFrom(input);
+		const withExtra = balancesFrom({
+			...input,
+			settlements: [
+				...input.settlements,
+				{
+					id: 's3',
+					fromUserId: 'u1',
+					toUserId: 'u2',
+					amount: 10000,
+					voidedAt: null,
+					status: 'pending'
+				},
+				{
+					id: 's4',
+					fromUserId: 'u1',
+					toUserId: 'u2',
+					amount: 5000,
+					voidedAt: null,
+					status: 'rejected'
+				}
+			]
+		});
+		expect(withExtra).toEqual(base);
+	});
+});
+
+describe('validateRejectReason', () => {
+	it('trims, empties to null, and refuses more than 100 characters', () => {
+		expect(validateRejectReason('  ')).toEqual({ ok: true, value: null });
+		expect(validateRejectReason(' পাইনি ')).toEqual({ ok: true, value: 'পাইনি' });
+		expect(validateRejectReason('x'.repeat(101))).toEqual({
+			ok: false,
+			error: 'ledger.error.reasonLong'
+		});
+		expect(validateRejectReason('x'.repeat(100))).toEqual({ ok: true, value: 'x'.repeat(100) });
 	});
 });
 

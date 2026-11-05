@@ -116,6 +116,7 @@ export const bn = {
 	'ledger.error.self': 'দুই পক্ষ আলাদা হতে হবে।',
 	'ledger.error.amount': '০-এর বেশি টাকার অঙ্ক লিখুন।',
 	'ledger.error.note': 'নোট ১০০ অক্ষরের মধ্যে রাখুন।',
+	'ledger.error.reasonLong': 'কারণ ১০০ অক্ষরের মধ্যে লিখুন।',
 	'ledger.error.date': 'তারিখটা ঠিক নেই, বা ভবিষ্যতের।',
 	'ledger.error.user': 'সদস্য পাওয়া যায়নি।',
 	'ledger.error.recordPermission': 'লেনদেনের কোনো পক্ষ বা ম্যানেজারই এটা লিখতে পারেন।',

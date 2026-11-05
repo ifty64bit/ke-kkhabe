@@ -16,12 +16,17 @@ export type LedgerLine = {
 	finalQuantity: number | null;
 };
 export type LedgerPayment = { dayId: string; userId: string; amount: Poisha };
+
+export const SETTLEMENT_STATUSES = ['pending', 'approved', 'rejected'] as const;
+export type SettlementStatus = (typeof SETTLEMENT_STATUSES)[number];
+
 export type LedgerSettlement = {
 	id: string;
 	fromUserId: string;
 	toUserId: string;
 	amount: Poisha;
 	voidedAt: Date | null;
+	status: SettlementStatus;
 };
 
 export type LedgerInput = {
@@ -70,7 +75,8 @@ export function balancesFrom({ days, items, lines, payments, settlements }: Ledg
 	}
 	for (const p of payments) if (counted.has(p.dayId)) bump(p.userId, p.amount);
 	for (const s of settlements) {
-		if (s.voidedAt !== null) continue;
+		// Only an approved, non-voided settlement moves a balance.
+		if (s.status !== 'approved' || s.voidedAt !== null) continue;
 		bump(s.fromUserId, s.amount);
 		bump(s.toUserId, -s.amount);
 	}
@@ -120,11 +126,38 @@ export function suggestSettlements(balances: Map<string, Poisha>): Transfer[] {
 export const canRecordSettlement = (meId: string, isManager: boolean, from: string, to: string) =>
 	isManager || from === meId || to === meId;
 
-/** Who may void a settlement: whoever created it, or any manager. */
-export const canVoidSettlement = (meId: string, isManager: boolean, createdBy: string) =>
-	isManager || createdBy === meId;
+/**
+ * A settlement starts `approved` when the receiver logs it themselves (logging it is the
+ * confirmation); anything the payer or a manager logs waits for the receiver.
+ */
+export const initialSettlementStatus = (meId: string, toUserId: string): SettlementStatus =>
+	meId === toUserId ? 'approved' : 'pending';
+
+/** Only the receiver may approve or reject, and only while the row is pending and not voided. */
+export const canDecideSettlement = (
+	meId: string,
+	row: { toUserId: string; status: SettlementStatus; voidedAt: Date | null }
+) => meId === row.toUserId && row.status === 'pending' && row.voidedAt === null;
+
+/** Who may void: whoever created it, or any manager — but a rejected row is final. */
+export const canVoidSettlement = (
+	meId: string,
+	isManager: boolean,
+	createdBy: string,
+	status: SettlementStatus
+) => status !== 'rejected' && (isManager || createdBy === meId);
 
 export const MAX_NOTE = 100;
+
+/** Trim the reject reason; '' becomes null, anything over `MAX_NOTE` is refused, not truncated. */
+export function validateRejectReason(
+	raw: string
+): { ok: true; value: string | null } | { ok: false; error: MessageKey } {
+	const reason = raw.trim();
+	if (reason === '') return { ok: true, value: null };
+	if (reason.length > MAX_NOTE) return { ok: false, error: 'ledger.error.reasonLong' };
+	return { ok: true, value: reason };
+}
 
 export type SettlementForm = {
 	from: string;

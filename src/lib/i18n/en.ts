@@ -119,6 +119,7 @@ export const en: Record<MessageKey, string> = {
 	'ledger.error.self': 'The two people must be different.',
 	'ledger.error.amount': 'Enter an amount above 0.',
 	'ledger.error.note': 'Keep the note within 100 characters.',
+	'ledger.error.reasonLong': 'Keep the reason under 100 characters.',
 	'ledger.error.date': 'That date is invalid, or in the future.',
 	'ledger.error.user': 'Member not found.',
 	'ledger.error.recordPermission': 'Only someone in the settlement, or a manager, can record it.',
