@@ -245,6 +245,9 @@ export type HistoryMonth<T extends HistoryRow> = {
 	/** Approved, unvoided totals for the month, so they match the balance. */
 	paid: Poisha;
 	received: Poisha;
+	/** Pending, unvoided totals: what is still waiting for approval. */
+	pendingPaid: Poisha;
+	pendingReceived: Poisha;
 };
 
 /**
@@ -261,7 +264,7 @@ export function groupHistory<T extends HistoryRow>(rows: T[], meId: string): His
 		const key = r.date.slice(0, 7);
 		let m = months.get(key);
 		if (!m) {
-			m = { month: key, entries: [], paid: 0, received: 0 };
+			m = { month: key, entries: [], paid: 0, received: 0, pendingPaid: 0, pendingReceived: 0 };
 			months.set(key, m);
 		}
 		const direction = r.fromId === meId ? 'out' : 'in';
@@ -270,7 +273,25 @@ export function groupHistory<T extends HistoryRow>(rows: T[], meId: string): His
 		if (counts) {
 			if (direction === 'out') m.paid += r.amount;
 			else m.received += r.amount;
+		} else if (r.status === 'pending' && !r.voidedAt) {
+			if (direction === 'out') m.pendingPaid += r.amount;
+			else m.pendingReceived += r.amount;
 		}
 	}
 	return [...months.values()];
+}
+
+/**
+ * My settle-up suggestions, less what I already sent and is waiting for approval.
+ * `pendingTo` maps a receiver's id to my pending total to them. `remaining` is what is
+ * left to pay (never below 0); `pending` is the part of the suggestion already sent.
+ */
+export function applyPending<T extends { to: string; amount: Poisha }>(
+	transfers: T[],
+	pendingTo: Record<string, Poisha>
+): (T & { remaining: Poisha; pending: Poisha })[] {
+	return transfers.map((t) => {
+		const pending = Math.min(t.amount, pendingTo[t.to] ?? 0);
+		return { ...t, remaining: t.amount - pending, pending };
+	});
 }

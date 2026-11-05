@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	applyPending,
 	balancesFrom,
 	groupHistory,
 	canDecideSettlement,
@@ -368,5 +369,53 @@ describe('groupHistory', () => {
 
 	it('leaves out rows I am not part of', () => {
 		expect(groupHistory([row('a', '2026-11-05', 'x', 'y', 100)], 'me')).toEqual([]);
+	});
+});
+
+describe('applyPending', () => {
+	const t = (to: string, amount: number) => ({ from: 'me', to, amount });
+
+	it('takes my pending payments off each suggestion', () => {
+		const out = applyPending([t('rafi', 3100), t('sumi', 10000)], { rafi: 3100, sumi: 3100 });
+		expect(out).toEqual([
+			{ from: 'me', to: 'rafi', amount: 3100, remaining: 0, pending: 3100 },
+			{ from: 'me', to: 'sumi', amount: 10000, remaining: 6900, pending: 3100 }
+		]);
+	});
+
+	it('never goes below zero when more is pending than suggested', () => {
+		const [row] = applyPending([t('rafi', 3100)], { rafi: 5000 });
+		expect(row.remaining).toBe(0);
+		expect(row.pending).toBe(3100);
+	});
+
+	it('leaves suggestions with nothing pending unchanged', () => {
+		const [row] = applyPending([t('rafi', 3100)], {});
+		expect(row).toMatchObject({ remaining: 3100, pending: 0 });
+	});
+});
+
+describe('groupHistory: pending totals', () => {
+	it('adds up pending, unvoided entries separately from the approved totals', () => {
+		const r = (
+			id: string,
+			fromId: string,
+			toId: string,
+			amount: number,
+			status: 'pending' | 'approved',
+			voidedAt: Date | null = null
+		) => ({ id, date: '2026-11-05', fromId, toId, amount, status, voidedAt });
+		const [nov] = groupHistory(
+			[
+				r('a', 'me', 'rafi', 3100, 'pending'),
+				r('b', 'sumi', 'me', 2000, 'pending'),
+				r('c', 'me', 'rafi', 900, 'pending', new Date()),
+				r('d', 'me', 'rafi', 5000, 'approved')
+			],
+			'me'
+		);
+		expect(nov.pendingPaid).toBe(3100);
+		expect(nov.pendingReceived).toBe(2000);
+		expect(nov.paid).toBe(5000);
 	});
 });

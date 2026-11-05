@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import RecordDialog from '#lib/components/ledger/RecordDialog.svelte';
-	import { canRecordSettlement, canVoidSettlement } from '#lib/ledger.ts';
+	import { applyPending, canRecordSettlement, canVoidSettlement } from '#lib/ledger.ts';
 	import { formatTaka } from '#lib/money.ts';
 	import {
 		Alert,
@@ -44,7 +44,13 @@
 		if (pending) sentTo = toName;
 	};
 
-	const myTransfers = $derived(data.suggestions.filter((s) => s.from === data.meId));
+	// My suggestions, less what I already sent and is waiting for approval.
+	const myTransfers = $derived(
+		applyPending(
+			data.suggestions.filter((s) => s.from === data.meId),
+			data.myPendingTo
+		)
+	);
 	const balanceKey = $derived<MessageKey>(
 		data.myBalance > 0
 			? 'ledger.youGet'
@@ -218,8 +224,16 @@
 				{i18n.t(balanceKey, { amount: formatTaka(Math.abs(data.myBalance), i18n.locale) })}
 			</p>
 			{#if data.myPending > 0}
-				<p class="mt-1 text-sm text-muted">
-					{i18n.t('ledger.myPending', { amount: formatTaka(data.myPending, i18n.locale) })}
+				<p class="mt-1 flex flex-wrap items-baseline gap-x-3 text-sm text-muted">
+					<span>
+						{i18n.t('ledger.myPending', { amount: formatTaka(data.myPending, i18n.locale) })}
+					</span>
+					<a
+						href="{resolve('/(app)/ledger/history')}?status=pending"
+						class="rounded-control font-medium text-primary underline-offset-2 hover:underline"
+					>
+						{i18n.t('history.seeAll')}
+					</a>
 				</p>
 			{/if}
 			{#if myTransfers.length > 0}
@@ -228,15 +242,28 @@
 						<li
 							class="flex items-center justify-between gap-3 rounded-control border border-border bg-surface px-4 py-3"
 						>
-							<span class="min-w-0 truncate">
-								{i18n.t('ledger.transferGive', {
-									name: t.toName,
-									amount: formatTaka(t.amount, i18n.locale)
-								})}
-							</span>
-							<Button variant="secondary" size="sm" onclick={() => openRecord(t)}>
-								{i18n.t('ledger.markPaid')}
-							</Button>
+							{#if t.remaining > 0}
+								<span class="min-w-0 truncate">
+									{i18n.t('ledger.transferGive', {
+										name: t.toName,
+										amount: formatTaka(t.remaining, i18n.locale)
+									})}
+								</span>
+								<Button
+									variant="secondary"
+									size="sm"
+									onclick={() => openRecord({ ...t, amount: t.remaining })}
+								>
+									{i18n.t('ledger.markPaid')}
+								</Button>
+							{:else}
+								<span class="min-w-0 text-muted">
+									{i18n.t('ledger.transferAwaiting', {
+										name: t.toName,
+										amount: formatTaka(t.pending, i18n.locale)
+									})}
+								</span>
+							{/if}
 						</li>
 					{/each}
 				</ul>

@@ -1,6 +1,14 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Badge, EmptyState, Money, PageHeader, Select } from '#lib/components/ui/index.ts';
+	import { page } from '$app/state';
+	import {
+		Badge,
+		EmptyState,
+		Money,
+		PageHeader,
+		SegmentedControl,
+		Select
+	} from '#lib/components/ui/index.ts';
 	import { useI18n } from '#lib/i18n/index.ts';
 	import { groupHistory } from '#lib/ledger.ts';
 	import type { PageProps } from './$types';
@@ -10,6 +18,11 @@
 
 	/** '' shows everyone; otherwise the id of one person I settled with. */
 	let withId = $state('');
+	/** 'pending' shows only requests still waiting for approval (the ledger links here). */
+	let show = $state<'all' | 'pending'>(
+		page.url.searchParams.get('status') === 'pending' ? 'pending' : 'all'
+	);
+	const pendingOnly = $derived(show === 'pending');
 
 	const counterparts = $derived(
 		[
@@ -23,7 +36,11 @@
 
 	const months = $derived(
 		groupHistory(
-			withId ? data.rows.filter((r) => r.fromId === withId || r.toId === withId) : data.rows,
+			data.rows.filter(
+				(r) =>
+					(!withId || r.fromId === withId || r.toId === withId) &&
+					(!pendingOnly || (r.status === 'pending' && !r.voidedAt))
+			),
 			data.meId
 		)
 	);
@@ -69,14 +86,30 @@
 			description={i18n.t('history.emptyBody')}
 		/>
 	{:else}
-		{#if counterparts.length > 1}
-			<label class="mt-8 block max-w-xs">
-				<span class="mb-1.5 block text-sm text-muted">{i18n.t('history.filter')}</span>
-				<Select
-					bind:value={withId}
-					options={[{ value: '', label: i18n.t('history.everyone') }, ...counterparts]}
-				/>
-			</label>
+		<div class="mt-8 flex flex-wrap items-end gap-4">
+			<SegmentedControl
+				bind:value={show}
+				label={i18n.t('history.show')}
+				options={[
+					{ value: 'all', label: i18n.t('history.showAll') },
+					{ value: 'pending', label: i18n.t('ledger.status.pending') }
+				]}
+			/>
+			{#if counterparts.length > 1}
+				<label class="block w-full max-w-xs">
+					<span class="mb-1.5 block text-sm text-muted">{i18n.t('history.filter')}</span>
+					<Select
+						bind:value={withId}
+						options={[{ value: '', label: i18n.t('history.everyone') }, ...counterparts]}
+					/>
+				</label>
+			{/if}
+		</div>
+
+		{#if months.length === 0}
+			<p class="mt-8 text-muted">
+				{i18n.t(pendingOnly ? 'history.nonePending' : 'history.noneWith')}
+			</p>
 		{/if}
 
 		{#each months as m (m.month)}
@@ -140,9 +173,15 @@
 					<tfoot>
 						<!-- The double rule under a khata total. -->
 						<tr class="border-t-4 border-double border-fg/40 font-semibold">
-							<th scope="row" colspan="2" class="py-3 pr-2 text-left">{i18n.t('history.total')}</th>
-							<td class="py-3 pl-2 text-right tabular-nums"><Money value={m.paid} /></td>
-							<td class="py-3 pl-2 text-right tabular-nums"><Money value={m.received} /></td>
+							<th scope="row" colspan="2" class="py-3 pr-2 text-left">
+								{i18n.t(pendingOnly ? 'history.totalPending' : 'history.total')}
+							</th>
+							<td class="py-3 pl-2 text-right tabular-nums">
+								<Money value={pendingOnly ? m.pendingPaid : m.paid} />
+							</td>
+							<td class="py-3 pl-2 text-right tabular-nums">
+								<Money value={pendingOnly ? m.pendingReceived : m.received} />
+							</td>
 						</tr>
 					</tfoot>
 				</table>

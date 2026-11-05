@@ -69,7 +69,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const toUser = alias(user, 'to_user');
 	const recorder = alias(user, 'recorder');
 	const decider = alias(user, 'decider');
-	const [awaitingMe, [pendingOut], recent] = await Promise.all([
+	const [awaitingMe, pendingOut, recent] = await Promise.all([
 		db
 			.select({
 				id: settlement.id,
@@ -89,8 +89,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 				)
 			)
 			.orderBy(asc(settlement.createdAt)),
+		// My pending outgoing, per receiver: shown as waiting, and taken off my suggestions.
 		db
-			.select({ total: sql<number>`coalesce(sum(${settlement.amount}), 0)`.mapWith(Number) })
+			.select({
+				toId: settlement.toUserId,
+				total: sql<number>`coalesce(sum(${settlement.amount}), 0)`.mapWith(Number)
+			})
 			.from(settlement)
 			.where(
 				and(
@@ -98,7 +102,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 					eq(settlement.status, 'pending'),
 					isNull(settlement.voidedAt)
 				)
-			),
+			)
+			.groupBy(settlement.toUserId),
 		db
 			.select({
 				id: settlement.id,
@@ -131,7 +136,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 		today,
 		hasFinalized,
 		myBalance: balances.get(me.id) ?? 0,
-		myPending: pendingOut?.total ?? 0,
+		myPending: pendingOut.reduce((a, p) => a + p.total, 0),
+		myPendingTo: Object.fromEntries(pendingOut.map((p) => [p.toId, p.total])) as Record<
+			string,
+			number
+		>,
 		people,
 		balances: rows,
 		suggestions,
