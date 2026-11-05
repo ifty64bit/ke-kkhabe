@@ -125,6 +125,8 @@ export const en: Record<MessageKey, string> = {
 	'ledger.error.recordPermission': 'Only someone in the settlement, or a manager, can record it.',
 	'ledger.error.voidPermission': 'Only the person who logged it, or a manager, can void it.',
 	'ledger.error.voided': 'This settlement is already voided.',
+	'ledger.error.decidePermission': 'Only the person who received the money can confirm it.',
+	'ledger.error.notPending': 'This request was already handled.',
 	'ledger.error.notFound': 'Settlement not found.',
 	'ledger.error.invalid': 'That request was invalid. Try again.',
 

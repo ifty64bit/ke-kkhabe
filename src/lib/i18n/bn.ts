@@ -122,6 +122,8 @@ export const bn = {
 	'ledger.error.recordPermission': 'লেনদেনের কোনো পক্ষ বা ম্যানেজারই এটা লিখতে পারেন।',
 	'ledger.error.voidPermission': 'যিনি লিখেছেন তিনি বা ম্যানেজার বাতিল করতে পারেন।',
 	'ledger.error.voided': 'এটা আগেই বাতিল হয়ে গেছে।',
+	'ledger.error.decidePermission': 'শুধু যিনি টাকা পেয়েছেন তিনিই নিশ্চিত করতে পারেন।',
+	'ledger.error.notPending': 'এই অনুরোধ আগেই নিষ্পত্তি হয়েছে।',
 	'ledger.error.notFound': 'লেনদেনটা পাওয়া যায়নি।',
 	'ledger.error.invalid': 'অনুরোধটা ঠিক নেই। আবার চেষ্টা করুন।',
 

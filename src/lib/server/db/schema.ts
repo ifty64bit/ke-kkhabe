@@ -8,6 +8,7 @@ import {
 	text,
 	uniqueIndex
 } from 'drizzle-orm/sqlite-core';
+import { SETTLEMENT_STATUSES } from '#lib/ledger.ts';
 import { user } from './auth.schema';
 
 export * from './auth.schema';
@@ -153,6 +154,11 @@ export const settlement = sqliteTable(
 		amount: integer('amount').notNull(), // poisha
 		date: text('date').notNull(), // YYYY-MM-DD Asia/Dhaka
 		note: text('note'),
+		/** The receiver's own entry counts at once; anyone else's waits for their approval. */
+		status: text('status', { enum: SETTLEMENT_STATUSES }).notNull().default('approved'),
+		decidedBy: userRef('decided_by'),
+		decidedAt: integer('decided_at', { mode: 'timestamp_ms' }),
+		rejectReason: text('reject_reason'),
 		createdBy: userRef('created_by').notNull(),
 		createdAt: createdAt(),
 		voidedAt: integer('voided_at', { mode: 'timestamp_ms' }),
@@ -161,6 +167,7 @@ export const settlement = sqliteTable(
 	(t) => [
 		index('settlement_from_idx').on(t.fromUserId),
 		index('settlement_to_idx').on(t.toUserId),
+		index('settlement_to_status_idx').on(t.toUserId, t.status),
 		index('settlement_date_idx').on(t.date),
 		check('settlement_amount_pos', sql`${t.amount} > 0`),
 		check('settlement_distinct_users', sql`${t.fromUserId} <> ${t.toUserId}`)

@@ -1,11 +1,14 @@
 import { fail } from '@sveltejs/kit';
-import { and, desc, eq, gte, inArray, isNull } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNull, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import { dhakaToday } from '#lib/date.ts';
 import {
+	canDecideSettlement,
 	canRecordSettlement,
 	canVoidSettlement,
+	initialSettlementStatus,
 	suggestSettlements,
+	validateRejectReason,
 	validateSettlementInput
 } from '#lib/ledger.ts';
 import type { MessageKey } from '#lib/i18n/index.ts';
@@ -65,26 +68,62 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const fromUser = alias(user, 'from_user');
 	const toUser = alias(user, 'to_user');
 	const recorder = alias(user, 'recorder');
-	const recent = await db
-		.select({
-			id: settlement.id,
-			fromId: settlement.fromUserId,
-			fromName: fromUser.name,
-			toId: settlement.toUserId,
-			toName: toUser.name,
-			amount: settlement.amount,
-			date: settlement.date,
-			note: settlement.note,
-			createdBy: settlement.createdBy,
-			createdByName: recorder.name,
-			createdAt: settlement.createdAt
-		})
-		.from(settlement)
-		.innerJoin(fromUser, eq(fromUser.id, settlement.fromUserId))
-		.innerJoin(toUser, eq(toUser.id, settlement.toUserId))
-		.leftJoin(recorder, eq(recorder.id, settlement.createdBy))
-		.where(and(isNull(settlement.voidedAt), gte(settlement.date, cutoff)))
-		.orderBy(desc(settlement.date), desc(settlement.createdAt));
+	const decider = alias(user, 'decider');
+	const [awaitingMe, [pendingOut], recent] = await Promise.all([
+		db
+			.select({
+				id: settlement.id,
+				fromId: settlement.fromUserId,
+				fromName: fromUser.name,
+				amount: settlement.amount,
+				date: settlement.date,
+				note: settlement.note
+			})
+			.from(settlement)
+			.innerJoin(fromUser, eq(fromUser.id, settlement.fromUserId))
+			.where(
+				and(
+					eq(settlement.toUserId, me.id),
+					eq(settlement.status, 'pending'),
+					isNull(settlement.voidedAt)
+				)
+			)
+			.orderBy(asc(settlement.createdAt)),
+		db
+			.select({ total: sql<number>`coalesce(sum(${settlement.amount}), 0)`.mapWith(Number) })
+			.from(settlement)
+			.where(
+				and(
+					eq(settlement.fromUserId, me.id),
+					eq(settlement.status, 'pending'),
+					isNull(settlement.voidedAt)
+				)
+			),
+		db
+			.select({
+				id: settlement.id,
+				fromId: settlement.fromUserId,
+				fromName: fromUser.name,
+				toId: settlement.toUserId,
+				toName: toUser.name,
+				amount: settlement.amount,
+				date: settlement.date,
+				note: settlement.note,
+				status: settlement.status,
+				rejectReason: settlement.rejectReason,
+				createdBy: settlement.createdBy,
+				createdByName: recorder.name,
+				decidedByName: decider.name,
+				createdAt: settlement.createdAt
+			})
+			.from(settlement)
+			.innerJoin(fromUser, eq(fromUser.id, settlement.fromUserId))
+			.innerJoin(toUser, eq(toUser.id, settlement.toUserId))
+			.leftJoin(recorder, eq(recorder.id, settlement.createdBy))
+			.leftJoin(decider, eq(decider.id, settlement.decidedBy))
+			.where(and(isNull(settlement.voidedAt), gte(settlement.date, cutoff)))
+			.orderBy(desc(settlement.date), desc(settlement.createdAt))
+	]);
 
 	return {
 		meId: me.id,
@@ -92,9 +131,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 		today,
 		hasFinalized,
 		myBalance: balances.get(me.id) ?? 0,
+		myPending: pendingOut?.total ?? 0,
 		people,
 		balances: rows,
 		suggestions,
+		awaitingMe,
 		recent
 	};
 };
@@ -129,15 +170,17 @@ export const actions: Actions = {
 		if (!have.has(v.fromUserId)) return fail(400, { errors: { from: 'ledger.error.user' } });
 		if (!have.has(v.toUserId)) return fail(400, { errors: { to: 'ledger.error.user' } });
 
+		const status = initialSettlementStatus(me.id, v.toUserId);
 		await db.insert(settlement).values({
 			fromUserId: v.fromUserId,
 			toUserId: v.toUserId,
 			amount: v.amount,
 			date: v.date,
 			note: v.note,
-			createdBy: me.id
+			createdBy: me.id,
+			status
 		});
-		return { saved: true };
+		return { saved: true, pending: status === 'pending' };
 	},
 
 	/** Soft-delete a settlement; the balances change, the row stays. */
@@ -148,7 +191,8 @@ export const actions: Actions = {
 		const id = String(form.get('id') ?? '');
 		const [row] = await db.select().from(settlement).where(eq(settlement.id, id)).limit(1);
 		if (!row) return failKey(404, 'ledger.error.notFound');
-		if (!canVoidSettlement(me.id, me.role === 'manager', row.createdBy))
+		if (row.status === 'rejected') return failKey(409, 'ledger.error.notPending');
+		if (!canVoidSettlement(me.id, me.role === 'manager', row.createdBy, row.status))
 			return failKey(403, 'ledger.error.voidPermission');
 		if (row.voidedAt) return failKey(409, 'ledger.error.voided');
 
@@ -163,6 +207,76 @@ export const actions: Actions = {
 				entity: 'settlement',
 				entityId: row.id,
 				data: { from: row.fromUserId, to: row.toUserId, amount: row.amount, date: row.date }
+			})
+		]);
+		return { saved: true };
+	},
+
+	/** Approve a pending settlement: only the receiver may, and only once. */
+	approve: async ({ locals, request }) => {
+		const me = locals.user!;
+		const db = locals.db;
+		const form = await request.formData();
+		const id = String(form.get('id') ?? '');
+		const [row] = await db.select().from(settlement).where(eq(settlement.id, id)).limit(1);
+		if (!row) return failKey(404, 'ledger.error.notFound');
+		if (me.id !== row.toUserId) return failKey(403, 'ledger.error.decidePermission');
+		if (!canDecideSettlement(me.id, row)) return failKey(409, 'ledger.error.notPending');
+
+		await db.batch([
+			db
+				.update(settlement)
+				.set({ status: 'approved', decidedBy: me.id, decidedAt: new Date() })
+				.where(eq(settlement.id, row.id)),
+			db.insert(auditLog).values({
+				actorId: me.id,
+				action: 'settlement.approve',
+				entity: 'settlement',
+				entityId: row.id,
+				data: { from: row.fromUserId, to: row.toUserId, amount: row.amount, date: row.date }
+			})
+		]);
+		return { saved: true };
+	},
+
+	/** Reject a pending settlement; final, with an optional trimmed reason. */
+	reject: async ({ locals, request }) => {
+		const me = locals.user!;
+		const db = locals.db;
+		const form = await request.formData();
+		const id = String(form.get('id') ?? '');
+		const [row] = await db.select().from(settlement).where(eq(settlement.id, id)).limit(1);
+		if (!row) return failKey(404, 'ledger.error.notFound');
+		if (me.id !== row.toUserId) return failKey(403, 'ledger.error.decidePermission');
+		if (!canDecideSettlement(me.id, row)) return failKey(409, 'ledger.error.notPending');
+
+		const reason = validateRejectReason(String(form.get('reason') ?? ''));
+		if (!reason.ok) return fail(400, { errors: { reason: reason.error } });
+
+		const data: Record<string, unknown> = {
+			from: row.fromUserId,
+			to: row.toUserId,
+			amount: row.amount,
+			date: row.date
+		};
+		if (reason.value !== null) data.reason = reason.value;
+
+		await db.batch([
+			db
+				.update(settlement)
+				.set({
+					status: 'rejected',
+					decidedBy: me.id,
+					decidedAt: new Date(),
+					rejectReason: reason.value
+				})
+				.where(eq(settlement.id, row.id)),
+			db.insert(auditLog).values({
+				actorId: me.id,
+				action: 'settlement.reject',
+				entity: 'settlement',
+				entityId: row.id,
+				data
 			})
 		]);
 		return { saved: true };

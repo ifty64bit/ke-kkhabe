@@ -176,7 +176,7 @@
 			{:else}
 				<ul class="divide-y divide-border">
 					{#each data.recent as s (s.id)}
-						{@const canVoid = canVoidSettlement(data.meId, data.isManager, s.createdBy)}
+						{@const canVoid = canVoidSettlement(data.meId, data.isManager, s.createdBy, s.status)}
 						<li class="flex items-start justify-between gap-2 px-4 py-3">
 							<div class="min-w-0">
 								<p class="truncate font-medium">{transferText(s)}</p>

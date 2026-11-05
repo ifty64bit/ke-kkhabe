@@ -1,10 +1,10 @@
 import { fail } from '@sveltejs/kit';
-import { and, eq, ne, sql } from 'drizzle-orm';
+import { and, eq, isNull, ne, sql } from 'drizzle-orm';
 import { dhakaToday } from '#lib/date.ts';
 import type { MessageKey } from '#lib/i18n/index.ts';
 import { breakdownForDay } from '#lib/server/charges.ts';
 import { computeLedger } from '#lib/server/ledger.ts';
-import { day, dayItem, item, orderLine, response } from '#lib/server/db/schema.ts';
+import { day, dayItem, item, orderLine, response, settlement } from '#lib/server/db/schema.ts';
 import { pricePerPiece } from '#lib/quantity.ts';
 import { openShares } from '#lib/sharing.ts';
 import { parseOrderForm } from '#lib/server/orders.ts';
@@ -85,9 +85,19 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const meId = locals.user!.id;
 	const t = await loadToday(locals.db, meId);
 	// The viewer's own balance for the ledger link; the full ledger is computed once, on the server.
-	const [breakdown, ledger] = await Promise.all([
+	const [breakdown, ledger, [awaitingMe]] = await Promise.all([
 		t.day?.status === 'finalized' ? breakdownForDay(locals.db, t.day.id) : Promise.resolve(null),
-		computeLedger(locals.db)
+		computeLedger(locals.db),
+		locals.db
+			.select({ n: sql<number>`count(*)`.mapWith(Number) })
+			.from(settlement)
+			.where(
+				and(
+					eq(settlement.toUserId, meId),
+					eq(settlement.status, 'pending'),
+					isNull(settlement.voidedAt)
+				)
+			)
 	]);
 	const mine = breakdown?.get(meId) ?? null;
 	// Twelfths eaten per item that day, to show the per-piece price (total cost ÷ whole items bought).
@@ -125,7 +135,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		...t,
 		charge: mine?.total ?? null,
 		receipt,
-		myBalance: ledger.balances.get(meId) ?? 0
+		myBalance: ledger.balances.get(meId) ?? 0,
+		awaitingMeCount: awaitingMe.n
 	};
 };
 
