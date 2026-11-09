@@ -168,9 +168,9 @@ export const bn = {
 
 	'reports.headTitle': 'রিপোর্ট',
 	'reports.title': 'মাসিক রিপোর্ট',
-	'reports.description': 'প্রতি মাসে কে কী খেয়েছে, কত দিয়েছে, আর মাস শেষে কার কত বাকি।',
-	'reports.emptyTitle': 'এই মাসের রিপোর্ট এখনো খালি',
-	'reports.emptyBody': 'চূড়ান্ত হওয়া প্রতিটি দিন এখানে যোগ হবে।',
+	'reports.description': 'মাসের প্রতিটি দিন: কে খেয়েছেন, কত খরচ, আর কত দিয়েছেন।',
+	'reports.emptyTitle': 'এই মাসে নাস্তার দিন নেই',
+	'reports.emptyBody': 'ম্যানেজার যেদিন মেনু দেবেন, সেদিন থেকে এখানে দেখা যাবে।',
 	'reports.view.label': 'কার রিপোর্ট',
 	'reports.view.me': 'আমি',
 	'reports.view.all': 'সবাই',

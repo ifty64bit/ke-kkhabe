@@ -172,9 +172,9 @@ export const en: Record<MessageKey, string> = {
 
 	'reports.headTitle': 'Reports',
 	'reports.title': 'Monthly report',
-	'reports.description': 'What everyone had and paid each month, and what is left at month end.',
-	'reports.emptyTitle': "This month's report is empty",
-	'reports.emptyBody': 'Each finalized day is added here.',
+	'reports.description': 'Every day of the month: who ate, what it cost, and what was paid.',
+	'reports.emptyTitle': 'No breakfast days this month',
+	'reports.emptyBody': 'Days appear here once a manager posts the menu.',
 	'reports.view.label': 'Whose report',
 	'reports.view.me': 'Me',
 	'reports.view.all': 'Everyone',

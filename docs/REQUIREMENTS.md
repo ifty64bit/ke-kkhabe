@@ -4,10 +4,10 @@ Office breakfast ordering with a shared expense ledger. Each working day, member
 
 ## Roles
 
-| Role        | Can do                                                                                                                                           |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Member**  | Order for today, edit or cancel while ordering is open, view the ledger and reports for everyone, log settlements                                |
-| **Manager** | Everything a member can, plus: manage the item catalog, open and close days, adjust quantities, enter prices and payers, promote/demote managers |
+| Role        | Can do                                                                                                                                                                              |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Member**  | Order for today, edit or cancel while ordering is open, view the ledger and their own monthly report, log settlements                                                               |
+| **Manager** | Everything a member can, plus: manage the item catalog, open and close days, adjust quantities, enter prices and payers, promote/demote managers, see every member's monthly report |
 
 - There can be multiple managers. Managers order and have balances like everyone else.
 - Bootstrap: emails listed in the `ADMIN_EMAILS` env var (comma-separated) become managers when they sign in.
@@ -54,12 +54,11 @@ A day moves through these states:
 - **Net balance** per member = bill payments + settlements sent − charges − settlements received. Positive means others owe you, negative means you owe.
 - **Settle-up suggestions**: a simplified set of transfers (fewest payments) that would bring every balance to zero, Splitwise-style.
 
-## Reports (visible to everyone)
+## Reports
 
 - **Balances**: every member's current net balance plus suggested settle-up transfers.
-- **Monthly report** per member: opening balance, a line per day (items × qty × price), bill payments, settlements in and out, closing balance. Balances carry over across months.
-- **Monthly overview**: all members' charges, payments and closing balance for the month.
-- **CSV export** of the month's ledger (managers).
+- **Monthly report** per member: a calendar of the month's days. Each day shows whether the member ate, skipped or did not answer; opening a day shows its items, quantities, charge and any bill payment. A member sees only their own report; a manager can switch between their own and everyone's.
+- **Monthly overview** (managers): every member's days eaten and charges for the month, with office totals for days with breakfast, charged and paid.
 
 ## UI
 
