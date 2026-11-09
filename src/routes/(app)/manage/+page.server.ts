@@ -10,6 +10,8 @@ import type { MessageKey } from '#lib/i18n/index.ts';
 import { validateFinalize } from '#lib/server/finalize.ts';
 import { chargesForDay } from '#lib/server/charges.ts';
 import { requireManager } from '#lib/server/guards.ts';
+import { queueNotify } from '#lib/server/push/index.ts';
+import { finalizedRecipients } from '#lib/server/push/recipients.ts';
 import {
 	auditLog,
 	billPayment,
@@ -246,7 +248,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
 	/** Open today with the ticked items. */
-	start: async ({ locals, request }) => {
+	start: async ({ locals, request, platform }) => {
 		const me = requireManager(locals);
 		const db = locals.db;
 		if (await todayFor(db)) return failKey(409, 'manage.error.exists');
@@ -263,9 +265,10 @@ export const actions: Actions = {
 		if (allowed.length !== unique.length) return failKey(400, 'manage.error.invalid');
 
 		const dayId = crypto.randomUUID();
+		const date = dhakaToday();
 		try {
 			await db.batch([
-				db.insert(day).values({ id: dayId, date: dhakaToday(), status: 'open', createdBy: me.id }),
+				db.insert(day).values({ id: dayId, date, status: 'open', createdBy: me.id }),
 				db.insert(dayItem).values(unique.map((itemId) => ({ dayId, itemId, available: true })))
 			]);
 		} catch (e) {
@@ -274,6 +277,15 @@ export const actions: Actions = {
 				return failKey(409, 'manage.error.exists');
 			throw e;
 		}
+		const members = await db.select({ id: user.id }).from(user).where(eq(user.active, true));
+		queueNotify(
+			{ locals, platform },
+			{
+				event: 'dayOpened',
+				actorId: me.id,
+				recipients: members.map((m) => ({ userId: m.id, data: { date } }))
+			}
+		);
 		return { saved: true };
 	},
 
@@ -468,7 +480,7 @@ export const actions: Actions = {
 	},
 
 	/** Enter real costs, final quantities, the delivery fee and who paid; posts the day. */
-	finalize: async ({ locals, request }) => {
+	finalize: async ({ locals, request, platform }) => {
 		const me = requireManager(locals);
 		const db = locals.db;
 		const today = await todayFor(db);
@@ -596,6 +608,11 @@ export const actions: Actions = {
 				}
 			})
 		]);
+		queueNotify({ locals, platform }, async () => ({
+			event: 'dayFinalized',
+			actorId: me.id,
+			recipients: finalizedRecipients(await chargesForDay(db, today.id), today.date)
+		}));
 		return { saved: true };
 	},
 

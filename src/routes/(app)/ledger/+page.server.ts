@@ -14,6 +14,8 @@ import {
 import type { MessageKey } from '#lib/i18n/index.ts';
 import { auditLog, settlement, user } from '#lib/server/db/schema.ts';
 import { computeLedger } from '#lib/server/ledger.ts';
+import { queueNotify } from '#lib/server/push/index.ts';
+import { decidedRecipient, pendingRecipient } from '#lib/server/push/recipients.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 const DAY_MS = 86_400_000;
@@ -166,7 +168,7 @@ const stillPendingFor = (id: string, meId: string) =>
 
 export const actions: Actions = {
 	/** Record "A paid B ৳X". The row itself is the record; no audit entry is written. */
-	record: async ({ locals, request }) => {
+	record: async ({ locals, request, platform }) => {
 		const me = locals.user!;
 		const db = locals.db;
 		const form = await request.formData();
@@ -193,15 +195,36 @@ export const actions: Actions = {
 		if (!have.has(v.toUserId)) return fail(400, { errors: { to: 'ledger.error.user' } });
 
 		const status = initialSettlementStatus(me.id, v.toUserId);
-		await db.insert(settlement).values({
-			fromUserId: v.fromUserId,
-			toUserId: v.toUserId,
-			amount: v.amount,
-			date: v.date,
-			note: v.note,
-			createdBy: me.id,
-			status
-		});
+		const [created] = await db
+			.insert(settlement)
+			.values({
+				fromUserId: v.fromUserId,
+				toUserId: v.toUserId,
+				amount: v.amount,
+				date: v.date,
+				note: v.note,
+				createdBy: me.id,
+				status
+			})
+			.returning({ id: settlement.id });
+		if (status === 'pending') {
+			const [fromUser] = await db
+				.select({ name: user.name })
+				.from(user)
+				.where(eq(user.id, v.fromUserId))
+				.limit(1);
+			queueNotify(
+				{ locals, platform },
+				{
+					event: 'settlementPending',
+					actorId: me.id,
+					recipients: pendingRecipient(
+						{ id: created.id, toUserId: v.toUserId, amount: v.amount, status },
+						fromUser?.name ?? ''
+					)
+				}
+			);
+		}
 		return { saved: true, pending: status === 'pending' };
 	},
 
@@ -242,7 +265,7 @@ export const actions: Actions = {
 	},
 
 	/** Approve a pending settlement: only the receiver may, and only once. */
-	approve: async ({ locals, request }) => {
+	approve: async ({ locals, request, platform }) => {
 		const me = locals.user!;
 		const db = locals.db;
 		const form = await request.formData();
@@ -265,11 +288,19 @@ export const actions: Actions = {
 			entityId: row.id,
 			data: { from: row.fromUserId, to: row.toUserId, amount: row.amount, date: row.date }
 		});
+		queueNotify(
+			{ locals, platform },
+			{
+				event: 'settlementDecided',
+				actorId: me.id,
+				recipients: decidedRecipient(row, me.name, true, null)
+			}
+		);
 		return { saved: true };
 	},
 
 	/** Reject a pending settlement; final, with an optional trimmed reason. */
-	reject: async ({ locals, request }) => {
+	reject: async ({ locals, request, platform }) => {
 		const me = locals.user!;
 		const db = locals.db;
 		const form = await request.formData();
@@ -308,6 +339,14 @@ export const actions: Actions = {
 			entityId: row.id,
 			data
 		});
+		queueNotify(
+			{ locals, platform },
+			{
+				event: 'settlementDecided',
+				actorId: me.id,
+				recipients: decidedRecipient(row, me.name, false, reason.value ?? null)
+			}
+		);
 		return { saved: true };
 	}
 };
