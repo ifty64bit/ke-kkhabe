@@ -95,18 +95,18 @@ application/octet-stream`, `TTL` (default 86400), `Urgency` (default `normal`).
 - Strings live in `src/lib/i18n/bn.ts` and `en.ts` under `push.*`. Amounts are formatted with
   the existing money formatter for that locale (৳, Bangla digits in `bn`).
 
-| Event               | Title (en)                     | Body (en)                                         | url                      | tag               |
-| ------------------- | ------------------------------ | ------------------------------------------------- | ------------------------ | ----------------- |
-| `dayOpened`         | Breakfast is open              | Will you eat today? Order now                     | `/`                      | `day-<date>`      |
-| `dayFinalized`      | Today's bill                   | Your charge: ৳85                                  | `/ledger`                | `bill-<date>`     |
-| `settlementPending` | Approve a settlement           | Rahim → you ৳200, waiting for your approval       | `/ledger?filter=pending` | `settlement-<id>` |
-| `settlementDecided` | Settlement approved / rejected | Karim approved ৳200 / Karim rejected ৳200: reason | `/ledger`                | `settlement-<id>` |
+| Event               | Title (en)                     | Body (en)                                         | url       | tag               |
+| ------------------- | ------------------------------ | ------------------------------------------------- | --------- | ----------------- |
+| `dayOpened`         | Breakfast is open              | Will you eat today? Order now                     | `/`       | `day-<date>`      |
+| `dayFinalized`      | Today's bill                   | Your charge: ৳85                                  | `/ledger` | `bill-<date>`     |
+| `settlementPending` | Approve a settlement           | Rahim → you ৳200, waiting for your approval       | `/ledger` | `settlement-<id>` |
+| `settlementDecided` | Settlement approved / rejected | Karim approved ৳200 / Karim rejected ৳200: reason | `/ledger` | `settlement-<id>` |
 
 The Bangla strings are written alongside the English ones in the same change.
 
 ### `src/lib/server/push/notify.ts`: who gets what
 
-- `notify(db, vapid, { event, actorId, recipients: { userId, data }[] }): Promise<void>`
+- `notify(store: PushStore, vapid, { event, actorId, recipients: { userId, data }[] }): Promise<void>`; `PushStore` (loading targets, removing and marking subscriptions) is injected so `notify` is unit-testable, and `d1PushStore(db)` is the D1 implementation
   1. Removes `actorId` from the recipients (nobody is notified about their own action).
   2. Loads subscriptions for the remaining users, joined to `user` where `active = true`,
      left-joined to `notification_pref`; drops users whose preference for `event` is off.
