@@ -339,6 +339,18 @@ export const en: Record<MessageKey, string> = {
 	'members.error.invalid': 'That request was invalid. Refresh the page and try again.',
 	'members.error.notFound': 'Member not found.',
 
+	'push.dayOpened.title': 'Breakfast is open',
+	'push.dayOpened.body': 'Will you eat today? Order now',
+	'push.dayFinalized.title': "Today's bill",
+	'push.dayFinalized.body': 'Your charge: {amount}',
+	'push.settlementPending.title': 'Approve a settlement',
+	'push.settlementPending.body': '{name} → you {amount}, waiting for your approval',
+	'push.settlementApproved.title': 'Settlement approved',
+	'push.settlementApproved.body': '{name} approved {amount}',
+	'push.settlementRejected.title': 'Settlement rejected',
+	'push.settlementRejected.body': '{name} rejected {amount}',
+	'push.settlementRejected.bodyReason': '{name} rejected {amount}: {reason}',
+
 	'inactive.title': 'Your account is deactivated',
 	'inactive.body': 'Ask a manager to turn it back on.',
 

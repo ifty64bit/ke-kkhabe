@@ -334,6 +334,18 @@ export const bn = {
 	'members.error.invalid': 'অনুরোধটা ঠিক নেই। পাতাটা রিফ্রেশ করে আবার চেষ্টা করুন।',
 	'members.error.notFound': 'সদস্য পাওয়া যায়নি।',
 
+	'push.dayOpened.title': 'আজ খাবেন?',
+	'push.dayOpened.body': 'নাস্তার অর্ডার চলছে, এখনই জানান',
+	'push.dayFinalized.title': 'আজকের বিল',
+	'push.dayFinalized.body': 'আপনার খরচ: {amount}',
+	'push.settlementPending.title': 'একটি লেনদেন অনুমোদন করুন',
+	'push.settlementPending.body': '{name} → আপনি {amount}, আপনার অনুমোদনের অপেক্ষায়',
+	'push.settlementApproved.title': 'লেনদেন অনুমোদিত',
+	'push.settlementApproved.body': '{name} {amount} অনুমোদন করেছেন',
+	'push.settlementRejected.title': 'লেনদেন প্রত্যাখ্যাত',
+	'push.settlementRejected.body': '{name} {amount} প্রত্যাখ্যান করেছেন',
+	'push.settlementRejected.bodyReason': '{name} {amount} প্রত্যাখ্যান করেছেন: {reason}',
+
 	'inactive.title': 'আপনার অ্যাকাউন্ট বন্ধ আছে',
 	'inactive.body': 'আবার চালু করতে একজন ম্যানেজারকে বলুন।',
 
