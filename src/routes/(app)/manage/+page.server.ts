@@ -248,7 +248,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
 	/** Open today with the ticked items. */
-	start: async ({ locals, request, platform }) => {
+	start: async ({ locals, request }) => {
 		const me = requireManager(locals);
 		const db = locals.db;
 		if (await todayFor(db)) return failKey(409, 'manage.error.exists');
@@ -279,7 +279,7 @@ export const actions: Actions = {
 		}
 		const members = await db.select({ id: user.id }).from(user).where(eq(user.active, true));
 		queueNotify(
-			{ locals, platform },
+			{ locals },
 			{
 				event: 'dayOpened',
 				actorId: me.id,
@@ -480,7 +480,7 @@ export const actions: Actions = {
 	},
 
 	/** Enter real costs, final quantities, the delivery fee and who paid; posts the day. */
-	finalize: async ({ locals, request, platform }) => {
+	finalize: async ({ locals, request }) => {
 		const me = requireManager(locals);
 		const db = locals.db;
 		const today = await todayFor(db);
@@ -608,7 +608,7 @@ export const actions: Actions = {
 				}
 			})
 		]);
-		queueNotify({ locals, platform }, async () => ({
+		queueNotify({ locals }, async () => ({
 			event: 'dayFinalized',
 			actorId: me.id,
 			recipients: finalizedRecipients(await chargesForDay(db, today.id), today.date)

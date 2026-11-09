@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { env, waitUntil } from 'cloudflare:workers';
 import type { NotifyRequest } from './events.ts';
 import { notify, vapidFromEnv } from './notify.ts';
 import { d1PushStore } from './store.ts';
@@ -8,7 +8,7 @@ import { d1PushStore } from './store.ts';
  * it must succeed even when there are no keys, no subscriptions, or the push service is down.
  */
 export function queueNotify(
-	event: { locals: App.Locals; platform?: App.Platform },
+	event: { locals: App.Locals },
 	req: NotifyRequest | (() => Promise<NotifyRequest>)
 ): void {
 	const promise = (async () => {
@@ -18,6 +18,7 @@ export function queueNotify(
 		console.warn('[push]', error instanceof Error ? error.message : 'notify queue failed');
 	});
 
-	event.platform?.ctx.waitUntil(promise);
-	void promise;
+	// adapter-cloudflare does not pass `platform` to SvelteKit, so take waitUntil from the
+	// runtime directly. Without it the send is cancelled as soon as the response goes out.
+	waitUntil(promise);
 }

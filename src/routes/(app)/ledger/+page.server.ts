@@ -168,7 +168,7 @@ const stillPendingFor = (id: string, meId: string) =>
 
 export const actions: Actions = {
 	/** Record "A paid B ৳X". The row itself is the record; no audit entry is written. */
-	record: async ({ locals, request, platform }) => {
+	record: async ({ locals, request }) => {
 		const me = locals.user!;
 		const db = locals.db;
 		const form = await request.formData();
@@ -214,7 +214,7 @@ export const actions: Actions = {
 				.where(eq(user.id, v.fromUserId))
 				.limit(1);
 			queueNotify(
-				{ locals, platform },
+				{ locals },
 				{
 					event: 'settlementPending',
 					actorId: me.id,
@@ -265,7 +265,7 @@ export const actions: Actions = {
 	},
 
 	/** Approve a pending settlement: only the receiver may, and only once. */
-	approve: async ({ locals, request, platform }) => {
+	approve: async ({ locals, request }) => {
 		const me = locals.user!;
 		const db = locals.db;
 		const form = await request.formData();
@@ -289,7 +289,7 @@ export const actions: Actions = {
 			data: { from: row.fromUserId, to: row.toUserId, amount: row.amount, date: row.date }
 		});
 		queueNotify(
-			{ locals, platform },
+			{ locals },
 			{
 				event: 'settlementDecided',
 				actorId: me.id,
@@ -300,7 +300,7 @@ export const actions: Actions = {
 	},
 
 	/** Reject a pending settlement; final, with an optional trimmed reason. */
-	reject: async ({ locals, request, platform }) => {
+	reject: async ({ locals, request }) => {
 		const me = locals.user!;
 		const db = locals.db;
 		const form = await request.formData();
@@ -340,7 +340,7 @@ export const actions: Actions = {
 			data
 		});
 		queueNotify(
-			{ locals, platform },
+			{ locals },
 			{
 				event: 'settlementDecided',
 				actorId: me.id,
