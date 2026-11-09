@@ -19,4 +19,5 @@ export { default as Select } from './Select.svelte';
 export { default as Separator } from './Separator.svelte';
 export { default as Skeleton } from './Skeleton.svelte';
 export { default as Spinner } from './Spinner.svelte';
+export { default as Switch } from './Switch.svelte';
 export { default as Textarea } from './Textarea.svelte';

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { Avatar, Menu, MenuItem, MenuLabel, Separator } from '#lib/components/ui/index.ts';
 	import { useI18n } from '#lib/i18n/index.ts';
 
@@ -34,6 +35,7 @@
 		<span class="block truncate text-sm font-medium text-fg">{user.name}</span>
 		<span class="block truncate">{user.email}</span>
 	</MenuLabel>
+	<MenuItem href={resolve('/(app)/notifications')}>{i18n.t('account.notifications')}</MenuItem>
 	<Separator />
 	<form method="POST" action="/logout">
 		<MenuItem type="submit" tone="danger">{i18n.t('common.logout')}</MenuItem>

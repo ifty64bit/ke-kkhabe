@@ -21,6 +21,7 @@ export const en: Record<MessageKey, string> = {
 	'account.label': 'Account',
 	'account.manager': 'Manager',
 	'account.member': 'Member',
+	'account.notifications': 'Notifications',
 
 	'stepper.decrease': 'Fewer {label}',
 	'stepper.increase': 'More {label}',
@@ -350,6 +351,29 @@ export const en: Record<MessageKey, string> = {
 	'push.settlementRejected.title': 'Settlement rejected',
 	'push.settlementRejected.body': '{name} rejected {amount}',
 	'push.settlementRejected.bodyReason': '{name} rejected {amount}: {reason}',
+
+	'notifications.title': 'Notifications',
+	'notifications.device.title': 'This device',
+	'notifications.device.on': 'On',
+	'notifications.device.off': 'Off',
+	'notifications.device.blocked': 'Notifications are blocked',
+	'notifications.device.blockedHelp':
+		"Allow notifications for this site in the browser's site settings, then reload the page.",
+	'notifications.device.needsInstall': 'Install this app to get notifications',
+	'notifications.device.installHelp':
+		'On iPhone: Share → Add to Home Screen, then open the app from the home screen.',
+	'notifications.device.unsupported': 'This browser does not support push notifications.',
+	'notifications.device.unavailable': 'Notifications are not configured on this server yet.',
+	'notifications.turnOn': 'Turn on',
+	'notifications.turnOff': 'Turn off',
+	'notifications.error': "Couldn't turn on notifications. Try again.",
+	'notifications.prefs.title': 'What to notify me about',
+	'notifications.prefs.dayOpened': 'When breakfast opens',
+	'notifications.prefs.dayFinalized': "When today's bill is ready",
+	'notifications.prefs.settlementPending': 'When a settlement waits for my approval',
+	'notifications.prefs.settlementDecided': 'When my settlement is approved or rejected',
+	'notifications.prefs.save': 'Save',
+	'notifications.prefs.saved': 'Saved',
 
 	'inactive.title': 'Your account is deactivated',
 	'inactive.body': 'Ask a manager to turn it back on.',

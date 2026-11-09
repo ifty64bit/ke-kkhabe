@@ -20,6 +20,7 @@
 		Separator,
 		Skeleton,
 		Spinner,
+		Switch,
 		Textarea
 	} from '#lib/components/ui/index.ts';
 	import GoogleSignInButton from '#lib/components/GoogleSignInButton.svelte';
@@ -29,6 +30,7 @@
 	let qty = $state(18); // 1½, in twelfths
 	let view = $state<'day' | 'month'>('day');
 	let name = $state('');
+	let pushOn = $state(true);
 	const nameError = $derived(name.length > 0 && name.length < 3 ? 'কমপক্ষে ৩ অক্ষর' : null);
 </script>
 
@@ -146,6 +148,14 @@
 					<MenuItem tone="danger" onclick={close}>লগআউট</MenuItem>
 				{/snippet}
 			</Menu>
+		</div>
+	</Card>
+
+	<Card title="Switch">
+		<div class="space-y-4">
+			<Switch bind:checked={pushOn} label="চালু" description="নোটিফিকেশন পাবেন" />
+			<Switch checked={false} label="বন্ধ" />
+			<Switch checked disabled label="নিষ্ক্রিয়" description="এখন বদলানো যাবে না" />
 		</div>
 	</Card>
 

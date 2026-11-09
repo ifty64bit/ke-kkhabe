@@ -19,6 +19,7 @@ export const bn = {
 	'account.label': 'অ্যাকাউন্ট',
 	'account.manager': 'ম্যানেজার',
 	'account.member': 'সদস্য',
+	'account.notifications': 'নোটিফিকেশন',
 
 	'stepper.decrease': '{label} কমান',
 	'stepper.increase': '{label} বাড়ান',
@@ -345,6 +346,29 @@ export const bn = {
 	'push.settlementRejected.title': 'লেনদেন প্রত্যাখ্যাত',
 	'push.settlementRejected.body': '{name} {amount} প্রত্যাখ্যান করেছেন',
 	'push.settlementRejected.bodyReason': '{name} {amount} প্রত্যাখ্যান করেছেন: {reason}',
+
+	'notifications.title': 'নোটিফিকেশন',
+	'notifications.device.title': 'এই ডিভাইস',
+	'notifications.device.on': 'চালু আছে',
+	'notifications.device.off': 'বন্ধ আছে',
+	'notifications.device.blocked': 'নোটিফিকেশন ব্লক করা আছে',
+	'notifications.device.blockedHelp':
+		'ব্রাউজারের সাইট সেটিংসে এই সাইটের নোটিফিকেশন চালু করুন, তারপর পাতাটা রিফ্রেশ করুন।',
+	'notifications.device.needsInstall': 'হোম স্ক্রিনে অ্যাপ হিসেবে যোগ করুন',
+	'notifications.device.installHelp':
+		'iPhone-এ Share → Add to Home Screen, তারপর হোম স্ক্রিন থেকে অ্যাপটা খুলুন।',
+	'notifications.device.unsupported': 'এই ব্রাউজারে পুশ নোটিফিকেশন চলে না।',
+	'notifications.device.unavailable': 'এই সার্ভারে নোটিফিকেশন এখনো চালু করা হয়নি।',
+	'notifications.turnOn': 'চালু করুন',
+	'notifications.turnOff': 'বন্ধ করুন',
+	'notifications.error': 'নোটিফিকেশন চালু করা যায়নি। আবার চেষ্টা করুন।',
+	'notifications.prefs.title': 'কী কী জানাব',
+	'notifications.prefs.dayOpened': 'নাস্তা শুরু হলে',
+	'notifications.prefs.dayFinalized': 'আজকের বিল তৈরি হলে',
+	'notifications.prefs.settlementPending': 'একটি লেনদেন আপনার অনুমোদনের অপেক্ষায় থাকলে',
+	'notifications.prefs.settlementDecided': 'আপনার লেনদেন অনুমোদিত বা প্রত্যাখ্যাত হলে',
+	'notifications.prefs.save': 'সেভ করুন',
+	'notifications.prefs.saved': 'সেভ হয়েছে',
 
 	'inactive.title': 'আপনার অ্যাকাউন্ট বন্ধ আছে',
 	'inactive.body': 'আবার চালু করতে একজন ম্যানেজারকে বলুন।',
