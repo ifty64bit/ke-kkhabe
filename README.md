@@ -17,6 +17,8 @@ Office breakfast order management. Every day, each person answers "Aj khaben?", 
    - `BETTER_AUTH_SECRET`: `openssl rand -base64 32`
    - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: create an OAuth client (Web application) in Google Cloud Console with the authorized redirect URI `<ORIGIN>/api/auth/callback/google`
    - `ADMIN_EMAILS`: comma-separated emails that become managers
+   - `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`: run `bun scripts/vapid-keys.ts` and paste the two lines
+   - `VAPID_SUBJECT`: `mailto:<admin email>` (used by push services to contact you)
 3. `bun run db:migrate:local`
 4. `bun run dev`
 
@@ -45,7 +47,7 @@ Accounts are created by Google sign-in, so a person must sign in once before the
 
 1. `wrangler d1 create ke-khabe` and put the returned `database_id` in `wrangler.jsonc`
 2. `bun run db:migrate:remote`
-3. Set secrets: `wrangler secret put BETTER_AUTH_SECRET` (and `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAILS`, `ORIGIN`)
+3. Set secrets: `wrangler secret put BETTER_AUTH_SECRET` (and `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAILS`, `ORIGIN`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`; generate the VAPID pair with `bun scripts/vapid-keys.ts`)
 4. `bun run build && wrangler deploy`
 
 See [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) for the product spec.

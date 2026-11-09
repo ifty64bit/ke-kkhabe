@@ -67,10 +67,22 @@ A day moves through these states:
 - Bangla by default, with an English toggle. Numbers and currency are formatted to match the locale (৳).
 - The home screen for a member is today's "Aj khaben?" card, showing either the order form or their order and the day's status.
 
+## Notifications
+
+- Browser/PWA push notifications for four events:
+  - breakfast is open for today ("আজ খাবেন?"),
+  - today is finalized, with that member's own charge,
+  - a settlement where they are the receiver is waiting for their approval,
+  - a settlement they recorded is approved or rejected.
+- Each member chooses per event whether to receive it. The choice applies to all of their devices.
+- Each device is turned on or off on its own from the Notifications page.
+- Works on Android and desktop browsers. On iPhone, notifications require the app to be installed to the home screen (iOS 16.4+).
+- A failed push never fails or delays the action that caused it.
+
 ## Out of scope (v1)
 
 - Online payment integration (bKash/Nagad APIs)
-- Push, email or SMS notifications
+- Email or SMS notifications
 - Multiple offices or groups
 - Automatic daily scheduling or cutoff times
 
