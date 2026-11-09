@@ -1,0 +1,1 @@
+ALTER TABLE `notification_pref` ADD `food_arrived` integer DEFAULT true NOT NULL;

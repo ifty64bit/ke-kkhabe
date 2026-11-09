@@ -1,4 +1,5 @@
-export type PushEvent = 'dayOpened' | 'dayFinalized' | 'settlementPending' | 'settlementDecided';
+export type PushEvent =
+	'dayOpened' | 'dayFinalized' | 'settlementPending' | 'settlementDecided' | 'foodArrived';
 
 export type PushData = {
 	dayOpened: { date: string };
@@ -11,6 +12,7 @@ export type PushData = {
 		approved: boolean;
 		reason: string | null;
 	};
+	foodArrived: { date: string };
 };
 
 export type NotifyRequest<E extends PushEvent = PushEvent> = {
@@ -26,5 +28,6 @@ export const PUSH_EVENTS: readonly PushEvent[] = [
 	'dayOpened',
 	'dayFinalized',
 	'settlementPending',
-	'settlementDecided'
+	'settlementDecided',
+	'foodArrived'
 ];

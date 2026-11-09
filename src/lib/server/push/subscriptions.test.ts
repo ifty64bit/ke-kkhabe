@@ -70,7 +70,8 @@ describe('parsePrefsForm', () => {
 			dayOpened: true,
 			dayFinalized: false,
 			settlementPending: false,
-			settlementDecided: true
+			settlementDecided: true,
+			foodArrived: false
 		});
 	});
 });

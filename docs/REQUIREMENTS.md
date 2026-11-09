@@ -69,11 +69,12 @@ A day moves through these states:
 
 ## Notifications
 
-- Browser/PWA push notifications for four events:
+- Browser/PWA push notifications for five events:
   - breakfast is open for today ("আজ খাবেন?"),
   - today is finalized, with that member's own charge,
   - a settlement where they are the receiver is waiting for their approval,
-  - a settlement they recorded is approved or rejected.
+  - a settlement they recorded is approved or rejected,
+  - breakfast has arrived: a manager taps "নাস্তা চলে এসেছে" once the day is closed or finalized, and everyone eating today is told. It can be sent once per day.
 - Each member chooses per event whether to receive it. The choice applies to all of their devices.
 - Each device is turned on or off on its own from the Notifications page.
 - Works on Android and desktop browsers. On iPhone, notifications require the app to be installed to the home screen (iOS 16.4+).

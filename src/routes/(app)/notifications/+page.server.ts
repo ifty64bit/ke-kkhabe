@@ -15,7 +15,8 @@ const allOn = (): Prefs => ({
 	dayOpened: true,
 	dayFinalized: true,
 	settlementPending: true,
-	settlementDecided: true
+	settlementDecided: true,
+	foodArrived: true
 });
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -29,7 +30,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 				dayOpened: pref.dayOpened,
 				dayFinalized: pref.dayFinalized,
 				settlementPending: pref.settlementPending,
-				settlementDecided: pref.settlementDecided
+				settlementDecided: pref.settlementDecided,
+				foodArrived: pref.foodArrived
 			}
 		: allOn();
 	return { vapidPublicKey: vapidFromEnv(env)?.publicKey ?? null, prefs };

@@ -8,7 +8,8 @@ const prefColumns = {
 	dayOpened: notificationPref.dayOpened,
 	dayFinalized: notificationPref.dayFinalized,
 	settlementPending: notificationPref.settlementPending,
-	settlementDecided: notificationPref.settlementDecided
+	settlementDecided: notificationPref.settlementDecided,
+	foodArrived: notificationPref.foodArrived
 } as const;
 
 export function d1PushStore(db: Db): PushStore {

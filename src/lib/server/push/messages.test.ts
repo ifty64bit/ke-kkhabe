@@ -65,4 +65,17 @@ describe('buildMessage', () => {
 		expect(withReason.url).toBe('/ledger');
 		expect(withReason.tag).toBe('settlement-s1');
 	});
+
+	it('foodArrived opens home with high-priority tag per day, in both locales', () => {
+		expect(buildMessage('foodArrived', { date: '2026-11-09' }, 'en')).toEqual({
+			title: 'Breakfast is here',
+			body: 'Come and get it',
+			url: '/',
+			tag: 'arrived-2026-11-09'
+		});
+		expect(buildMessage('foodArrived', { date: '2026-11-09' }, 'bn')).toMatchObject({
+			title: 'নাস্তা চলে এসেছে',
+			body: 'এসে নিয়ে যান'
+		});
+	});
 });

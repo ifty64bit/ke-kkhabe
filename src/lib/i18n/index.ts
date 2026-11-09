@@ -59,6 +59,14 @@ export const formatShortDay = (date: string, locale: Locale) =>
 		timeZone: 'Asia/Dhaka'
 	}).format(new Date(`${date}T06:00:00Z`));
 
+/** Clock time for a timestamp in Dhaka, e.g. "৯:৪২ AM" / "9:42 am". */
+export const formatTime = (d: Date | number, locale: Locale) =>
+	new Intl.DateTimeFormat(intlLocale(locale), {
+		hour: 'numeric',
+		minute: '2-digit',
+		timeZone: 'Asia/Dhaka'
+	}).format(d);
+
 export type I18n = ReturnType<typeof createI18n>;
 
 export function createI18n(getLocale: () => Locale) {
@@ -71,6 +79,7 @@ export function createI18n(getLocale: () => Locale) {
 		num: (n: number) => formatNumber(n, getLocale()),
 		day: (date: string) => formatDay(date, getLocale()),
 		date: (d: Date | number) => formatDate(d, getLocale()),
+		time: (d: Date | number) => formatTime(d, getLocale()),
 		month: (month: string) => formatMonth(month, getLocale()),
 		shortDay: (date: string) => formatShortDay(date, getLocale()),
 		/** Pick the localized field of a record with `xBn` / `xEn` columns; English falls back to Bangla. */

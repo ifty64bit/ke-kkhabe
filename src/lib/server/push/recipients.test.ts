@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { decidedRecipient, finalizedRecipients, pendingRecipient } from './recipients.ts';
+import {
+	arrivedRecipients,
+	decidedRecipient,
+	finalizedRecipients,
+	pendingRecipient
+} from './recipients.ts';
 
 describe('recipients', () => {
 	it('pending: notifies the receiver only while pending', () => {
@@ -34,6 +39,22 @@ describe('recipients', () => {
 		).toEqual([
 			{ userId: 'u1', data: { date: '2026-11-09', charge: 8500 } },
 			{ userId: 'u2', data: { date: '2026-11-09', charge: 4250 } }
+		]);
+	});
+
+	it('arrived: only members who said they are eating', () => {
+		expect(
+			arrivedRecipients(
+				[
+					{ userId: 'u1', eating: true },
+					{ userId: 'u2', eating: false },
+					{ userId: 'u3', eating: true }
+				],
+				'2026-11-09'
+			)
+		).toEqual([
+			{ userId: 'u1', data: { date: '2026-11-09' } },
+			{ userId: 'u3', data: { date: '2026-11-09' } }
 		]);
 	});
 });

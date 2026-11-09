@@ -219,5 +219,6 @@ export const notificationPref = sqliteTable('notification_pref', {
 	dayOpened: integer('day_opened', { mode: 'boolean' }).notNull().default(true),
 	dayFinalized: integer('day_finalized', { mode: 'boolean' }).notNull().default(true),
 	settlementPending: integer('settlement_pending', { mode: 'boolean' }).notNull().default(true),
-	settlementDecided: integer('settlement_decided', { mode: 'boolean' }).notNull().default(true)
+	settlementDecided: integer('settlement_decided', { mode: 'boolean' }).notNull().default(true),
+	foodArrived: integer('food_arrived', { mode: 'boolean' }).notNull().default(true)
 });

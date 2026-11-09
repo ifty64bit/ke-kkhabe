@@ -131,6 +131,11 @@
 					name="settlementDecided"
 					label={i18n.t('notifications.prefs.settlementDecided')}
 				/>
+				<Switch
+					bind:checked={prefs.foodArrived}
+					name="foodArrived"
+					label={i18n.t('notifications.prefs.foodArrived')}
+				/>
 			</div>
 			<div class="mt-5 flex flex-wrap items-center gap-3">
 				<Button type="submit" variant="secondary">{i18n.t('notifications.prefs.save')}</Button>

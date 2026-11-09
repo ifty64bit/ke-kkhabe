@@ -29,3 +29,10 @@ export function finalizedRecipients(
 ): NotifyRequest<'dayFinalized'>['recipients'] {
 	return [...charges.entries()].map(([userId, charge]) => ({ userId, data: { date, charge } }));
 }
+
+export function arrivedRecipients(
+	responses: { userId: string; eating: boolean }[],
+	date: string
+): NotifyRequest<'foodArrived'>['recipients'] {
+	return responses.filter((r) => r.eating).map((r) => ({ userId: r.userId, data: { date } }));
+}

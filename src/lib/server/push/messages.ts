@@ -60,6 +60,15 @@ export function buildMessage<E extends PushEvent>(
 				tag: `settlement-${d.id}`
 			};
 		}
+		case 'foodArrived': {
+			const d = data as PushData['foodArrived'];
+			return {
+				title: translate(locale, 'push.foodArrived.title'),
+				body: translate(locale, 'push.foodArrived.body'),
+				url: '/',
+				tag: `arrived-${d.date}`
+			};
+		}
 	}
 	throw new Error(`Unknown push event: ${event}`);
 }

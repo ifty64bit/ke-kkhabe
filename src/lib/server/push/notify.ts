@@ -52,7 +52,7 @@ export async function notify(
 
 		const dataOf = new Map(recipients.map((r) => [r.userId, r.data]));
 		const send = deps.send ?? sendWebPush;
-		const urgency = req.event === 'dayOpened' ? 'high' : 'normal';
+		const urgency = req.event === 'dayOpened' || req.event === 'foodArrived' ? 'high' : 'normal';
 
 		const results = await Promise.allSettled(
 			rows.map(async (row) => {

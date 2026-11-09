@@ -289,6 +289,10 @@ export const en: Record<MessageKey, string> = {
 
 	'manage.error.exists': "Today's day has already been started.",
 	'manage.error.status': "The day's state changed. Refresh the page and try again.",
+	'manage.arrived.cta': 'Breakfast is here',
+	'manage.arrived.hint': 'Everyone eating today gets a notification. You can send it once a day.',
+	'manage.arrived.sent': 'Told everyone breakfast arrived at {time}',
+	'manage.arrived.already': 'Breakfast arrival was already sent today.',
 	'manage.error.invalid': 'That request was invalid. Try again.',
 
 	'items.add': 'Add item',
@@ -351,6 +355,8 @@ export const en: Record<MessageKey, string> = {
 	'push.settlementRejected.title': 'Settlement rejected',
 	'push.settlementRejected.body': '{name} rejected {amount}',
 	'push.settlementRejected.bodyReason': '{name} rejected {amount}: {reason}',
+	'push.foodArrived.title': 'Breakfast is here',
+	'push.foodArrived.body': 'Come and get it',
 	'push.nudge.text': 'Get a notification when breakfast opens',
 	'push.nudge.turnOn': 'Turn on',
 	'push.nudge.dismiss': 'Not now',
@@ -376,6 +382,7 @@ export const en: Record<MessageKey, string> = {
 	'notifications.prefs.dayFinalized': "When today's bill is ready",
 	'notifications.prefs.settlementPending': 'When a settlement waits for my approval',
 	'notifications.prefs.settlementDecided': 'When my settlement is approved or rejected',
+	'notifications.prefs.foodArrived': 'When breakfast arrives',
 	'notifications.prefs.save': 'Save',
 	'notifications.prefs.saved': 'Saved',
 

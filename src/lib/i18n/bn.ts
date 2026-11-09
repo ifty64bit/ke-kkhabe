@@ -283,6 +283,10 @@ export const bn = {
 
 	'manage.error.exists': 'আজকের দিন আগেই শুরু হয়ে গেছে।',
 	'manage.error.status': 'দিনের অবস্থা বদলে গেছে। পাতাটা রিফ্রেশ করে আবার করুন।',
+	'manage.arrived.cta': 'নাস্তা চলে এসেছে',
+	'manage.arrived.hint': 'যাঁরা আজ খাচ্ছেন, সবাইকে নোটিফিকেশন যাবে। দিনে একবারই পাঠানো যায়।',
+	'manage.arrived.sent': 'নাস্তা আসার খবর পাঠানো হয়েছে {time}-এ',
+	'manage.arrived.already': 'নাস্তা আসার খবর আজ আগেই পাঠানো হয়েছে।',
 	'manage.error.invalid': 'অনুরোধটা ঠিক নেই। আবার চেষ্টা করুন।',
 
 	'items.add': 'আইটেম যোগ করুন',
@@ -346,6 +350,8 @@ export const bn = {
 	'push.settlementRejected.title': 'লেনদেন প্রত্যাখ্যাত',
 	'push.settlementRejected.body': '{name} {amount} প্রত্যাখ্যান করেছেন',
 	'push.settlementRejected.bodyReason': '{name} {amount} প্রত্যাখ্যান করেছেন: {reason}',
+	'push.foodArrived.title': 'নাস্তা চলে এসেছে',
+	'push.foodArrived.body': 'এসে নিয়ে যান',
 	'push.nudge.text': 'নাস্তা শুরু হলে নোটিফিকেশন পান',
 	'push.nudge.turnOn': 'চালু করুন',
 	'push.nudge.dismiss': 'এখন না',
@@ -371,6 +377,7 @@ export const bn = {
 	'notifications.prefs.dayFinalized': 'আজকের বিল তৈরি হলে',
 	'notifications.prefs.settlementPending': 'একটি লেনদেন আপনার অনুমোদনের অপেক্ষায় থাকলে',
 	'notifications.prefs.settlementDecided': 'আপনার লেনদেন অনুমোদিত বা প্রত্যাখ্যাত হলে',
+	'notifications.prefs.foodArrived': 'নাস্তা চলে এলে',
 	'notifications.prefs.save': 'সেভ করুন',
 	'notifications.prefs.saved': 'সেভ হয়েছে',
 

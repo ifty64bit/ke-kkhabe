@@ -11,7 +11,7 @@ import { validateFinalize } from '#lib/server/finalize.ts';
 import { chargesForDay } from '#lib/server/charges.ts';
 import { requireManager } from '#lib/server/guards.ts';
 import { queueNotify } from '#lib/server/push/index.ts';
-import { finalizedRecipients } from '#lib/server/push/recipients.ts';
+import { arrivedRecipients, finalizedRecipients } from '#lib/server/push/recipients.ts';
 import {
 	auditLog,
 	billPayment,
@@ -35,6 +35,22 @@ const runBatch = (db: Db, statements: BatchItem<'sqlite'>[]) =>
 async function todayFor(db: Db) {
 	const [today] = await db.select().from(day).where(eq(day.date, dhakaToday())).limit(1);
 	return today ?? null;
+}
+
+/** When "food is here" was sent for this day, if it was. Sent at most once per day. */
+async function foodArrivedAtFor(db: Db, dayId: string) {
+	const [row] = await db
+		.select({ at: auditLog.createdAt })
+		.from(auditLog)
+		.where(
+			and(
+				eq(auditLog.entity, 'day'),
+				eq(auditLog.entityId, dayId),
+				eq(auditLog.action, 'day.food_arrived')
+			)
+		)
+		.limit(1);
+	return row?.at ?? null;
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -218,6 +234,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 					amount
 				}))
 			: null;
+	const foodArrivedAt = await foodArrivedAtFor(db, today.id);
 
 	return {
 		meId: me.id,
@@ -242,7 +259,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		lastDayItems: lastDayItems.map((r) => r.itemId),
 		payments: paymentRows.length > 0 || today.status === 'finalized' ? paymentRows : null,
 		charges,
-		grandTotal: charges ? charges.reduce((a, c) => a + c.amount, 0) : null
+		grandTotal: charges ? charges.reduce((a, c) => a + c.amount, 0) : null,
+		foodArrivedAt
 	};
 };
 
@@ -395,6 +413,36 @@ export const actions: Actions = {
 				data: counts
 			})
 		]);
+		return { saved: true };
+	},
+
+	/** Tell everyone eating today that the food has arrived. Once per day, after ordering closes. */
+	foodArrived: async ({ locals }) => {
+		const me = requireManager(locals);
+		const db = locals.db;
+		const today = await todayFor(db);
+		if (!today || (today.status !== 'closed' && today.status !== 'finalized'))
+			return failKey(409, 'manage.error.status');
+		if (await foodArrivedAtFor(db, today.id)) return failKey(409, 'manage.arrived.already');
+
+		await db.insert(auditLog).values({
+			actorId: me.id,
+			action: 'day.food_arrived',
+			entity: 'day',
+			entityId: today.id,
+			data: null
+		});
+		queueNotify({ locals }, async () => ({
+			event: 'foodArrived',
+			actorId: me.id,
+			recipients: arrivedRecipients(
+				await db
+					.select({ userId: response.userId, eating: response.eating })
+					.from(response)
+					.where(eq(response.dayId, today.id)),
+				today.date
+			)
+		}));
 		return { saved: true };
 	},
 

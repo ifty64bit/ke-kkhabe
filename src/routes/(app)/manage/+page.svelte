@@ -158,6 +158,26 @@
 	</Card>
 {/snippet}
 
+{#snippet foodArrived()}
+	<Card class="mt-4">
+		{#if data.foodArrivedAt}
+			<p class="text-sm text-muted">
+				{i18n.t('manage.arrived.sent', { time: i18n.time(data.foodArrivedAt) })}
+			</p>
+		{:else}
+			<form
+				method="POST"
+				action="?/foodArrived"
+				use:enhance={rowAction}
+				class="flex flex-col gap-2"
+			>
+				<Button type="submit">{i18n.t('manage.arrived.cta')}</Button>
+				<p class="text-sm text-muted">{i18n.t('manage.arrived.hint')}</p>
+			</form>
+		{/if}
+	</Card>
+{/snippet}
+
 {#if !status || status === 'draft'}
 	<Card title={i18n.t('manage.today.emptyTitle')} description={i18n.t('manage.today.emptyBody')}>
 		{#if data.items.length === 0}
@@ -253,6 +273,8 @@
 		</ul>
 	</Card>
 
+	{@render foodArrived()}
+
 	<div class="mt-4">
 		{@render peopleList()}
 	</div>
@@ -314,6 +336,7 @@
 			</Button>
 		</div>
 	</Card>
+	{@render foodArrived()}
 {/if}
 
 <MemberOrderDialog bind:open={memberOpen} member={editing} items={data.menu} />
