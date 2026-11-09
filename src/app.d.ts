@@ -19,11 +19,8 @@ declare global {
 		// interface Error {}
 		// interface PageData {}
 		// interface PageState {}
-		interface Platform {
-			env: Env;
-			ctx: ExecutionContext;
-			caches: CacheStorage;
-		}
+		// No `Platform`: adapter-cloudflare v8 never passes one. Use `env` and `waitUntil`
+		// from 'cloudflare:workers' instead.
 	}
 }
 
