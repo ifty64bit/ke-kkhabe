@@ -346,6 +346,10 @@ export const bn = {
 	'push.settlementRejected.title': 'লেনদেন প্রত্যাখ্যাত',
 	'push.settlementRejected.body': '{name} {amount} প্রত্যাখ্যান করেছেন',
 	'push.settlementRejected.bodyReason': '{name} {amount} প্রত্যাখ্যান করেছেন: {reason}',
+	'push.nudge.text': 'নাস্তা শুরু হলে নোটিফিকেশন পান',
+	'push.nudge.turnOn': 'চালু করুন',
+	'push.nudge.dismiss': 'এখন না',
+	'push.nudge.denied': 'এই ব্রাউজারে নোটিফিকেশন বন্ধ করা আছে',
 
 	'notifications.title': 'নোটিফিকেশন',
 	'notifications.device.title': 'এই ডিভাইস',

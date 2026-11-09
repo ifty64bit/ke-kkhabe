@@ -351,6 +351,10 @@ export const en: Record<MessageKey, string> = {
 	'push.settlementRejected.title': 'Settlement rejected',
 	'push.settlementRejected.body': '{name} rejected {amount}',
 	'push.settlementRejected.bodyReason': '{name} rejected {amount}: {reason}',
+	'push.nudge.text': 'Get a notification when breakfast opens',
+	'push.nudge.turnOn': 'Turn on',
+	'push.nudge.dismiss': 'Not now',
+	'push.nudge.denied': 'Notifications are blocked in this browser',
 
 	'notifications.title': 'Notifications',
 	'notifications.device.title': 'This device',

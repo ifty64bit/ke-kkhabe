@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import OrderDialog from '#lib/components/today/OrderDialog.svelte';
+	import PushNudge from '#lib/components/today/PushNudge.svelte';
 	import Receipt from '#lib/components/today/Receipt.svelte';
 	import { Alert, Button } from '#lib/components/ui/index.ts';
 	import { useI18n, type MessageKey } from '#lib/i18n/index.ts';
@@ -82,6 +83,7 @@
 	</h1>
 
 	<div class="mt-10 flex w-full flex-col items-center gap-4">
+		<PushNudge publicKey={data.vapidPublicKey} />
 		{#if data.awaitingMeCount > 0}
 			<Alert tone="info" class="w-full max-w-sm text-left">
 				{i18n.t('today.awaitingApproval', { count: i18n.num(data.awaitingMeCount) })}

@@ -1,4 +1,5 @@
 import { fail } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 import { and, eq, isNull, ne, sql } from 'drizzle-orm';
 import { dhakaToday } from '#lib/date.ts';
 import type { MessageKey } from '#lib/i18n/index.ts';
@@ -8,6 +9,7 @@ import { day, dayItem, item, orderLine, response, settlement } from '#lib/server
 import { pricePerPiece } from '#lib/quantity.ts';
 import { openShares } from '#lib/sharing.ts';
 import { parseOrderForm } from '#lib/server/orders.ts';
+import { vapidFromEnv } from '#lib/server/push/notify.ts';
 import type { Db } from '#lib/server/db/index.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -136,7 +138,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		charge: mine?.total ?? null,
 		receipt,
 		myBalance: ledger.balances.get(meId) ?? 0,
-		awaitingMeCount: awaitingMe.n
+		awaitingMeCount: awaitingMe.n,
+		vapidPublicKey: vapidFromEnv(env)?.publicKey ?? null
 	};
 };
 
