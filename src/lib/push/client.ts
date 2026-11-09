@@ -59,9 +59,12 @@ function encodeBase64Url(buffer: ArrayBuffer | null): string {
 export async function enablePush(publicKey: string): Promise<'on' | 'denied' | 'error'> {
 	let subscription: PushSubscription | null = null;
 	try {
-		const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+		// Ask first, straight from the click: Safari needs the user gesture to still be live.
 		const permission = await Notification.requestPermission();
 		if (permission !== 'granted') return 'denied';
+		await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+		// subscribe() needs an active worker; on first registration it is still installing.
+		const registration = await navigator.serviceWorker.ready;
 
 		subscription = await registration.pushManager.subscribe({
 			userVisibleOnly: true,
