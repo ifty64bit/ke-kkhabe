@@ -14,6 +14,7 @@
 		MenuItem,
 		MenuLabel,
 		Money,
+		Popover,
 		QuantityStepper,
 		SegmentedControl,
 		Select,
@@ -31,6 +32,7 @@
 	let view = $state<'day' | 'month'>('day');
 	let name = $state('');
 	let pushOn = $state(true);
+	let popoverAnchor = $state<HTMLButtonElement | null>(null);
 	const nameError = $derived(name.length > 0 && name.length < 3 ? 'কমপক্ষে ৩ অক্ষর' : null);
 </script>
 
@@ -151,6 +153,19 @@
 		</div>
 	</Card>
 
+	<Card
+		title="Popover"
+		description="Hover, focus or tap the anchor; Escape or an outside tap closes."
+	>
+		<button
+			bind:this={popoverAnchor}
+			type="button"
+			class="rounded-control border border-border bg-surface-2 px-3 py-2 text-sm font-medium hover:text-primary"
+		>
+			৯ নভেম্বর
+		</button>
+	</Card>
+
 	<Card title="Switch">
 		<div class="space-y-4">
 			<Switch bind:checked={pushOn} label="চালু" description="নোটিফিকেশন পাবেন" />
@@ -197,3 +212,8 @@
 	<p class="text-muted">Esc বা বাইরে ক্লিক করে বন্ধ হবে না।</p>
 	{#snippet footer({ close })}<Button block onclick={close}>ঠিক আছে</Button>{/snippet}
 </Dialog>
+
+<Popover anchor={popoverAnchor} labelledby="popover-demo-title">
+	<h3 id="popover-demo-title" class="font-display text-lg">৯ নভেম্বর</h3>
+	<p class="mt-1 text-sm text-muted">খেয়েছেন, ৳৭৪.৬৭</p>
+</Popover>
