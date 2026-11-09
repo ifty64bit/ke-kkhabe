@@ -188,3 +188,36 @@ export const auditLog = sqliteTable(
 	},
 	(t) => [index('audit_entity_idx').on(t.entity, t.entityId)]
 );
+
+/** One browser/device's Web Push subscription. Endpoint is unique across users: a device moves with its browser account. */
+export const pushSubscription = sqliteTable(
+	'push_subscription',
+	{
+		id: id(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		endpoint: text('endpoint').notNull(),
+		p256dh: text('p256dh').notNull(),
+		auth: text('auth').notNull(),
+		userAgent: text('user_agent'),
+		createdAt: createdAt(),
+		lastSuccessAt: integer('last_success_at', { mode: 'timestamp_ms' })
+	},
+	(t) => [
+		uniqueIndex('push_subscription_endpoint_uq').on(t.endpoint),
+		index('push_subscription_user_idx').on(t.userId)
+	]
+);
+
+/** Per-member choice of push events. A missing row means every event is on. */
+export const notificationPref = sqliteTable('notification_pref', {
+	userId: text('user_id')
+		.primaryKey()
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	dayOpened: integer('day_opened', { mode: 'boolean' }).notNull().default(true),
+	dayFinalized: integer('day_finalized', { mode: 'boolean' }).notNull().default(true),
+	settlementPending: integer('settlement_pending', { mode: 'boolean' }).notNull().default(true),
+	settlementDecided: integer('settlement_decided', { mode: 'boolean' }).notNull().default(true)
+});
