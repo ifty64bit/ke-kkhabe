@@ -58,6 +58,20 @@
 				? 'ledger.youOwe'
 				: 'ledger.youSettled'
 	);
+	// Who each person pays or gets paid by, read off the settle-up plan.
+	const counterparts = $derived.by(() => {
+		const byId: Record<string, { name: string; amount: number }[]> = {};
+		const add = (id: string, name: string, amount: number) =>
+			(byId[id] ??= []).push({ name, amount });
+		for (const s of data.suggestions) {
+			add(s.from, s.toName, s.amount);
+			add(s.to, s.fromName, s.amount);
+		}
+		return byId;
+	});
+	const openBalances = $derived(data.balances.filter((p) => p.balance !== 0));
+	const settledPeople = $derived(data.balances.filter((p) => p.balance === 0));
+
 	const balanceTone = $derived(
 		data.myBalance > 0 ? 'text-success' : data.myBalance < 0 ? 'text-danger' : 'text-fg'
 	);
@@ -272,8 +286,10 @@
 
 		<Card class="mt-8" title={i18n.t('ledger.everyoneTitle')} padding="none">
 			<ul class="divide-y divide-border">
-				{#each data.balances as p (p.id)}
-					<li class="flex items-center gap-3 px-4 py-3">
+				{#each openBalances as p (p.id)}
+					{@const gets = p.balance > 0}
+					{@const others = counterparts[p.id] ?? []}
+					<li class="flex items-start gap-3 px-4 py-3">
 						<Avatar name={p.name} src={p.image} class={p.active ? '' : 'opacity-60'} />
 						<div class="min-w-0 flex-1">
 							<p class="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -286,10 +302,63 @@
 									<Badge>{i18n.t('manage.person.inactive')}</Badge>
 								{/if}
 							</p>
+							{#if others.length > 0}
+								<ul class="mt-0.5 text-sm text-muted">
+									{#each others as o, i (i)}
+										<li class="flex items-baseline justify-between gap-3">
+											<span class="min-w-0 truncate">
+												{i18n.t(gets ? 'ledger.fromName' : 'ledger.toName', { name: o.name })}
+											</span>
+											{#if others.length > 1}
+												<Money value={o.amount} class="shrink-0" />
+											{/if}
+										</li>
+									{/each}
+								</ul>
+							{/if}
 						</div>
-						<Money value={p.balance} balance class="font-semibold" />
+						<span class="shrink-0 pt-0.5 font-semibold {gets ? 'text-success' : 'text-danger'}">
+							{i18n.t(gets ? 'ledger.getsBack' : 'ledger.owes', {
+								amount: formatTaka(Math.abs(p.balance), i18n.locale)
+							})}
+						</span>
 					</li>
 				{/each}
+				{#if settledPeople.length > 0}
+					<li>
+						<details class="group">
+							<summary
+								class="flex cursor-pointer list-none items-center gap-3 px-4 py-3 text-muted [&::-webkit-details-marker]:hidden"
+							>
+								<span class="flex -space-x-2">
+									{#each settledPeople.slice(0, 4) as p (p.id)}
+										<Avatar name={p.name} src={p.image} size="sm" class="ring-2 ring-surface" />
+									{/each}
+								</span>
+								<span class="flex-1">
+									{i18n.t('ledger.settledCount', { count: i18n.num(settledPeople.length) })}
+								</span>
+								<svg
+									viewBox="0 0 24 24"
+									class="size-5 transition-transform group-open:rotate-180"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg
+								>
+							</summary>
+							<ul class="divide-y divide-border border-t border-border">
+								{#each settledPeople as p (p.id)}
+									<li class="flex items-center gap-3 px-4 py-2.5">
+										<Avatar name={p.name} src={p.image} size="sm" />
+										<span class="min-w-0 truncate">{p.name}</span>
+										{#if p.id === data.meId}<Badge>{i18n.t('members.you')}</Badge>{/if}
+									</li>
+								{/each}
+							</ul>
+						</details>
+					</li>
+				{/if}
 			</ul>
 		</Card>
 
