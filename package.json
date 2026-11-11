@@ -3,6 +3,7 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"packageManager": "bun@1.4.4",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "bun run clean && wrangler types --env-file .env.example --check && vite build",
