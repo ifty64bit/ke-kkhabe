@@ -119,12 +119,23 @@
 					<p class="text-lg text-muted">{i18n.t('today.saidNo')}</p>
 				{/if}
 				<div class="flex w-full max-w-sm flex-col gap-2 sm:flex-row">
-					<Button size="lg" class="flex-1" onclick={() => (ordering = true)}>
+					<Button size="lg" class="sm:flex-1" onclick={() => (ordering = true)}>
 						{i18n.t('today.yes')}
 					</Button>
 					{#if !answered}
-						<form method="POST" action="?/skip" class="flex flex-1" use:enhance={skipEnhance}>
-							<Button type="submit" size="lg" variant="secondary" class="flex-1" loading={skipping}>
+						<form
+							method="POST"
+							action="?/skip"
+							class="flex flex-col sm:flex-1 sm:flex-row"
+							use:enhance={skipEnhance}
+						>
+							<Button
+								type="submit"
+								size="lg"
+								variant="secondary"
+								class="sm:flex-1"
+								loading={skipping}
+							>
 								{i18n.t('today.no')}
 							</Button>
 						</form>
