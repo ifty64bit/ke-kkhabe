@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import RecordDialog from '#lib/components/ledger/RecordDialog.svelte';
+	import TransferDays from '#lib/components/ledger/TransferDays.svelte';
 	import { applyPending, canRecordSettlement, canVoidSettlement } from '#lib/ledger.ts';
 	import { formatTaka } from '#lib/money.ts';
 	import {
@@ -15,7 +16,6 @@
 		Field,
 		Menu,
 		MenuItem,
-		Money,
 		PageHeader,
 		Textarea
 	} from '#lib/components/ui/index.ts';
@@ -60,12 +60,10 @@
 	);
 	// Who each person pays or gets paid by, read off the settle-up plan.
 	const counterparts = $derived.by(() => {
-		const byId: Record<string, { name: string; amount: number }[]> = {};
-		const add = (id: string, name: string, amount: number) =>
-			(byId[id] ??= []).push({ name, amount });
+		const byId: Record<string, { name: string; s: Suggestion }[]> = {};
 		for (const s of data.suggestions) {
-			add(s.from, s.toName, s.amount);
-			add(s.to, s.fromName, s.amount);
+			(byId[s.from] ??= []).push({ name: s.toName, s });
+			(byId[s.to] ??= []).push({ name: s.fromName, s });
 		}
 		return byId;
 	});
@@ -317,25 +315,18 @@
 										<span class="min-w-0 truncate">
 											{i18n.t(gets ? 'ledger.fromName' : 'ledger.toName', { name: o.name })}
 										</span>
-										{#if others.length > 1}
-											<Money value={o.amount} class="shrink-0 tabular-nums" />
-										{/if}
+										<TransferDays
+											amount={o.s.amount}
+											title={i18n.t('ledger.days.title', {
+												from: o.s.fromName,
+												to: o.s.toName
+											})}
+											eater={o.s.fromName}
+											days={o.s.days}
+										/>
 									</li>
 								{/each}
 							</ul>
-						{/if}
-						{#if p.days.length > 0}
-							<p class="col-span-2 mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
-								<span>{i18n.t(gets ? 'ledger.paidOn' : 'ledger.orderedOn')}</span>
-								{#each p.days as d (d.date)}
-									<span
-										class="inline-flex items-baseline gap-1 rounded-full bg-surface-2 px-2 py-0.5"
-									>
-										<span class="font-medium text-fg">{i18n.shortDay(d.date)}</span>
-										<Money value={d.amount} />
-									</span>
-								{/each}
-							</p>
 						{/if}
 					</li>
 				{/each}

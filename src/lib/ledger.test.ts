@@ -4,6 +4,7 @@ import {
 	balancesFrom,
 	groupHistory,
 	openDays,
+	transferDays,
 	canDecideSettlement,
 	canRecordSettlement,
 	canVoidSettlement,
@@ -118,8 +119,12 @@ describe('openDays', () => {
 	it('names the days behind each balance', () => {
 		const days = openDays(input, balancesFrom(input));
 		// u2 owes ৳275: ৳175 from day 1; the other ৳100 is the settlement u1 overpaid.
-		expect(days.get('u2')).toEqual([{ dayId: 'd1', date: '2026-11-02', amount: 17500 }]);
-		expect(days.get('u3')).toEqual([{ dayId: 'd1', date: '2026-11-02', amount: 20000 }]);
+		expect(days.get('u2')).toEqual([
+			{ dayId: 'd1', date: '2026-11-02', amount: 17500, dayNet: 17500 }
+		]);
+		expect(days.get('u3')).toEqual([
+			{ dayId: 'd1', date: '2026-11-02', amount: 20000, dayNet: 20000 }
+		]);
 		// u1 was charged more than they paid on day 1, so no day stands behind their credit.
 		expect(days.get('u1')).toEqual([]);
 	});
@@ -149,13 +154,49 @@ describe('openDays', () => {
 		const balances = balancesFrom(run);
 		expect(balances.get('eater')).toBe(-10000);
 		expect(openDays(run, balances).get('eater')).toEqual([
-			{ dayId: 'c', date: '2026-11-03', amount: 6000 },
-			{ dayId: 'b', date: '2026-11-02', amount: 4000 }
+			{ dayId: 'c', date: '2026-11-03', amount: 6000, dayNet: 6000 },
+			{ dayId: 'b', date: '2026-11-02', amount: 4000, dayNet: 6000 }
 		]);
 		expect(openDays(run, balances).get('payer')).toEqual([
-			{ dayId: 'c', date: '2026-11-03', amount: 6000 },
-			{ dayId: 'b', date: '2026-11-02', amount: 4000 }
+			{ dayId: 'c', date: '2026-11-03', amount: 6000, dayNet: 6000 },
+			{ dayId: 'b', date: '2026-11-02', amount: 4000, dayNet: 6000 }
 		]);
+	});
+});
+
+describe('transferDays', () => {
+	const day = (dayId: string, date: string, amount: number) => ({
+		dayId,
+		date,
+		amount,
+		dayNet: amount
+	});
+	const open = new Map([
+		['d', [day('n12', '2026-11-12', 2590), day('n05', '2026-11-05', 4300)]],
+		['s', [day('n05', '2026-11-05', 5000)]],
+		['r', [day('n12', '2026-11-12', 1890)]]
+	]);
+
+	it('pairs a day with whoever paid for it, then fills from the rest', () => {
+		const [toS, toR] = transferDays(
+			[
+				{ from: 'd', to: 's', amount: 5000 },
+				{ from: 'd', to: 'r', amount: 1890 }
+			],
+			open
+		);
+		// Sahim paid on 5 Nov: ৳43 of it is that day, the other ৳7 from 12 Nov.
+		expect(toS).toEqual([
+			{ ...day('n12', '2026-11-12', 700), dayNet: 2590 },
+			{ ...day('n05', '2026-11-05', 4300) }
+		]);
+		// Rafi paid on 12 Nov and gets the rest of it.
+		expect(toR).toEqual([{ ...day('n12', '2026-11-12', 1890), dayNet: 2590 }]);
+	});
+
+	it('covers at most what the payer has open', () => {
+		const [t] = transferDays([{ from: 'r', to: 'x', amount: 5000 }], new Map());
+		expect(t).toEqual([]);
 	});
 });
 

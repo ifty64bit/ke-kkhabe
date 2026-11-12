@@ -1,5 +1,5 @@
 import { fail } from '@sveltejs/kit';
-import { and, asc, desc, eq, gte, inArray, isNull, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import { dhakaToday } from '#lib/date.ts';
 import {
@@ -7,12 +7,11 @@ import {
 	canRecordSettlement,
 	canVoidSettlement,
 	initialSettlementStatus,
-	suggestSettlements,
 	validateRejectReason,
 	validateSettlementInput
 } from '#lib/ledger.ts';
 import type { MessageKey } from '#lib/i18n/index.ts';
-import { auditLog, settlement, user } from '#lib/server/db/schema.ts';
+import { auditLog, item, orderLine, settlement, user } from '#lib/server/db/schema.ts';
 import { computeLedger } from '#lib/server/ledger.ts';
 import { queueNotify } from '#lib/server/push/index.ts';
 import { decidedRecipient, pendingRecipient } from '#lib/server/push/recipients.ts';
@@ -25,7 +24,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const db = locals.db;
 	const today = dhakaToday();
 
-	const [{ balances, openDays, hasFinalized }, userRows] = await Promise.all([
+	const [{ balances, suggestions: plan, hasFinalized }, userRows] = await Promise.all([
 		computeLedger(db),
 		db
 			.select({
@@ -47,11 +46,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	// Every non-zero balance (including deactivated accounts), plus settled active members.
 	const rows = people
-		.map((p) => ({
-			...p,
-			balance: balances.get(p.id) ?? 0,
-			days: (openDays.get(p.id) ?? []).map(({ date, amount }) => ({ date, amount }))
-		}))
+		.map((p) => ({ ...p, balance: balances.get(p.id) ?? 0 }))
 		.filter((p) => p.balance !== 0 || p.active !== false)
 		.toSorted((a, b) => {
 			const group = (v: number) => (v > 0 ? 0 : v < 0 ? 2 : 1);
@@ -62,10 +57,45 @@ export const load: PageServerLoad = async ({ locals }) => {
 			);
 		});
 
-	const suggestions = suggestSettlements(balances).map((t) => ({
-		...t,
+	// What each payer ate on the days behind their transfers, for the "which orders" popover.
+	const dayIds = [...new Set(plan.flatMap((t) => t.days.map((d) => d.dayId)))];
+	const eaters = new Set(plan.map((t) => t.from));
+	const eaten = new Map<string, { name: string; quantity: number }[]>();
+	for (let i = 0; i < dayIds.length; i += 90) {
+		const rows = await db
+			.select({
+				dayId: orderLine.dayId,
+				userId: orderLine.userId,
+				name: item.name,
+				quantity: orderLine.finalQuantity12ths
+			})
+			.from(orderLine)
+			.innerJoin(item, eq(item.id, orderLine.itemId))
+			.where(
+				and(inArray(orderLine.dayId, dayIds.slice(i, i + 90)), gt(orderLine.finalQuantity12ths, 0))
+			)
+			.orderBy(item.name);
+		for (const r of rows) {
+			if (!eaters.has(r.userId)) continue;
+			const key = `${r.dayId}:${r.userId}`;
+			const list = eaten.get(key) ?? [];
+			list.push({ name: r.name, quantity: r.quantity ?? 0 });
+			eaten.set(key, list);
+		}
+	}
+
+	const suggestions = plan.map((t) => ({
+		from: t.from,
+		to: t.to,
+		amount: t.amount,
 		fromName: personOf.get(t.from)?.name ?? t.from,
-		toName: personOf.get(t.to)?.name ?? t.to
+		toName: personOf.get(t.to)?.name ?? t.to,
+		days: t.days.map((d) => ({
+			date: d.date,
+			amount: d.amount,
+			dayNet: d.dayNet,
+			items: eaten.get(`${d.dayId}:${t.from}`) ?? []
+		}))
 	}));
 
 	const cutoff = new Date(Date.parse(`${today}T00:00:00Z`) - 30 * DAY_MS)

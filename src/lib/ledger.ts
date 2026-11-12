@@ -98,7 +98,14 @@ function dayNets({ days, items, lines, payments }: LedgerInput) {
 	return nets;
 }
 
-export type OpenDay = { dayId: string; date: string; amount: Poisha };
+export type OpenDay = {
+	dayId: string;
+	date: string;
+	/** The part of this day still open. */
+	amount: Poisha;
+	/** The day's whole effect on the user (paid minus charged, made positive). */
+	dayNet: Poisha;
+};
 
 /**
  * The days behind each open balance. Money is pooled, so a balance has no exact
@@ -125,7 +132,7 @@ export function openDays(input: LedgerInput, balances: Map<string, Poisha>) {
 			const net = (nets.get(d.id)?.get(userId) ?? 0) * sign;
 			if (net <= 0) continue;
 			const amount = Math.min(net, left);
-			list.push({ dayId: d.id, date: d.date, amount });
+			list.push({ dayId: d.id, date: d.date, amount, dayNet: net });
 			left -= amount;
 		}
 		out.set(userId, list);
@@ -134,6 +141,57 @@ export function openDays(input: LedgerInput, balances: Map<string, Poisha>) {
 }
 
 export type Transfer = { from: string; to: string; amount: Poisha };
+
+/**
+ * Which of the payer's open days each settle-up transfer pays for. A day the receiver
+ * also has open (they paid the bill the payer ate from) goes to that receiver first;
+ * the payer's remaining days fill the rest, newest first. Per transfer, newest day
+ * first; the amounts sum to at most the transfer (less when part of the debt came from
+ * a settlement rather than a day).
+ */
+export function transferDays(transfers: Transfer[], open: Map<string, OpenDay[]>) {
+	const left = new Map<string, Map<string, number>>();
+	const leftOf = (userId: string) => {
+		let m = left.get(userId);
+		if (!m) {
+			m = new Map((open.get(userId) ?? []).map((d) => [d.dayId, d.amount]));
+			left.set(userId, m);
+		}
+		return m;
+	};
+	const taken = transfers.map(() => new Map<string, number>());
+	const need = transfers.map((t) => t.amount);
+	const take = (i: number, dayId: string, amount: number) => {
+		const from = leftOf(transfers[i].from);
+		from.set(dayId, from.get(dayId)! - amount);
+		need[i] -= amount;
+		taken[i].set(dayId, (taken[i].get(dayId) ?? 0) + amount);
+	};
+
+	// Same-day matches: the payer ate on a day the receiver paid for.
+	transfers.forEach((t, i) => {
+		const to = leftOf(t.to);
+		for (const d of open.get(t.from) ?? []) {
+			const amount = Math.min(need[i], leftOf(t.from).get(d.dayId)!, to.get(d.dayId) ?? 0);
+			if (amount <= 0) continue;
+			take(i, d.dayId, amount);
+			to.set(d.dayId, to.get(d.dayId)! - amount);
+		}
+	});
+	// Whatever is left, from the payer's other open days.
+	transfers.forEach((t, i) => {
+		for (const d of open.get(t.from) ?? []) {
+			const amount = Math.min(need[i], leftOf(t.from).get(d.dayId)!);
+			if (amount > 0) take(i, d.dayId, amount);
+		}
+	});
+
+	return transfers.map((t, i) =>
+		(open.get(t.from) ?? [])
+			.filter((d) => taken[i].has(d.dayId))
+			.map((d) => ({ ...d, amount: taken[i].get(d.dayId)! }))
+	);
+}
 
 /**
  * Settle-up suggestions: greedy matching of the largest debtor with the largest
