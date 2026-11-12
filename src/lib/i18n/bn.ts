@@ -115,6 +115,8 @@ export const bn = {
 	'ledger.owes': 'দেবে {amount}',
 	'ledger.fromName': '{name} থেকে',
 	'ledger.toName': '{name}-কে',
+	'ledger.paidOn': 'যেদিন বিল দিয়েছে',
+	'ledger.orderedOn': 'যেদিনের অর্ডার',
 	'ledger.settledCount': '{count} জনের হিসাব মেটানো',
 	'ledger.suggestTitle': 'মেটানোর উপায়',
 	'ledger.suggestBody': 'সবচেয়ে কম লেনদেনে সব হিসাব মেটে।',

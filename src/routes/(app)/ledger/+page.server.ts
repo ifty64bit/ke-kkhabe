@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const db = locals.db;
 	const today = dhakaToday();
 
-	const [{ balances, hasFinalized }, userRows] = await Promise.all([
+	const [{ balances, openDays, hasFinalized }, userRows] = await Promise.all([
 		computeLedger(db),
 		db
 			.select({
@@ -47,7 +47,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	// Every non-zero balance (including deactivated accounts), plus settled active members.
 	const rows = people
-		.map((p) => ({ ...p, balance: balances.get(p.id) ?? 0 }))
+		.map((p) => ({
+			...p,
+			balance: balances.get(p.id) ?? 0,
+			days: (openDays.get(p.id) ?? []).map(({ date, amount }) => ({ date, amount }))
+		}))
 		.filter((p) => p.balance !== 0 || p.active !== false)
 		.toSorted((a, b) => {
 			const group = (v: number) => (v > 0 ? 0 : v < 0 ? 2 : 1);

@@ -43,11 +43,26 @@ export type LedgerInput = {
  * they owe. Charges and bill payments of the finalized days, minus settlements
  * received, plus settlements sent. The sum over all users is exactly 0.
  */
-export function balancesFrom({ days, items, lines, payments, settlements }: LedgerInput) {
+export function balancesFrom(input: LedgerInput) {
 	const balances = new Map<string, Poisha>();
 	const bump = (userId: string, delta: number) =>
 		balances.set(userId, (balances.get(userId) ?? 0) + delta);
 
+	for (const nets of dayNets(input).values()) for (const [userId, net] of nets) bump(userId, net);
+	for (const s of input.settlements) {
+		// Only an approved, non-voided settlement moves a balance.
+		if (s.status !== 'approved' || s.voidedAt !== null) continue;
+		bump(s.fromUserId, s.amount);
+		bump(s.toUserId, -s.amount);
+	}
+	return balances;
+}
+
+/**
+ * Each finalized day's effect on each user, in poisha: bill payments minus charges.
+ * Keyed by day id, in the order of `days`.
+ */
+function dayNets({ days, items, lines, payments }: LedgerInput) {
 	const counted = new Set(days.map((d) => d.id));
 	const itemsByDay = new Map<string, ChargeItem[]>();
 	const linesByDay = new Map<string, ChargeLine[]>();
@@ -64,23 +79,58 @@ export function balancesFrom({ days, items, lines, payments, settlements }: Ledg
 		linesByDay.set(line.dayId, list);
 	}
 
+	const nets = new Map<string, Map<string, Poisha>>();
 	for (const d of days) {
+		const m = new Map<string, Poisha>();
 		for (const [userId, charge] of computeCharges(
 			itemsByDay.get(d.id) ?? [],
 			linesByDay.get(d.id) ?? [],
 			d.deliveryFee,
 			d.discount ?? 0
 		))
-			bump(userId, -charge);
+			m.set(userId, (m.get(userId) ?? 0) - charge);
+		nets.set(d.id, m);
 	}
-	for (const p of payments) if (counted.has(p.dayId)) bump(p.userId, p.amount);
-	for (const s of settlements) {
-		// Only an approved, non-voided settlement moves a balance.
-		if (s.status !== 'approved' || s.voidedAt !== null) continue;
-		bump(s.fromUserId, s.amount);
-		bump(s.toUserId, -s.amount);
+	for (const p of payments) {
+		const m = nets.get(p.dayId);
+		if (m) m.set(p.userId, (m.get(p.userId) ?? 0) + p.amount);
 	}
-	return balances;
+	return nets;
+}
+
+export type OpenDay = { dayId: string; date: string; amount: Poisha };
+
+/**
+ * The days behind each open balance. Money is pooled, so a balance has no exact
+ * source; this reads it first-in-first-out: older days are taken as settled first,
+ * and the balance is made of the newest days on the same side (charged more than
+ * paid for a debtor, paid more than charged for a creditor), the oldest of them
+ * possibly in part. Amounts are positive, newest day first, and sum to |balance|
+ * unless part of it came from a settlement (e.g. someone overpaid a debt), which
+ * no day stands behind.
+ */
+export function openDays(input: LedgerInput, balances: Map<string, Poisha>) {
+	const nets = dayNets(input);
+	const newestFirst = input.days.toSorted((a, b) =>
+		a.date < b.date ? 1 : a.date > b.date ? -1 : a.id < b.id ? 1 : -1
+	);
+	const out = new Map<string, OpenDay[]>();
+	for (const [userId, balance] of balances) {
+		if (balance === 0) continue;
+		const sign = Math.sign(balance);
+		let left = Math.abs(balance);
+		const list: OpenDay[] = [];
+		for (const d of newestFirst) {
+			if (left === 0) break;
+			const net = (nets.get(d.id)?.get(userId) ?? 0) * sign;
+			if (net <= 0) continue;
+			const amount = Math.min(net, left);
+			list.push({ dayId: d.id, date: d.date, amount });
+			left -= amount;
+		}
+		out.set(userId, list);
+	}
+	return out;
 }
 
 export type Transfer = { from: string; to: string; amount: Poisha };

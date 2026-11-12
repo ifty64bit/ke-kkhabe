@@ -118,6 +118,8 @@ export const en: Record<MessageKey, string> = {
 	'ledger.owes': 'Owes {amount}',
 	'ledger.fromName': 'from {name}',
 	'ledger.toName': 'to {name}',
+	'ledger.paidOn': 'Paid for',
+	'ledger.orderedOn': 'From orders on',
 	'ledger.settledCount': '{count} settled',
 	'ledger.suggestTitle': 'How to settle up',
 	'ledger.suggestBody': 'The fewest payments that clear every balance.',

@@ -1,5 +1,5 @@
 import { and, eq, isNull } from 'drizzle-orm';
-import { balancesFrom } from '#lib/ledger.ts';
+import { balancesFrom, openDays } from '#lib/ledger.ts';
 import { billPayment, day, dayItem, orderLine, settlement } from '#lib/server/db/schema.ts';
 import type { Db } from '#lib/server/db/index.ts';
 
@@ -48,6 +48,7 @@ export async function computeLedger(db: Db) {
 			.where(and(isNull(settlement.voidedAt), eq(settlement.status, 'approved')))
 	]);
 
-	const balances = balancesFrom({ days, items, lines, payments, settlements });
-	return { balances, hasFinalized: days.length > 0 };
+	const input = { days, items, lines, payments, settlements };
+	const balances = balancesFrom(input);
+	return { balances, openDays: openDays(input, balances), hasFinalized: days.length > 0 };
 }

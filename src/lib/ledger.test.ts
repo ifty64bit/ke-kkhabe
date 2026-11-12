@@ -3,6 +3,7 @@ import {
 	applyPending,
 	balancesFrom,
 	groupHistory,
+	openDays,
 	canDecideSettlement,
 	canRecordSettlement,
 	canVoidSettlement,
@@ -110,6 +111,51 @@ describe('balancesFrom', () => {
 		// u2 pays u1 back ৳175 exactly: u2 lands on 0 and stays in the map, u1 drops to −20000.
 		expect(balances.get('u1')).toBe(-20000);
 		expect(balances.get('u2')).toBe(0);
+	});
+});
+
+describe('openDays', () => {
+	it('names the days behind each balance', () => {
+		const days = openDays(input, balancesFrom(input));
+		// u2 owes ৳275: ৳175 from day 1; the other ৳100 is the settlement u1 overpaid.
+		expect(days.get('u2')).toEqual([{ dayId: 'd1', date: '2026-11-02', amount: 17500 }]);
+		expect(days.get('u3')).toEqual([{ dayId: 'd1', date: '2026-11-02', amount: 20000 }]);
+		// u1 was charged more than they paid on day 1, so no day stands behind their credit.
+		expect(days.get('u1')).toEqual([]);
+	});
+
+	it('takes older days as settled first, the oldest open one in part', () => {
+		const days = [
+			{ id: 'a', date: '2026-11-01', deliveryFee: 0 },
+			{ id: 'b', date: '2026-11-02', deliveryFee: 0 },
+			{ id: 'c', date: '2026-11-03', deliveryFee: 0 }
+		];
+		const run: LedgerInput = {
+			days,
+			items: days.map((d) => ({ dayId: d.id, itemId: 'x', totalCost: 6000 })),
+			lines: days.map((d) => ({ dayId: d.id, userId: 'eater', itemId: 'x', finalQuantity: 12 })),
+			payments: days.map((d) => ({ dayId: d.id, userId: 'payer', amount: 6000 })),
+			settlements: [
+				{
+					id: 's',
+					fromUserId: 'eater',
+					toUserId: 'payer',
+					amount: 8000,
+					voidedAt: null,
+					status: 'approved'
+				}
+			]
+		};
+		const balances = balancesFrom(run);
+		expect(balances.get('eater')).toBe(-10000);
+		expect(openDays(run, balances).get('eater')).toEqual([
+			{ dayId: 'c', date: '2026-11-03', amount: 6000 },
+			{ dayId: 'b', date: '2026-11-02', amount: 4000 }
+		]);
+		expect(openDays(run, balances).get('payer')).toEqual([
+			{ dayId: 'c', date: '2026-11-03', amount: 6000 },
+			{ dayId: 'b', date: '2026-11-02', amount: 4000 }
+		]);
 	});
 });
 

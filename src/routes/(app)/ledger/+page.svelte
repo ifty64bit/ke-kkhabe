@@ -289,39 +289,54 @@
 				{#each openBalances as p (p.id)}
 					{@const gets = p.balance > 0}
 					{@const others = counterparts[p.id] ?? []}
-					<li class="flex items-start gap-3 px-4 py-3">
-						<Avatar name={p.name} src={p.image} class={p.active ? '' : 'opacity-60'} />
-						<div class="min-w-0 flex-1">
-							<p class="flex flex-wrap items-center gap-x-2 gap-y-1">
-								<span class="truncate font-medium">{p.name}</span>
-								{#if p.id === data.meId}<Badge>{i18n.t('members.you')}</Badge>{/if}
-								{#if p.role === 'manager'}
-									<Badge tone="highlight">{i18n.t('account.manager')}</Badge>
-								{/if}
-								{#if !p.active}
-									<Badge>{i18n.t('manage.person.inactive')}</Badge>
-								{/if}
-							</p>
-							{#if others.length > 0}
-								<ul class="mt-0.5 text-sm text-muted">
-									{#each others as o, i (i)}
-										<li class="flex items-baseline justify-between gap-3">
-											<span class="min-w-0 truncate">
-												{i18n.t(gets ? 'ledger.fromName' : 'ledger.toName', { name: o.name })}
-											</span>
-											{#if others.length > 1}
-												<Money value={o.amount} class="shrink-0" />
-											{/if}
-										</li>
-									{/each}
-								</ul>
+					<li class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 px-4 py-3">
+						<Avatar
+							name={p.name}
+							src={p.image}
+							class="row-span-3 self-start {p.active ? '' : 'opacity-60'}"
+						/>
+						<p class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+							<span class="truncate font-medium">{p.name}</span>
+							{#if p.id === data.meId}<Badge>{i18n.t('members.you')}</Badge>{/if}
+							{#if p.role === 'manager'}
+								<Badge tone="highlight">{i18n.t('account.manager')}</Badge>
 							{/if}
-						</div>
-						<span class="shrink-0 pt-0.5 font-semibold {gets ? 'text-success' : 'text-danger'}">
+							{#if !p.active}
+								<Badge>{i18n.t('manage.person.inactive')}</Badge>
+							{/if}
+						</p>
+						<span class="text-right font-semibold {gets ? 'text-success' : 'text-danger'}">
 							{i18n.t(gets ? 'ledger.getsBack' : 'ledger.owes', {
 								amount: formatTaka(Math.abs(p.balance), i18n.locale)
 							})}
 						</span>
+						{#if others.length > 0}
+							<ul class="col-span-2 mt-1 space-y-0.5 text-sm text-muted">
+								{#each others as o, i (i)}
+									<li class="flex items-baseline justify-between gap-3">
+										<span class="min-w-0 truncate">
+											{i18n.t(gets ? 'ledger.fromName' : 'ledger.toName', { name: o.name })}
+										</span>
+										{#if others.length > 1}
+											<Money value={o.amount} class="shrink-0 tabular-nums" />
+										{/if}
+									</li>
+								{/each}
+							</ul>
+						{/if}
+						{#if p.days.length > 0}
+							<p class="col-span-2 mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
+								<span>{i18n.t(gets ? 'ledger.paidOn' : 'ledger.orderedOn')}</span>
+								{#each p.days as d (d.date)}
+									<span
+										class="inline-flex items-baseline gap-1 rounded-full bg-surface-2 px-2 py-0.5"
+									>
+										<span class="font-medium text-fg">{i18n.shortDay(d.date)}</span>
+										<Money value={d.amount} />
+									</span>
+								{/each}
+							</p>
+						{/if}
 					</li>
 				{/each}
 				{#if settledPeople.length > 0}
