@@ -37,19 +37,16 @@
 		hint: MessageKey;
 		hintParams?: Record<string, string>;
 	};
-	const ledgerHint = $derived<{ hint: MessageKey; hintParams?: Record<string, string> }>(
-		data.myBalance > 0
-			? {
-					hint: 'links.ledgerHintPos',
-					hintParams: { amount: formatTaka(data.myBalance, i18n.locale) }
-				}
-			: data.myBalance < 0
-				? {
-						hint: 'links.ledgerHintNeg',
-						hintParams: { amount: formatTaka(data.myBalance, i18n.locale) }
-					}
-				: { hint: 'links.ledgerHintZero' }
-	);
+	type Hint = { hint: MessageKey; hintParams?: Record<string, string> };
+	const ledgerHint = $derived.by((): Hint => {
+		const owe = formatTaka(data.myOwe, i18n.locale);
+		const owed = formatTaka(data.myOwed, i18n.locale);
+		if (data.myOwe > 0 && data.myOwed > 0)
+			return { hint: 'links.ledgerHintBoth', hintParams: { owe, owed } };
+		if (data.myOwe > 0) return { hint: 'links.ledgerHintNeg', hintParams: { amount: owe } };
+		if (data.myOwed > 0) return { hint: 'links.ledgerHintPos', hintParams: { amount: owed } };
+		return { hint: 'links.ledgerHintZero' };
+	});
 	const links = $derived<Link[]>([
 		{
 			route: '/(app)/ledger',

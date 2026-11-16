@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const db = locals.db;
 	const today = dhakaToday();
 
-	const [{ balances, suggestions: plan, hasFinalized }, userRows] = await Promise.all([
+	const [{ suggestions: plan, hasFinalized }, userRows] = await Promise.all([
 		computeLedger(db),
 		db
 			.select({
@@ -43,19 +43,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		active: r.active !== false
 	}));
 	const personOf = new Map(people.map((p) => [p.id, p]));
-
-	// Every non-zero balance (including deactivated accounts), plus settled active members.
-	const rows = people
-		.map((p) => ({ ...p, balance: balances.get(p.id) ?? 0 }))
-		.filter((p) => p.balance !== 0 || p.active !== false)
-		.toSorted((a, b) => {
-			const group = (v: number) => (v > 0 ? 0 : v < 0 ? 2 : 1);
-			return (
-				group(a.balance) - group(b.balance) ||
-				(a.balance < 0 ? a.balance - b.balance : b.balance - a.balance) ||
-				(a.name < b.name ? -1 : 1)
-			);
-		});
 
 	// What each payer ate on the days behind their transfers, for the "which orders" popover.
 	const dayIds = [...new Set(plan.flatMap((t) => t.days.map((d) => d.dayId)))];
@@ -89,7 +76,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		to: t.to,
 		amount: t.amount,
 		fromName: personOf.get(t.from)?.name ?? t.from,
+		fromImage: personOf.get(t.from)?.image ?? null,
 		toName: personOf.get(t.to)?.name ?? t.to,
+		toImage: personOf.get(t.to)?.image ?? null,
 		days: t.days.map((d) => ({
 			date: d.date,
 			amount: d.amount,
@@ -171,14 +160,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 		isManager: me.role === 'manager',
 		today,
 		hasFinalized,
-		myBalance: balances.get(me.id) ?? 0,
-		myPending: pendingOut.reduce((a, p) => a + p.total, 0),
 		myPendingTo: Object.fromEntries(pendingOut.map((p) => [p.toId, p.total])) as Record<
 			string,
 			number
 		>,
 		people,
-		balances: rows,
 		suggestions,
 		awaitingMe,
 		recent

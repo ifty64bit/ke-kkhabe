@@ -22,7 +22,7 @@
 		people,
 		meId,
 		isManager,
-		balances,
+		owed,
 		today,
 		onsaved
 	}: {
@@ -33,7 +33,8 @@
 		meId: string;
 		isManager: boolean;
 		/** Current balance per user id (poisha), for the soft over-payment warning. */
-		balances: Record<string, Poisha>;
+		/** What each person owes another, keyed `from:to`. */
+		owed: Record<string, Poisha>;
 		/** Today in Dhaka, the default settlement date. */
 		today: string;
 		/** Called after a successful save, with whether the entry waits for approval. */
@@ -92,13 +93,8 @@
 	const pickTo = $derived(people.filter((p) => p.id !== from).map(option));
 
 	// Soft, never blocking: paying more than is owed is fine (people pay ahead).
-	// The most that can be owed between two people: the payer's debt, capped by the receiver's credit.
-	const owedBetween = $derived.by(() => {
-		if (!from || !to || from === to) return 0;
-		const debt = Math.max(0, -(balances[from] ?? 0));
-		const credit = Math.max(0, balances[to] ?? 0);
-		return Math.min(debt, credit);
-	});
+	// What the payer owes this receiver, person to person.
+	const owedBetween = $derived(from && to && from !== to ? (owed[`${from}:${to}`] ?? 0) : 0);
 	const parsedAmount = $derived(parseTaka(amount));
 	const overOwed = $derived(
 		from !== '' && to !== '' && from !== to && parsedAmount !== null && parsedAmount > owedBetween

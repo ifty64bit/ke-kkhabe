@@ -44,35 +44,14 @@
 		if (pending) sentTo = toName;
 	};
 
-	// My suggestions, less what I already sent and is waiting for approval.
-	const myTransfers = $derived(
+	// What I owe each person, less what I already sent and is waiting for approval.
+	const myOwe = $derived(
 		applyPending(
 			data.suggestions.filter((s) => s.from === data.meId),
 			data.myPendingTo
 		)
 	);
-	const balanceKey = $derived<MessageKey>(
-		data.myBalance > 0
-			? 'ledger.youGet'
-			: data.myBalance < 0
-				? 'ledger.youOwe'
-				: 'ledger.youSettled'
-	);
-	// Who each person pays or gets paid by, read off the settle-up plan.
-	const counterparts = $derived.by(() => {
-		const byId: Record<string, { name: string; s: Suggestion }[]> = {};
-		for (const s of data.suggestions) {
-			(byId[s.from] ??= []).push({ name: s.toName, s });
-			(byId[s.to] ??= []).push({ name: s.fromName, s });
-		}
-		return byId;
-	});
-	const openBalances = $derived(data.balances.filter((p) => p.balance !== 0));
-	const settledPeople = $derived(data.balances.filter((p) => p.balance === 0));
-
-	const balanceTone = $derived(
-		data.myBalance > 0 ? 'text-success' : data.myBalance < 0 ? 'text-danger' : 'text-fg'
-	);
+	const myOwed = $derived(data.suggestions.filter((s) => s.to === data.meId));
 
 	let voiding = $state<SettlementRow | null>(null);
 	let voidOpen = $state(false);
@@ -231,36 +210,34 @@
 			<EmptyState title={i18n.t('ledger.emptyTitle')} description={i18n.t('ledger.emptyBody')} />
 		</Card>
 	{:else}
-		<section class="mt-8">
-			<p class="text-2xl font-semibold sm:text-3xl {balanceTone}">
-				{i18n.t(balanceKey, { amount: formatTaka(Math.abs(data.myBalance), i18n.locale) })}
-			</p>
-			{#if data.myPending > 0}
-				<p class="mt-1 flex flex-wrap items-baseline gap-x-3 text-sm text-muted">
-					<span>
-						{i18n.t('ledger.myPending', { amount: formatTaka(data.myPending, i18n.locale) })}
-					</span>
-					<a
-						href="{resolve('/(app)/ledger/history')}?status=pending"
-						class="rounded-control font-medium text-primary underline-offset-2 hover:underline"
-					>
-						{i18n.t('history.seeAll')}
-					</a>
-				</p>
-			{/if}
-			{#if myTransfers.length > 0}
-				<ul class="mt-4 space-y-2">
-					{#each myTransfers as t (t.to)}
-						<li
-							class="flex items-center justify-between gap-3 rounded-control border border-border bg-surface px-4 py-3"
-						>
+		<Card class="mt-8" title={i18n.t('ledger.mineTitle')} padding="none">
+			{#if myOwe.length === 0 && myOwed.length === 0}
+				<p class="px-4 pb-4 text-muted">{i18n.t('ledger.youSettled')}</p>
+			{:else}
+				<ul class="divide-y divide-border">
+					{#each myOwe as t (t.to)}
+						<li class="flex items-center gap-3 px-4 py-3">
+							<Avatar name={t.toName} src={t.toImage} />
+							<div class="min-w-0 flex-1">
+								<p class="truncate">{i18n.t('ledger.youOweName', { name: t.toName })}</p>
+								{#if t.pending > 0}
+									<p class="text-sm text-muted">
+										{i18n.t('ledger.transferAwaiting', {
+											name: t.toName,
+											amount: formatTaka(t.pending, i18n.locale)
+										})}
+									</p>
+								{/if}
+							</div>
+							<span class="font-semibold text-danger">
+								<TransferDays
+									amount={t.amount}
+									title={i18n.t('ledger.days.title', { from: t.fromName, to: t.toName })}
+									eater={t.fromName}
+									days={t.days}
+								/>
+							</span>
 							{#if t.remaining > 0}
-								<span class="min-w-0 truncate">
-									{i18n.t('ledger.transferGive', {
-										name: t.toName,
-										amount: formatTaka(t.remaining, i18n.locale)
-									})}
-								</span>
 								<Button
 									variant="secondary"
 									size="sm"
@@ -268,117 +245,47 @@
 								>
 									{i18n.t('ledger.markPaid')}
 								</Button>
-							{:else}
-								<span class="min-w-0 text-muted">
-									{i18n.t('ledger.transferAwaiting', {
-										name: t.toName,
-										amount: formatTaka(t.pending, i18n.locale)
-									})}
-								</span>
 							{/if}
+						</li>
+					{/each}
+					{#each myOwed as t (t.from)}
+						<li class="flex items-center gap-3 px-4 py-3">
+							<Avatar name={t.fromName} src={t.fromImage} />
+							<p class="min-w-0 flex-1 truncate">
+								{i18n.t('ledger.owesYou', { name: t.fromName })}
+							</p>
+							<span class="font-semibold text-success">
+								<TransferDays
+									amount={t.amount}
+									title={i18n.t('ledger.days.title', { from: t.fromName, to: t.toName })}
+									eater={t.fromName}
+									days={t.days}
+								/>
+							</span>
 						</li>
 					{/each}
 				</ul>
 			{/if}
-		</section>
-
-		<Card class="mt-8" title={i18n.t('ledger.everyoneTitle')} padding="none">
-			<ul class="divide-y divide-border">
-				{#each openBalances as p (p.id)}
-					{@const gets = p.balance > 0}
-					{@const others = counterparts[p.id] ?? []}
-					<li class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 px-4 py-3">
-						<Avatar
-							name={p.name}
-							src={p.image}
-							class="row-span-3 self-start {p.active ? '' : 'opacity-60'}"
-						/>
-						<p class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-							<span class="truncate font-medium">{p.name}</span>
-							{#if p.id === data.meId}<Badge>{i18n.t('members.you')}</Badge>{/if}
-							{#if p.role === 'manager'}
-								<Badge tone="highlight">{i18n.t('account.manager')}</Badge>
-							{/if}
-							{#if !p.active}
-								<Badge>{i18n.t('manage.person.inactive')}</Badge>
-							{/if}
-						</p>
-						<span class="text-right font-semibold {gets ? 'text-success' : 'text-danger'}">
-							{i18n.t(gets ? 'ledger.getsBack' : 'ledger.owes', {
-								amount: formatTaka(Math.abs(p.balance), i18n.locale)
-							})}
-						</span>
-						{#if others.length > 0}
-							<ul class="col-span-2 mt-1 space-y-0.5 text-sm text-muted">
-								{#each others as o, i (i)}
-									<li class="flex items-baseline justify-between gap-3">
-										<span class="min-w-0 truncate">
-											{i18n.t(gets ? 'ledger.fromName' : 'ledger.toName', { name: o.name })}
-										</span>
-										<TransferDays
-											amount={o.s.amount}
-											title={i18n.t('ledger.days.title', {
-												from: o.s.fromName,
-												to: o.s.toName
-											})}
-											eater={o.s.fromName}
-											days={o.s.days}
-										/>
-									</li>
-								{/each}
-							</ul>
-						{/if}
-					</li>
-				{/each}
-				{#if settledPeople.length > 0}
-					<li>
-						<details class="group">
-							<summary
-								class="flex cursor-pointer list-none items-center gap-3 px-4 py-3 text-muted [&::-webkit-details-marker]:hidden"
-							>
-								<span class="flex -space-x-2">
-									{#each settledPeople.slice(0, 4) as p (p.id)}
-										<Avatar name={p.name} src={p.image} size="sm" class="ring-2 ring-surface" />
-									{/each}
-								</span>
-								<span class="flex-1">
-									{i18n.t('ledger.settledCount', { count: i18n.num(settledPeople.length) })}
-								</span>
-								<svg
-									viewBox="0 0 24 24"
-									class="size-5 transition-transform group-open:rotate-180"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg
-								>
-							</summary>
-							<ul class="divide-y divide-border border-t border-border">
-								{#each settledPeople as p (p.id)}
-									<li class="flex items-center gap-3 px-4 py-2.5">
-										<Avatar name={p.name} src={p.image} size="sm" />
-										<span class="min-w-0 truncate">{p.name}</span>
-										{#if p.id === data.meId}<Badge>{i18n.t('members.you')}</Badge>{/if}
-									</li>
-								{/each}
-							</ul>
-						</details>
-					</li>
-				{/if}
-			</ul>
 		</Card>
 
-		{#if data.suggestions.length > 0}
-			<Card
-				class="mt-8"
-				title={i18n.t('ledger.suggestTitle')}
-				description={i18n.t('ledger.suggestBody')}
-				padding="sm"
-			>
-				<ul class="-mx-1 divide-y divide-border">
-					{#each data.suggestions as s, i (i)}
-						<li class="flex items-center justify-between gap-3 px-1 py-2.5">
-							<span class="min-w-0 truncate">{transferText(s)}</span>
+		<Card class="mt-8" title={i18n.t('ledger.everyoneTitle')} padding="none">
+			{#if data.suggestions.length === 0}
+				<p class="px-4 pb-4 text-muted">{i18n.t('ledger.allSettled')}</p>
+			{:else}
+				<ul class="divide-y divide-border">
+					{#each data.suggestions as s (`${s.from}:${s.to}`)}
+						<li class="flex items-center gap-3 px-4 py-3">
+							<p class="min-w-0 flex-1 truncate">
+								{i18n.t('ledger.pairRow', { from: s.fromName, to: s.toName })}
+							</p>
+							<span class="font-semibold">
+								<TransferDays
+									amount={s.amount}
+									title={i18n.t('ledger.days.title', { from: s.fromName, to: s.toName })}
+									eater={s.fromName}
+									days={s.days}
+								/>
+							</span>
 							{#if canRecordSettlement(data.meId, data.isManager, s.from, s.to)}
 								<Button variant="secondary" size="sm" onclick={() => openRecord(s)}>
 									{i18n.t('ledger.recordShort')}
@@ -387,8 +294,8 @@
 						</li>
 					{/each}
 				</ul>
-			</Card>
-		{/if}
+			{/if}
+		</Card>
 
 		<Card class="mt-8" title={i18n.t('ledger.recentTitle')} padding="none">
 			{#snippet actions()}
@@ -477,7 +384,7 @@
 	people={data.people}
 	meId={data.meId}
 	isManager={data.isManager}
-	balances={Object.fromEntries(data.balances.map((b) => [b.id, b.balance]))}
+	owed={Object.fromEntries(data.suggestions.map((s) => [`${s.from}:${s.to}`, s.amount]))}
 	today={data.today}
 	{onsaved}
 />

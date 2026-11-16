@@ -137,7 +137,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		...t,
 		charge: mine?.total ?? null,
 		receipt,
-		myBalance: ledger.balances.get(meId) ?? 0,
+		// Person to person, not netted: what I owe others and what others owe me.
+		myOwe: ledger.suggestions.filter((s) => s.from === meId).reduce((a, s) => a + s.amount, 0),
+		myOwed: ledger.suggestions.filter((s) => s.to === meId).reduce((a, s) => a + s.amount, 0),
 		awaitingMeCount: awaitingMe.n,
 		vapidPublicKey: vapidFromEnv(env)?.publicKey ?? null
 	};
