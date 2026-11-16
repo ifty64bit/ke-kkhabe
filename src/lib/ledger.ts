@@ -98,136 +98,117 @@ function dayNets({ days, items, lines, payments }: LedgerInput) {
 	return nets;
 }
 
-export type OpenDay = {
+export type Transfer = { from: string; to: string; amount: Poisha };
+
+/** A day behind a settle-up amount. */
+export type TransferDay = {
 	dayId: string;
 	date: string;
-	/** The part of this day still open. */
+	/** The part of this day the transfer pays for. */
 	amount: Poisha;
-	/** The day's whole effect on the user (paid minus charged, made positive). */
+	/** What the payer owed the receiver for this day in all. */
 	dayNet: Poisha;
 };
 
+export type Suggestion = Transfer & { days: TransferDay[] };
+
 /**
- * The days behind each open balance. Money is pooled, so a balance has no exact
- * source; this reads it first-in-first-out: older days are taken as settled first,
- * and the balance is made of the newest days on the same side (charged more than
- * paid for a debtor, paid more than charged for a creditor), the oldest of them
- * possibly in part. Amounts are positive, newest day first, and sum to |balance|
- * unless part of it came from a settlement (e.g. someone overpaid a debt), which
- * no day stands behind.
+ * One day's debts: everyone who was charged more than they paid owes the people who
+ * paid more than they were charged. Debtors and creditors are lined up in user-id order
+ * and matched along the way (so with one bill payer, every eater owes that payer their
+ * whole share). Integer and exact: each person's debts add up to their day net.
  */
-export function openDays(input: LedgerInput, balances: Map<string, Poisha>) {
-	const nets = dayNets(input);
-	const newestFirst = input.days.toSorted((a, b) =>
-		a.date < b.date ? 1 : a.date > b.date ? -1 : a.id < b.id ? 1 : -1
-	);
-	const out = new Map<string, OpenDay[]>();
-	for (const [userId, balance] of balances) {
-		if (balance === 0) continue;
-		const sign = Math.sign(balance);
-		let left = Math.abs(balance);
-		const list: OpenDay[] = [];
-		for (const d of newestFirst) {
-			if (left === 0) break;
-			const net = (nets.get(d.id)?.get(userId) ?? 0) * sign;
-			if (net <= 0) continue;
-			const amount = Math.min(net, left);
-			list.push({ dayId: d.id, date: d.date, amount, dayNet: net });
-			left -= amount;
+function splitDay(nets: Map<string, Poisha>): Transfer[] {
+	const byId = (a: [string, Poisha], b: [string, Poisha]) => (a[0] < b[0] ? -1 : 1);
+	const debtors = [...nets]
+		.filter(([, n]) => n < 0)
+		.sort(byId)
+		.map(([id, n]) => ({ id, left: -n }));
+	const creditors = [...nets]
+		.filter(([, n]) => n > 0)
+		.sort(byId)
+		.map(([id, n]) => ({ id, left: n }));
+	const out: Transfer[] = [];
+	let c = 0;
+	for (const d of debtors) {
+		while (d.left > 0 && c < creditors.length) {
+			const amount = Math.min(d.left, creditors[c].left);
+			out.push({ from: d.id, to: creditors[c].id, amount });
+			d.left -= amount;
+			creditors[c].left -= amount;
+			if (creditors[c].left === 0) c++;
 		}
-		out.set(userId, list);
 	}
 	return out;
 }
 
-export type Transfer = { from: string; to: string; amount: Poisha };
-
 /**
- * Which of the payer's open days each settle-up transfer pays for. A day the receiver
- * also has open (they paid the bill the payer ate from) goes to that receiver first;
- * the payer's remaining days fill the rest, newest first. Per transfer, newest day
- * first; the amounts sum to at most the transfer (less when part of the debt came from
- * a settlement rather than a day).
+ * Settle-up suggestions, person to person: on each finalized day an eater owes whoever
+ * paid that bill; settlements between the two pay it down; debts both ways between the
+ * same two people cancel. What is left is one transfer per pair, so nobody is told to
+ * pay someone they never ate with or paid for. Each person's transfers add up to their
+ * balance.
+ *
+ * Each transfer lists the days it pays for: the payer's debts to that receiver, newest
+ * first, older ones taken as paid first (the oldest open one possibly in part). A
+ * transfer that comes from a settlement rather than a day (e.g. paying back an
+ * overpayment) lists fewer days, or none.
+ *
+ * Ordered by amount, largest first; ties by payer then receiver id.
  */
-export function transferDays(transfers: Transfer[], open: Map<string, OpenDay[]>) {
-	const left = new Map<string, Map<string, number>>();
-	const leftOf = (userId: string) => {
-		let m = left.get(userId);
-		if (!m) {
-			m = new Map((open.get(userId) ?? []).map((d) => [d.dayId, d.amount]));
-			left.set(userId, m);
-		}
-		return m;
-	};
-	const taken = transfers.map(() => new Map<string, number>());
-	const need = transfers.map((t) => t.amount);
-	const take = (i: number, dayId: string, amount: number) => {
-		const from = leftOf(transfers[i].from);
-		from.set(dayId, from.get(dayId)! - amount);
-		need[i] -= amount;
-		taken[i].set(dayId, (taken[i].get(dayId) ?? 0) + amount);
+export function pairwiseSettlements(input: LedgerInput): Suggestion[] {
+	const dateOf = new Map(input.days.map((d) => [d.id, d.date]));
+	const key = (from: string, to: string) => `${from}\u0000${to}`;
+	/** Signed total each person owes another, by ordered pair. */
+	const owed = new Map<string, Poisha>();
+	/** The days behind each ordered pair's debt, in `days` order. */
+	const flows = new Map<string, { dayId: string; amount: Poisha }[]>();
+	const pairs = new Map<string, [string, string]>();
+	const add = (from: string, to: string, amount: Poisha) => {
+		owed.set(key(from, to), (owed.get(key(from, to)) ?? 0) + amount);
+		const [a, b] = from < to ? [from, to] : [to, from];
+		pairs.set(key(a, b), [a, b]);
 	};
 
-	// Same-day matches: the payer ate on a day the receiver paid for.
-	transfers.forEach((t, i) => {
-		const to = leftOf(t.to);
-		for (const d of open.get(t.from) ?? []) {
-			const amount = Math.min(need[i], leftOf(t.from).get(d.dayId)!, to.get(d.dayId) ?? 0);
-			if (amount <= 0) continue;
-			take(i, d.dayId, amount);
-			to.set(d.dayId, to.get(d.dayId)! - amount);
+	for (const [dayId, nets] of dayNets(input)) {
+		for (const t of splitDay(nets)) {
+			add(t.from, t.to, t.amount);
+			const list = flows.get(key(t.from, t.to)) ?? [];
+			list.push({ dayId, amount: t.amount });
+			flows.set(key(t.from, t.to), list);
 		}
-	});
-	// Whatever is left, from the payer's other open days.
-	transfers.forEach((t, i) => {
-		for (const d of open.get(t.from) ?? []) {
-			const amount = Math.min(need[i], leftOf(t.from).get(d.dayId)!);
-			if (amount > 0) take(i, d.dayId, amount);
-		}
-	});
+	}
+	for (const s of input.settlements) {
+		if (s.status !== 'approved' || s.voidedAt !== null) continue;
+		add(s.fromUserId, s.toUserId, -s.amount);
+	}
 
-	return transfers.map((t, i) =>
-		(open.get(t.from) ?? [])
-			.filter((d) => taken[i].has(d.dayId))
-			.map((d) => ({ ...d, amount: taken[i].get(d.dayId)! }))
+	const out: Suggestion[] = [];
+	for (const [a, b] of pairs.values()) {
+		const net = (owed.get(key(a, b)) ?? 0) - (owed.get(key(b, a)) ?? 0);
+		if (net === 0) continue;
+		const [from, to] = net > 0 ? [a, b] : [b, a];
+		const amount = Math.abs(net);
+		const days: TransferDay[] = [];
+		let left = amount;
+		const newestFirst = (flows.get(key(from, to)) ?? []).toSorted((x, y) => {
+			const dx = dateOf.get(x.dayId)!;
+			const dy = dateOf.get(y.dayId)!;
+			return dx < dy ? 1 : dx > dy ? -1 : x.dayId < y.dayId ? 1 : -1;
+		});
+		for (const f of newestFirst) {
+			if (left === 0) break;
+			const part = Math.min(f.amount, left);
+			days.push({ dayId: f.dayId, date: dateOf.get(f.dayId)!, amount: part, dayNet: f.amount });
+			left -= part;
+		}
+		out.push({ from, to, amount, days });
+	}
+	return out.sort(
+		(x, y) =>
+			y.amount - x.amount ||
+			(x.from < y.from ? -1 : x.from > y.from ? 1 : x.to < y.to ? -1 : x.to > y.to ? 1 : 0)
 	);
-}
-
-/**
- * Settle-up suggestions: greedy matching of the largest debtor with the largest
- * creditor until every balance is zero. Ties break by user id, so the result is
- * stable. Not the mathematical minimum (that's NP-hard), but never more than
- * n − 1 transfers for n non-zero balances.
- */
-export function suggestSettlements(balances: Map<string, Poisha>): Transfer[] {
-	type Side = { id: string; left: Poisha };
-	const debtors: Side[] = [];
-	const creditors: Side[] = [];
-	for (const [id, amount] of balances) {
-		if (amount < 0) debtors.push({ id, left: -amount });
-		else if (amount > 0) creditors.push({ id, left: amount });
-	}
-
-	// Largest side first; ties break by the smaller user id.
-	const pick = (list: Side[]) => {
-		let best = list[0];
-		for (const side of list)
-			if (side.left > best.left || (side.left === best.left && side.id < best.id)) best = side;
-		return best;
-	};
-
-	const transfers: Transfer[] = [];
-	while (debtors.length > 0 && creditors.length > 0) {
-		const debtor = pick(debtors);
-		const creditor = pick(creditors);
-		const amount = Math.min(debtor.left, creditor.left);
-		transfers.push({ from: debtor.id, to: creditor.id, amount });
-		debtor.left -= amount;
-		creditor.left -= amount;
-		if (debtor.left === 0) debtors.splice(debtors.indexOf(debtor), 1);
-		if (creditor.left === 0) creditors.splice(creditors.indexOf(creditor), 1);
-	}
-	return transfers;
 }
 
 /** Who may record "A paid B ৳X": a party of the settlement, or any manager. */

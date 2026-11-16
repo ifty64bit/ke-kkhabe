@@ -1,5 +1,5 @@
 import { and, eq, isNull } from 'drizzle-orm';
-import { balancesFrom, openDays, suggestSettlements, transferDays } from '#lib/ledger.ts';
+import { balancesFrom, pairwiseSettlements } from '#lib/ledger.ts';
 import { billPayment, day, dayItem, orderLine, settlement } from '#lib/server/db/schema.ts';
 import type { Db } from '#lib/server/db/index.ts';
 
@@ -50,8 +50,6 @@ export async function computeLedger(db: Db) {
 
 	const input = { days, items, lines, payments, settlements };
 	const balances = balancesFrom(input);
-	const transfers = suggestSettlements(balances);
-	const paidFor = transferDays(transfers, openDays(input, balances));
-	const suggestions = transfers.map((t, i) => ({ ...t, days: paidFor[i] }));
+	const suggestions = pairwiseSettlements(input);
 	return { balances, suggestions, hasFinalized: days.length > 0 };
 }

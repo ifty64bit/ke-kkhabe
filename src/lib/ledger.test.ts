@@ -3,13 +3,11 @@ import {
 	applyPending,
 	balancesFrom,
 	groupHistory,
-	openDays,
-	transferDays,
+	pairwiseSettlements,
 	canDecideSettlement,
 	canRecordSettlement,
 	canVoidSettlement,
 	initialSettlementStatus,
-	suggestSettlements,
 	validateRejectReason,
 	validateSettlementInput,
 	type LedgerInput,
@@ -115,21 +113,60 @@ describe('balancesFrom', () => {
 	});
 });
 
-describe('openDays', () => {
-	it('names the days behind each balance', () => {
-		const days = openDays(input, balancesFrom(input));
-		// u2 owes ৳275: ৳175 from day 1; the other ৳100 is the settlement u1 overpaid.
-		expect(days.get('u2')).toEqual([
-			{ dayId: 'd1', date: '2026-11-02', amount: 17500, dayNet: 17500 }
+describe('pairwiseSettlements', () => {
+	const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+
+	it('has each person pay the people they actually owe', () => {
+		// d1: u1 owes u3 ৳25 and u2 owes u3 ৳175 (u3 paid more than they ate); u1's ৳100 to
+		// u2 was an overpayment, so u2 owes it back.
+		expect(pairwiseSettlements(input)).toEqual([
+			{
+				from: 'u2',
+				to: 'u3',
+				amount: 17500,
+				days: [{ dayId: 'd1', date: '2026-11-02', amount: 17500, dayNet: 17500 }]
+			},
+			{ from: 'u2', to: 'u1', amount: 10000, days: [] },
+			{
+				from: 'u1',
+				to: 'u3',
+				amount: 2500,
+				days: [{ dayId: 'd1', date: '2026-11-02', amount: 2500, dayNet: 2500 }]
+			}
 		]);
-		expect(days.get('u3')).toEqual([
-			{ dayId: 'd1', date: '2026-11-02', amount: 20000, dayNet: 20000 }
-		]);
-		// u1 was charged more than they paid on day 1, so no day stands behind their credit.
-		expect(days.get('u1')).toEqual([]);
 	});
 
-	it('takes older days as settled first, the oldest open one in part', () => {
+	it('does not route a debt through a third person', () => {
+		// Real case: e owes r for a breakfast; r owes s back an overpayment. Pooled
+		// balances would have e pay s. Person to person, e pays r and r refunds s.
+		const run: LedgerInput = {
+			days: [{ id: 'a', date: '2026-11-16', deliveryFee: 0 }],
+			items: [{ dayId: 'a', itemId: 'x', totalCost: 5133 }],
+			lines: [{ dayId: 'a', userId: 'e', itemId: 'x', finalQuantity: 12 }],
+			payments: [{ dayId: 'a', userId: 'r', amount: 5133 }],
+			settlements: [
+				{
+					id: 's',
+					fromUserId: 's',
+					toUserId: 'r',
+					amount: 5000,
+					voidedAt: null,
+					status: 'approved'
+				}
+			]
+		};
+		expect(pairwiseSettlements(run)).toEqual([
+			{
+				from: 'e',
+				to: 'r',
+				amount: 5133,
+				days: [{ dayId: 'a', date: '2026-11-16', amount: 5133, dayNet: 5133 }]
+			},
+			{ from: 'r', to: 's', amount: 5000, days: [] }
+		]);
+	});
+
+	it('takes older days as paid first, the oldest open one in part', () => {
 		const days = [
 			{ id: 'a', date: '2026-11-01', deliveryFee: 0 },
 			{ id: 'b', date: '2026-11-02', deliveryFee: 0 },
@@ -151,108 +188,137 @@ describe('openDays', () => {
 				}
 			]
 		};
-		const balances = balancesFrom(run);
-		expect(balances.get('eater')).toBe(-10000);
-		expect(openDays(run, balances).get('eater')).toEqual([
-			{ dayId: 'c', date: '2026-11-03', amount: 6000, dayNet: 6000 },
-			{ dayId: 'b', date: '2026-11-02', amount: 4000, dayNet: 6000 }
-		]);
-		expect(openDays(run, balances).get('payer')).toEqual([
-			{ dayId: 'c', date: '2026-11-03', amount: 6000, dayNet: 6000 },
-			{ dayId: 'b', date: '2026-11-02', amount: 4000, dayNet: 6000 }
+		expect(pairwiseSettlements(run)).toEqual([
+			{
+				from: 'eater',
+				to: 'payer',
+				amount: 10000,
+				days: [
+					{ dayId: 'c', date: '2026-11-03', amount: 6000, dayNet: 6000 },
+					{ dayId: 'b', date: '2026-11-02', amount: 4000, dayNet: 6000 }
+				]
+			}
 		]);
 	});
-});
 
-describe('transferDays', () => {
-	const day = (dayId: string, date: string, amount: number) => ({
-		dayId,
-		date,
-		amount,
-		dayNet: amount
-	});
-	const open = new Map([
-		['d', [day('n12', '2026-11-12', 2590), day('n05', '2026-11-05', 4300)]],
-		['s', [day('n05', '2026-11-05', 5000)]],
-		['r', [day('n12', '2026-11-12', 1890)]]
-	]);
-
-	it('pairs a day with whoever paid for it, then fills from the rest', () => {
-		const [toS, toR] = transferDays(
-			[
-				{ from: 'd', to: 's', amount: 5000 },
-				{ from: 'd', to: 'r', amount: 1890 }
+	it('cancels debts both ways between the same two people', () => {
+		const days = [
+			{ id: 'a', date: '2026-11-01', deliveryFee: 0 },
+			{ id: 'b', date: '2026-11-02', deliveryFee: 0 }
+		];
+		const run: LedgerInput = {
+			days,
+			items: days.map((d) => ({ dayId: d.id, itemId: 'x', totalCost: d.id === 'a' ? 5000 : 3000 })),
+			lines: [
+				{ dayId: 'a', userId: 'p', itemId: 'x', finalQuantity: 12 },
+				{ dayId: 'b', userId: 'q', itemId: 'x', finalQuantity: 12 }
 			],
-			open
-		);
-		// Sahim paid on 5 Nov: ৳43 of it is that day, the other ৳7 from 12 Nov.
-		expect(toS).toEqual([
-			{ ...day('n12', '2026-11-12', 700), dayNet: 2590 },
-			{ ...day('n05', '2026-11-05', 4300) }
-		]);
-		// Rafi paid on 12 Nov and gets the rest of it.
-		expect(toR).toEqual([{ ...day('n12', '2026-11-12', 1890), dayNet: 2590 }]);
-	});
-
-	it('covers at most what the payer has open', () => {
-		const [t] = transferDays([{ from: 'r', to: 'x', amount: 5000 }], new Map());
-		expect(t).toEqual([]);
-	});
-});
-
-const mapOf = (entries: Record<string, number>) => new Map(Object.entries(entries));
-
-describe('suggestSettlements', () => {
-	it('gives none when every balance is zero', () => {
-		expect(suggestSettlements(mapOf({ u1: 0, u2: 0 }))).toEqual([]);
-	});
-
-	it('matches one debtor with one creditor', () => {
-		expect(suggestSettlements(mapOf({ a: -100, b: 100 }))).toEqual([
-			{ from: 'a', to: 'b', amount: 100 }
+			payments: [
+				{ dayId: 'a', userId: 'q', amount: 5000 },
+				{ dayId: 'b', userId: 'p', amount: 3000 }
+			],
+			settlements: []
+		};
+		expect(pairwiseSettlements(run)).toEqual([
+			{
+				from: 'p',
+				to: 'q',
+				amount: 2000,
+				days: [{ dayId: 'a', date: '2026-11-01', amount: 2000, dayNet: 5000 }]
+			}
 		]);
 	});
 
-	it('settles a many-to-many case exactly', () => {
-		const transfers = suggestSettlements(mapOf({ a: -300, b: -100, c: 250, d: 150 }));
-		expect(transfers).toEqual([
-			{ from: 'a', to: 'c', amount: 250 },
-			{ from: 'b', to: 'd', amount: 100 },
-			{ from: 'a', to: 'd', amount: 50 }
-		]);
+	it('ignores pending, rejected and voided settlements', () => {
+		const run: LedgerInput = {
+			...input,
+			settlements: [
+				{
+					id: 'p',
+					fromUserId: 'u2',
+					toUserId: 'u3',
+					amount: 17500,
+					voidedAt: null,
+					status: 'pending'
+				},
+				{
+					id: 'r',
+					fromUserId: 'u2',
+					toUserId: 'u3',
+					amount: 17500,
+					voidedAt: null,
+					status: 'rejected'
+				},
+				{
+					id: 'v',
+					fromUserId: 'u2',
+					toUserId: 'u3',
+					amount: 17500,
+					voidedAt: new Date(),
+					status: 'approved'
+				}
+			]
+		};
+		expect(pairwiseSettlements(run).find((t) => t.from === 'u2')?.amount).toBe(17500);
 	});
 
-	it('breaks ties by user id, so the result is stable', () => {
-		const once = suggestSettlements(mapOf({ u2: -50, u1: -50, u4: 50, u3: 50 }));
-		expect(once).toEqual([
-			{ from: 'u1', to: 'u3', amount: 50 },
-			{ from: 'u2', to: 'u4', amount: 50 }
-		]);
-		expect(suggestSettlements(mapOf({ u2: -50, u1: -50, u4: 50, u3: 50 }))).toEqual(once);
-	});
-
-	it('never exceeds n − 1 transfers and always lands on zero (fuzz)', () => {
-		const random = mulberry32(20261104);
+	it('adds up to every balance and never pays a day twice (fuzz)', () => {
+		const random = mulberry32(20261116);
+		const pick = <T>(xs: T[]) => xs[Math.floor(random() * xs.length)];
 		for (let round = 0; round < 200; round++) {
-			const n = 2 + Math.floor(random() * 7);
-			const users = Array.from({ length: n }, (_, i) => `u${i}`);
-			const values = users.map(() => Math.floor(random() * 100_001) - 50_000);
-			// Force the sum to exactly 0.
-			values[0] -= values.reduce((a, b) => a + b, 0);
-			const balances = mapOf(Object.fromEntries(users.map((u, i) => [u, values[i]])));
-
-			const transfers = suggestSettlements(balances);
-			const nonZero = values.filter((v) => v !== 0).length;
-			expect(transfers.length).toBeLessThanOrEqual(Math.max(nonZero - 1, 0));
-			for (const t of transfers) {
-				expect(Number.isSafeInteger(t.amount)).toBe(true);
-				expect(t.amount).toBeGreaterThan(0);
+			const users = Array.from({ length: 2 + Math.floor(random() * 6) }, (_, i) => `u${i}`);
+			const days = Array.from({ length: 1 + Math.floor(random() * 5) }, (_, i) => ({
+				id: `d${i}`,
+				date: `2026-11-${String(i + 1).padStart(2, '0')}`,
+				deliveryFee: Math.floor(random() * 1000)
+			}));
+			const run: LedgerInput = { days, items: [], lines: [], payments: [], settlements: [] };
+			for (const d of days) {
+				const cost = 1000 + Math.floor(random() * 50_000);
+				run.items.push({ dayId: d.id, itemId: 'x', totalCost: cost });
+				const eaters = users.filter(() => random() < 0.6);
+				if (eaters.length === 0) eaters.push(users[0]);
+				for (const u of eaters)
+					run.lines.push({
+						dayId: d.id,
+						userId: u,
+						itemId: 'x',
+						finalQuantity: 6 * (1 + Math.floor(random() * 3))
+					});
+				// One or two payers covering the bill exactly.
+				const bill = cost + d.deliveryFee;
+				const first = pick(users);
+				const split = random() < 0.5 ? Math.floor(random() * bill) : 0;
+				run.payments.push({ dayId: d.id, userId: first, amount: bill - split });
+				if (split > 0) run.payments.push({ dayId: d.id, userId: pick(users), amount: split });
+			}
+			for (let i = Math.floor(random() * 4); i > 0; i--) {
+				const from = pick(users);
+				const to = pick(users.filter((u) => u !== from));
+				run.settlements.push({
+					id: `s${i}`,
+					fromUserId: from,
+					toUserId: to,
+					amount: 1 + Math.floor(random() * 20_000),
+					voidedAt: null,
+					status: 'approved'
+				});
 			}
 
+			const balances = balancesFrom(run);
+			const plan = pairwiseSettlements(run);
 			const settled = new Map(balances);
-			for (const { from, to, amount } of transfers) {
-				settled.set(from, settled.get(from)! + amount);
-				settled.set(to, settled.get(to)! - amount);
+			const pairs = new Set<string>();
+			for (const t of plan) {
+				expect(t.amount).toBeGreaterThan(0);
+				expect(t.from).not.toBe(t.to);
+				const pair = [t.from, t.to].sort().join('|');
+				expect(pairs.has(pair)).toBe(false);
+				pairs.add(pair);
+				expect(sum(t.days.map((d) => d.amount))).toBeLessThanOrEqual(t.amount);
+				for (const d of t.days) expect(d.amount).toBeLessThanOrEqual(d.dayNet);
+				settled.set(t.from, settled.get(t.from)! + t.amount);
+				settled.set(t.to, settled.get(t.to)! - t.amount);
 			}
 			for (const v of settled.values()) expect(v).toBe(0);
 		}

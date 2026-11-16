@@ -124,7 +124,7 @@ export const en: Record<MessageKey, string> = {
 	'ledger.days.rest': '{amount} came from a settlement, not an order.',
 	'ledger.settledCount': '{count} settled',
 	'ledger.suggestTitle': 'How to settle up',
-	'ledger.suggestBody': 'The fewest payments that clear every balance.',
+	'ledger.suggestBody': 'Everyone pays the people they owe directly.',
 	'ledger.transferRow': '{from} → {to} {amount}',
 	'ledger.recordShort': 'Record',
 	'ledger.recentTitle': 'Recent settlements',

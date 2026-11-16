@@ -121,7 +121,7 @@ export const bn = {
 	'ledger.days.rest': '{amount} এসেছে লেনদেন থেকে, অর্ডার থেকে নয়।',
 	'ledger.settledCount': '{count} জনের হিসাব মেটানো',
 	'ledger.suggestTitle': 'মেটানোর উপায়',
-	'ledger.suggestBody': 'সবচেয়ে কম লেনদেনে সব হিসাব মেটে।',
+	'ledger.suggestBody': 'যার কাছে যত বাকি, সরাসরি তাকেই দিন।',
 	'ledger.transferRow': '{from} → {to} {amount}',
 	'ledger.recordShort': 'লিখুন',
 	'ledger.recentTitle': 'সাম্প্রতিক লেনদেন',
