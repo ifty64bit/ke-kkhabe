@@ -330,6 +330,12 @@ export const en: Record<MessageKey, string> = {
 	'manage.summary.reopenBody':
 		"Until it is finalized again, the day stays out of everyone's balances.",
 
+	'manage.cancel.cta': "Cancel today's order",
+	'manage.cancel.title': "Cancel today's order?",
+	'manage.cancel.body':
+		"Everyone's orders for today will be removed and nobody will be charged. You can start the day again later.",
+	'manage.cancel.confirm': 'Yes, cancel',
+
 	'manage.error.exists': "Today's day has already been started.",
 	'manage.error.status': "The day's state changed. Refresh the page and try again.",
 	'manage.arrived.cta': 'Breakfast is here',

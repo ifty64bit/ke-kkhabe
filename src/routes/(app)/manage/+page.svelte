@@ -40,6 +40,7 @@
 	let finalizeOpen = $state(false);
 	let closeOpen = $state(false);
 	let reopenOpen = $state(false);
+	let cancelOpen = $state(false);
 
 	/** Enhance for the plain row actions: surface a failure message at the top. */
 	const rowAction = () => {
@@ -58,6 +59,7 @@
 			// Close any confirmation that triggered this action, then refresh.
 			closeOpen = false;
 			reopenOpen = false;
+			cancelOpen = false;
 			await update();
 		};
 	};
@@ -178,6 +180,14 @@
 	</Card>
 {/snippet}
 
+{#snippet cancelDay()}
+	<div class="mt-6 border-t border-border pt-4">
+		<Button variant="danger" block onclick={() => (cancelOpen = true)}>
+			{i18n.t('manage.cancel.cta')}
+		</Button>
+	</div>
+{/snippet}
+
 {#if !status || status === 'draft'}
 	<Card title={i18n.t('manage.today.emptyTitle')} description={i18n.t('manage.today.emptyBody')}>
 		{#if data.items.length === 0}
@@ -249,6 +259,7 @@
 			{i18n.t('manage.day.closeOrders')}
 		</Button>
 	</div>
+	{@render cancelDay()}
 {:else if status === 'closed'}
 	<Card title={i18n.t('manage.shopping.title')} description={i18n.t('manage.shopping.hint')}>
 		<!-- Shared columns (name | quantity | unit) so quantities line up whatever the unit's length. -->
@@ -290,6 +301,7 @@
 			{i18n.t('manage.day.finalizeCta')}
 		</Button>
 	</div>
+	{@render cancelDay()}
 {:else if status === 'finalized'}
 	<Card>
 		{#snippet actions()}
@@ -426,6 +438,21 @@
 		<Button variant="secondary" onclick={close}>{i18n.t('common.cancel')}</Button>
 		<form method="POST" action="?/reopenDay" use:enhance={rowAction}>
 			<Button type="submit">{i18n.t('manage.summary.reopen')}</Button>
+		</form>
+	{/snippet}
+</Dialog>
+
+<Dialog
+	bind:open={cancelOpen}
+	size="sm"
+	title={i18n.t('manage.cancel.title')}
+	description={i18n.t('manage.cancel.body')}
+>
+	{#if actionError}<Alert tone="danger">{i18n.t(actionError)}</Alert>{/if}
+	{#snippet footer({ close })}
+		<Button variant="secondary" onclick={close}>{i18n.t('common.cancel')}</Button>
+		<form method="POST" action="?/cancelDay" use:enhance={rowAction}>
+			<Button type="submit" variant="danger">{i18n.t('manage.cancel.confirm')}</Button>
 		</form>
 	{/snippet}
 </Dialog>

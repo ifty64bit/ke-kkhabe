@@ -324,6 +324,12 @@ export const bn = {
 	'manage.summary.reopenTitle': 'আবার খুলবেন?',
 	'manage.summary.reopenBody': 'আবার চূড়ান্ত না করা পর্যন্ত দিনটা সবার ব্যালান্স থেকে বাদ থাকবে।',
 
+	'manage.cancel.cta': 'আজকের অর্ডার বাতিল করুন',
+	'manage.cancel.title': 'আজকের অর্ডার বাতিল করবেন?',
+	'manage.cancel.body':
+		'আজকের সবার অর্ডার মুছে যাবে, কারো খরচ ধরা হবে না। চাইলে পরে আবার দিন শুরু করতে পারবেন।',
+	'manage.cancel.confirm': 'হ্যাঁ, বাতিল করুন',
+
 	'manage.error.exists': 'আজকের দিন আগেই শুরু হয়ে গেছে।',
 	'manage.error.status': 'দিনের অবস্থা বদলে গেছে। পাতাটা রিফ্রেশ করে আবার করুন।',
 	'manage.arrived.cta': 'নাস্তা চলে এসেছে',

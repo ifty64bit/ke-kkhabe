@@ -466,6 +466,40 @@ export const actions: Actions = {
 		return { saved: true };
 	},
 
+	/**
+	 * Call off today's order (e.g. too few people): removes the day and everything on it, so
+	 * nobody is charged. Not allowed once finalized; reopen first. The day can be started again.
+	 */
+	cancelDay: async ({ locals }) => {
+		const me = requireManager(locals);
+		const db = locals.db;
+		const today = await todayFor(db);
+		if (!today || (today.status !== 'open' && today.status !== 'closed'))
+			return failKey(409, 'manage.error.status');
+
+		const lines = await db
+			.select({ userId: orderLine.userId, itemId: orderLine.itemId, qty: orderLine.quantity12ths })
+			.from(orderLine)
+			.where(eq(orderLine.dayId, today.id));
+
+		// Children first, so it works whether or not foreign-key cascades are enforced.
+		await db.batch([
+			db.delete(orderLine).where(eq(orderLine.dayId, today.id)),
+			db.delete(response).where(eq(response.dayId, today.id)),
+			db.delete(billPayment).where(eq(billPayment.dayId, today.id)),
+			db.delete(dayItem).where(eq(dayItem.dayId, today.id)),
+			db.delete(day).where(eq(day.id, today.id)),
+			db.insert(auditLog).values({
+				actorId: me.id,
+				action: 'day.cancel',
+				entity: 'day',
+				entityId: today.id,
+				data: { date: today.date, status: today.status, lines }
+			})
+		]);
+		return { saved: true };
+	},
+
 	/** Add or edit one member's order on their behalf (late request). */
 	saveMemberOrder: async ({ locals, request }) => {
 		const me = requireManager(locals);
